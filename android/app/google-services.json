@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:987401672169:android:609564634103aa1403e778",
         "android_client_info": {
-          "package_name": "com.mycompany.ugoadmin"
+          "package_name": "com.ugotaxi.admin"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "987401672169-2u6ovbg1pi26ik5a11os72t206kdai8p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.mycompany.ugoadmin",
+            "package_name": "com.ugotaxi.admin",
             "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
           }
         },

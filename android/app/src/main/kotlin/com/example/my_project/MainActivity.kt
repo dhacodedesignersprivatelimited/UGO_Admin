@@ -1,4 +1,4 @@
-package com.mycompany.ugoadmin
+package com.ugotaxi.admin
 
 import io.flutter.embedding.android.FlutterActivity
 
