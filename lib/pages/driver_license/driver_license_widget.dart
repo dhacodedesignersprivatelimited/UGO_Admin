@@ -163,7 +163,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                         borderRadius:
                                             BorderRadius.circular(4.0),
                                         child: Image.network(
-                                          'http://www.ugotaxi.com${getJsonField(
+                                          'https://ugotaxi.icacorp.org${getJsonField(
                                             (_model.getdriverid?.jsonBody ??
                                                 ''),
                                             r'''$.data.license_image''',
@@ -309,7 +309,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                         borderRadius:
                                             BorderRadius.circular(4.0),
                                         child: Image.network(
-                                          'http://www.ugotaxi.com${getJsonField(
+                                          'https://ugotaxi.icacorp.org${getJsonField(
                                             (_model.getdriverid?.jsonBody ??
                                                 ''),
                                             r'''$.data.profile_image''',
@@ -455,7 +455,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                         borderRadius:
                                             BorderRadius.circular(4.0),
                                         child: Image.network(
-                                          'http://www.ugotaxi.com${getJsonField(
+                                          'https://ugotaxi.icacorp.org${getJsonField(
                                             (_model.getdriverid?.jsonBody ??
                                                 ''),
                                             r'''$.data.aadhaar_image''',
@@ -601,7 +601,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                         borderRadius:
                                             BorderRadius.circular(4.0),
                                         child: Image.network(
-                                          'http://www.ugotaxi.com${getJsonField(
+                                          'https://ugotaxi.icacorp.org${getJsonField(
                                             (_model.getdriverid?.jsonBody ??
                                                 ''),
                                             r'''$.data.pan_image''',
@@ -747,7 +747,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                         borderRadius:
                                             BorderRadius.circular(4.0),
                                         child: Image.network(
-                                          'http://www.ugotaxi.com${getJsonField(
+                                          'https://ugotaxi.icacorp.org${getJsonField(
                                             (_model.getdriverid?.jsonBody ??
                                                 ''),
                                             r'''$.data.rc_image''',
