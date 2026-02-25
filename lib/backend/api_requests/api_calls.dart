@@ -23,7 +23,7 @@ class LoginCall {
 }''';
     return ApiManager.instance.makeApiCall(
       callName: 'login',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/admins/login',
+      apiUrl: 'https://ugo-api.icacorp.org/api/admins/login',
       callType: ApiCallType.POST,
       headers: {},
       params: {},
@@ -66,7 +66,7 @@ class AddVehicleCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'addVehicle',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/admins/vehicles',
+      apiUrl: 'https://ugo-api.icacorp.org/api/admins/vehicles',
       callType: ApiCallType.POST,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -96,7 +96,7 @@ class GetRidersCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'GetRiders',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/admins/rides-analytics',
+      apiUrl: 'https://ugo-api.icacorp.org/api/admins/rides-analytics',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -128,7 +128,7 @@ class GetAnalyticsCall {
     return ApiManager.instance.makeApiCall(
       callName: 'GetAnalytics',
       apiUrl:
-          'https://ugotaxi.icacorp.org/api/admins/earnings-analytics?period=weekly',
+          'https://ugo-api.icacorp.org/api/admins/earnings-analytics?period=weekly',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -159,7 +159,7 @@ class ActiveDriversCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'ActiveDrivers',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/admins/active-drivers',
+      apiUrl: 'https://ugo-api.icacorp.org/api/admins/active-drivers',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -190,7 +190,7 @@ class AllUsersCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'AllUsers',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/admins/all-users',
+      apiUrl: 'https://ugo-api.icacorp.org/api/admins/all-users',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -245,7 +245,7 @@ class GetDriversCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'get drivers',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/drivers/getall',
+      apiUrl: 'https://ugo-api.icacorp.org/api/drivers/getall',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -290,7 +290,7 @@ class VerifyDocsCall {
 }''';
     return ApiManager.instance.makeApiCall(
       callName: 'verifyDocs',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/admins/verify-driver-documents',
+      apiUrl: 'https://ugo-api.icacorp.org/api/admins/verify-driver-documents',
       callType: ApiCallType.POST,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -314,7 +314,7 @@ class DashBoardCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'dashBoard',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/admins/dashboard',
+      apiUrl: 'https://ugo-api.icacorp.org/api/admins/dashboard',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -367,7 +367,7 @@ class GetDriverByIdCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'GetDriverById',
-      apiUrl: 'https://ugotaxi.icacorp.org/api/drivers/${id}',
+      apiUrl: 'https://ugo-api.icacorp.org/api/drivers/${id}',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
