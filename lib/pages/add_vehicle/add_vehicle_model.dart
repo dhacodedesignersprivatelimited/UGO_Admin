@@ -5,6 +5,8 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/upload_data.dart';
+import '/flutter_flow/uploaded_file.dart';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'add_vehicle_widget.dart' show AddVehicleWidget;
 import 'package:flutter/material.dart';
@@ -14,18 +16,29 @@ import 'package:provider/provider.dart';
 class AddVehicleModel extends FlutterFlowModel<AddVehicleWidget> {
   ///  State fields for stateful widgets in this page.
 
+  // Vehicle types from API
+  List<Map<String, dynamic>> vehicleTypesList = [];
+  bool isLoadingVehicleTypes = false;
+  int? selectedVehicleTypeId;
+  String? selectedVehicleTypeName;
+
   // State field(s) for vehicleName widget.
   FocusNode? vehicleNameFocusNode;
   TextEditingController? vehicleNameTextController;
   String? Function(BuildContext, String?)? vehicleNameTextControllerValidator;
-  // State field(s) for vehicleType widget.
+  // State field(s) for vehicleType widget - kept for compatibility, dropdown replaces input
   FocusNode? vehicleTypeFocusNode;
   TextEditingController? vehicleTypeTextController;
   String? Function(BuildContext, String?)? vehicleTypeTextControllerValidator;
-  // State field(s) for priceperkm widget.
-  FocusNode? priceperkmFocusNode;
-  TextEditingController? priceperkmTextController;
-  String? Function(BuildContext, String?)? priceperkmTextControllerValidator;
+  // Ride category for sub-vehicle (pro, standard, etc.)
+  String? selectedRideCategory = 'pro';
+  // Vehicle type form (Tab 1)
+  FocusNode? typeNameFocusNode;
+  TextEditingController? typeNameTextController;
+  String? Function(BuildContext, String?)? typeNameTextControllerValidator;
+  bool isDataUploading_typeImage = false;
+  FFUploadedFile uploadedLocalFile_typeImage =
+      FFUploadedFile(bytes: Uint8List.fromList([]), originalFilename: '');
   // State field(s) for seatingCapacity widget.
   FocusNode? seatingCapacityFocusNode;
   TextEditingController? seatingCapacityTextController;
@@ -56,8 +69,8 @@ class AddVehicleModel extends FlutterFlowModel<AddVehicleWidget> {
     vehicleTypeFocusNode?.dispose();
     vehicleTypeTextController?.dispose();
 
-    priceperkmFocusNode?.dispose();
-    priceperkmTextController?.dispose();
+    typeNameFocusNode?.dispose();
+    typeNameTextController?.dispose();
 
     seatingCapacityFocusNode?.dispose();
     seatingCapacityTextController?.dispose();

@@ -1,14 +1,14 @@
-import '/backend/api_requests/api_calls.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import 'allusers_widget.dart' show AllusersWidget;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+import '/flutter_flow/flutter_flow_util.dart';
 
 class AllusersModel extends FlutterFlowModel<AllusersWidget> {
+  /// All pending KYC driver IDs (no page limit)
+  List<int> pendingKycDriverIds = [];
+
+  /// Full list of pending KYC drivers for display
+  List<dynamic> pendingKycDrivers = [];
+
   @override
   void initState(BuildContext context) {}
 

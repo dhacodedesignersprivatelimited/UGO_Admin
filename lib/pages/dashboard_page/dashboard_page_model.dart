@@ -14,9 +14,10 @@ import 'package:provider/provider.dart';
 class DashboardPageModel extends FlutterFlowModel<DashboardPageWidget> {
   ///  State fields for stateful widgets in this page.
 
-  // Stores action output result for [Backend Call - API (dashBoard)] action in dashboardPage widget.
+  // Stores action output result for [Backend Call - API (dashBoard)] action.
   ApiCallResponse? dashboard;
-  // State field(s) for TextField widget.
+
+  // State field(s) for TextField widget (Referral Amount).
   FocusNode? textFieldFocusNode;
   TextEditingController? textController;
   String? Function(BuildContext, String?)? textControllerValidator;

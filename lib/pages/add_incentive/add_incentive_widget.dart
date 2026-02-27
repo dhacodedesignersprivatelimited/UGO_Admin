@@ -1,3 +1,5 @@
+import '/components/admin_drawer.dart';
+import '/index.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -62,7 +64,14 @@ class _AddIncentiveWidgetState extends State<AddIncentiveWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.goNamedAuth(IncentivesWidget.routeName, context.mounted);
+        }
+      },
+      child: GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -70,9 +79,10 @@ class _AddIncentiveWidgetState extends State<AddIncentiveWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        drawer: buildAdminDrawer(context),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primaryText,
-          automaticallyImplyLeading: false,
+          backgroundColor: FlutterFlowTheme.of(context).primary,
+          automaticallyImplyLeading: true,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
             borderRadius: 30.0,
@@ -83,8 +93,8 @@ class _AddIncentiveWidgetState extends State<AddIncentiveWidget> {
               color: Colors.white,
               size: 30.0,
             ),
-            onPressed: () async {
-              context.pop();
+            onPressed: () {
+              context.goNamedAuth(IncentivesWidget.routeName, context.mounted);
             },
           ),
           title: Text(
@@ -1172,6 +1182,7 @@ class _AddIncentiveWidgetState extends State<AddIncentiveWidget> {
           ),
         ),
       ),
+    ),
     );
   }
 }

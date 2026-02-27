@@ -1,3 +1,7 @@
+import '/auth/custom_auth/auth_util.dart';
+import '/backend/api_requests/api_calls.dart';
+import '/components/admin_drawer.dart';
+import '/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -38,7 +42,14 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+        }
+      },
+      child: GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -46,11 +57,12 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        drawer: buildAdminDrawer(context),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primaryText,
-          automaticallyImplyLeading: false,
+          backgroundColor: FlutterFlowTheme.of(context).primary,
+          automaticallyImplyLeading: true,
           title: Text(
-            'Page Title',
+            'User Complaints',
             style: FlutterFlowTheme.of(context).headlineMedium.override(
                   font: GoogleFonts.interTight(
                     fontWeight:
@@ -953,6 +965,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
           ),
         ),
       ),
+    ),
     );
   }
 }

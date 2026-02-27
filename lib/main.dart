@@ -13,6 +13,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'flutter_flow/nav/nav.dart';
+import 'flutter_flow/nav/router.dart';
 import 'index.dart';
 
 void main() async {
@@ -73,10 +74,13 @@ class _MyAppState extends State<MyApp> {
     userStream = ugoAdminAuthUserStream()
       ..listen((user) {
         _appStateNotifier.update(user);
+        // Stop splash as soon as we have user state
+        _appStateNotifier.stopShowingSplashImage();
       });
 
+    // Fallback: stop splash after 500ms if stream hasn't fired
     Future.delayed(
-      Duration(milliseconds: 1000),
+      const Duration(milliseconds: 500),
       () => _appStateNotifier.stopShowingSplashImage(),
     );
   }
@@ -88,7 +92,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
+    return Container(
+      color: const Color(0xFFF5F5F5),
+      child: MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'ugoAdmin',
       localizationsDelegates: [
@@ -100,96 +106,29 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         brightness: Brightness.light,
         useMaterial3: false,
+        primaryColor: const Color(0xFFFF6B35),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFF6B35),
+          brightness: Brightness.light,
+          primary: const Color(0xFFFF6B35),
+          secondary: const Color(0xFFFF8F65),
+        ),
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         useMaterial3: false,
+        primaryColor: const Color(0xFFFF6B35),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFF6B35),
+          brightness: Brightness.dark,
+          primary: const Color(0xFFFF6B35),
+          secondary: const Color(0xFFFF8F65),
+        ),
       ),
       themeMode: _themeMode,
       routerConfig: _router,
-    );
-  }
-}
-
-class NavBarPage extends StatefulWidget {
-  NavBarPage({
-    Key? key,
-    this.initialPage,
-    this.page,
-    this.disableResizeToAvoidBottomInset = false,
-  }) : super(key: key);
-
-  final String? initialPage;
-  final Widget? page;
-  final bool disableResizeToAvoidBottomInset;
-
-  @override
-  _NavBarPageState createState() => _NavBarPageState();
-}
-
-/// This is the private State class that goes with NavBarPage.
-class _NavBarPageState extends State<NavBarPage> {
-  String _currentPageName = 'dashboardPage';
-  late Widget? _currentPage;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentPageName = widget.initialPage ?? _currentPageName;
-    _currentPage = widget.page;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tabs = {
-      'dashboardPage': DashboardPageWidget(),
-      'Earnings': EarningsWidget(),
-      'Account': AccountWidget(),
-    };
-    final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
-
-    return Scaffold(
-      resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
-      body: _currentPage ?? tabs[_currentPageName],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (i) => safeSetState(() {
-          _currentPage = null;
-          _currentPageName = tabs.keys.toList()[i];
-        }),
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        selectedItemColor: FlutterFlowTheme.of(context).primaryText,
-        unselectedItemColor: Color(0xFFB8BBBD),
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home_outlined,
-              size: 24.0,
-            ),
-            label: 'Home',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.currency_exchange_sharp,
-              size: 24.0,
-            ),
-            label: 'Earnings',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.account_circle_outlined,
-              size: 24.0,
-            ),
-            label: 'Account',
-            tooltip: '',
-          )
-        ],
       ),
     );
   }
 }
+

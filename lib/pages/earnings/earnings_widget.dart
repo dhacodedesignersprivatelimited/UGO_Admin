@@ -1,3 +1,5 @@
+import '/components/admin_drawer.dart';
+import '/index.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -40,7 +42,14 @@ class _EarningsWidgetState extends State<EarningsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+        }
+      },
+      child: GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -48,9 +57,10 @@ class _EarningsWidgetState extends State<EarningsWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        drawer: buildAdminDrawer(context),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primaryText,
-          automaticallyImplyLeading: false,
+          backgroundColor: FlutterFlowTheme.of(context).primary,
+          automaticallyImplyLeading: true,
           title: Text(
             'Earnings',
             style: FlutterFlowTheme.of(context).headlineMedium.override(
@@ -956,6 +966,7 @@ class _EarningsWidgetState extends State<EarningsWidget> {
           ),
         ),
       ),
+    ),
     );
   }
 }

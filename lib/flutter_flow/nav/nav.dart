@@ -9,14 +9,9 @@ import '/backend/schema/structs/index.dart';
 
 import '/auth/custom_auth/custom_auth_user_provider.dart';
 
-import '/main.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/lat_lng.dart';
-import '/flutter_flow/place.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'serialization_util.dart';
-
-import '/index.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -78,113 +73,6 @@ class AppStateNotifier extends ChangeNotifier {
   }
 }
 
-GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
-      initialLocation: '/',
-      debugLogDiagnostics: true,
-      refreshListenable: appStateNotifier,
-      navigatorKey: appNavigatorKey,
-      errorBuilder: (context, state) =>
-          appStateNotifier.loggedIn ? NavBarPage() : LoginWidget(),
-      routes: [
-        FFRoute(
-          name: '_initialize',
-          path: '/',
-          builder: (context, _) =>
-              appStateNotifier.loggedIn ? NavBarPage() : LoginWidget(),
-        ),
-        FFRoute(
-          name: LoginWidget.routeName,
-          path: LoginWidget.routePath,
-          builder: (context, params) => LoginWidget(),
-        ),
-        FFRoute(
-          name: DashboardPageWidget.routeName,
-          path: DashboardPageWidget.routePath,
-          builder: (context, params) => params.isEmpty
-              ? NavBarPage(initialPage: 'dashboardPage')
-              : DashboardPageWidget(),
-        ),
-        FFRoute(
-          name: EarningsWidget.routeName,
-          path: EarningsWidget.routePath,
-          builder: (context, params) => params.isEmpty
-              ? NavBarPage(initialPage: 'Earnings')
-              : EarningsWidget(),
-        ),
-        FFRoute(
-          name: AccountWidget.routeName,
-          path: AccountWidget.routePath,
-          builder: (context, params) => params.isEmpty
-              ? NavBarPage(initialPage: 'Account')
-              : AccountWidget(),
-        ),
-        FFRoute(
-          name: AddVehicleWidget.routeName,
-          path: AddVehicleWidget.routePath,
-          builder: (context, params) => AddVehicleWidget(),
-        ),
-        FFRoute(
-          name: IncentivesWidget.routeName,
-          path: IncentivesWidget.routePath,
-          builder: (context, params) => IncentivesWidget(),
-        ),
-        FFRoute(
-          name: IncentiveDetailsWidget.routeName,
-          path: IncentiveDetailsWidget.routePath,
-          builder: (context, params) => IncentiveDetailsWidget(),
-        ),
-        FFRoute(
-          name: AddIncentiveWidget.routeName,
-          path: AddIncentiveWidget.routePath,
-          builder: (context, params) => AddIncentiveWidget(),
-        ),
-        FFRoute(
-          name: NotificationsWidget.routeName,
-          path: NotificationsWidget.routePath,
-          builder: (context, params) => NotificationsWidget(),
-        ),
-        FFRoute(
-          name: PromoCodesWidget.routeName,
-          path: PromoCodesWidget.routePath,
-          builder: (context, params) => PromoCodesWidget(),
-        ),
-        FFRoute(
-          name: DriverLicenseVerificationWidget.routeName,
-          path: DriverLicenseVerificationWidget.routePath,
-          builder: (context, params) => DriverLicenseVerificationWidget(),
-        ),
-        FFRoute(
-          name: DriverLicenseWidget.routeName,
-          path: DriverLicenseWidget.routePath,
-          builder: (context, params) => DriverLicenseWidget(
-            userId: params.getParam(
-              'userId',
-              ParamType.int,
-            ),
-          ),
-        ),
-        FFRoute(
-          name: UserComplaintsWidget.routeName,
-          path: UserComplaintsWidget.routePath,
-          builder: (context, params) => UserComplaintsWidget(),
-        ),
-        FFRoute(
-          name: ReviewsWidget.routeName,
-          path: ReviewsWidget.routePath,
-          builder: (context, params) => ReviewsWidget(),
-        ),
-        FFRoute(
-          name: DriversWidget.routeName,
-          path: DriversWidget.routePath,
-          builder: (context, params) => DriversWidget(),
-        ),
-        FFRoute(
-          name: AllusersWidget.routeName,
-          path: AllusersWidget.routePath,
-          builder: (context, params) => AllusersWidget(),
-        )
-      ].map((r) => r.toRoute(appStateNotifier)).toList(),
-    );
 
 extension NavParamExtensions on Map<String, String?> {
   Map<String, String> get withoutNulls => Map.fromEntries(
@@ -202,15 +90,27 @@ extension NavigationExtensions on BuildContext {
     Map<String, String> queryParameters = const <String, String>{},
     Object? extra,
     bool ignoreRedirect = false,
-  }) =>
-      !mounted || GoRouter.of(this).shouldRedirect(ignoreRedirect)
-          ? null
-          : goNamed(
-              name,
-              pathParameters: pathParameters,
-              queryParameters: queryParameters,
-              extra: extra,
-            );
+  }) {
+    if (!mounted || GoRouter.of(this).shouldRedirect(ignoreRedirect)) return;
+    final transition = TransitionInfo(
+      hasTransition: true,
+      transitionType: PageTransitionType.leftToRight,
+      duration: const Duration(milliseconds: 280),
+    );
+    final Map<String, dynamic> mergedExtra;
+    if (extra is Map<String, dynamic>) {
+      mergedExtra = Map<String, dynamic>.from(extra as Map);
+      mergedExtra[kTransitionInfoKey] = transition;
+    } else {
+      mergedExtra = <String, dynamic>{kTransitionInfoKey: transition};
+    }
+    goNamed(
+      name,
+      pathParameters: pathParameters,
+      queryParameters: queryParameters,
+      extra: mergedExtra,
+    );
+  }
 
   void pushNamedAuth(
     String name,
@@ -219,15 +119,27 @@ extension NavigationExtensions on BuildContext {
     Map<String, String> queryParameters = const <String, String>{},
     Object? extra,
     bool ignoreRedirect = false,
-  }) =>
-      !mounted || GoRouter.of(this).shouldRedirect(ignoreRedirect)
-          ? null
-          : pushNamed(
-              name,
-              pathParameters: pathParameters,
-              queryParameters: queryParameters,
-              extra: extra,
-            );
+  }) {
+    if (!mounted || GoRouter.of(this).shouldRedirect(ignoreRedirect)) return;
+    final transition = TransitionInfo(
+      hasTransition: true,
+      transitionType: PageTransitionType.rightToLeft,
+      duration: const Duration(milliseconds: 320),
+    );
+    final Map<String, dynamic> mergedExtra;
+    if (extra is Map<String, dynamic>) {
+      mergedExtra = Map<String, dynamic>.from(extra as Map);
+      mergedExtra[kTransitionInfoKey] = transition;
+    } else {
+      mergedExtra = <String, dynamic>{kTransitionInfoKey: transition};
+    }
+    pushNamed(
+      name,
+      pathParameters: pathParameters,
+      queryParameters: queryParameters,
+      extra: mergedExtra,
+    );
+  }
 
   void safePop() {
     // If there is only one route on the stack, navigate to the initial

@@ -1,6 +1,8 @@
+import '/components/admin_drawer.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/index.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -39,7 +41,14 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+        }
+      },
+      child: GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -47,9 +56,10 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        drawer: buildAdminDrawer(context),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primaryText,
-          automaticallyImplyLeading: false,
+          backgroundColor: FlutterFlowTheme.of(context).primary,
+          automaticallyImplyLeading: true,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
             borderRadius: 30.0,
@@ -61,14 +71,15 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
               size: 30.0,
             ),
             onPressed: () async {
-              context.pop();
+              context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
             },
           ),
           title: Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Text(
+              Expanded(
+                child: Text(
                 'Incentives',
                 style: FlutterFlowTheme.of(context).headlineMedium.override(
                       font: GoogleFonts.interTight(
@@ -88,11 +99,15 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
                       fontStyle:
                           FlutterFlowTheme.of(context).headlineMedium.fontStyle,
                     ),
+                ),
               ),
-              Icon(
-                Icons.add,
-                color: FlutterFlowTheme.of(context).secondaryBackground,
-                size: 24.0,
+              InkWell(
+                onTap: () => context.pushNamedAuth(AddIncentiveWidget.routeName, context.mounted),
+                child: Icon(
+                  Icons.add,
+                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                  size: 24.0,
+                ),
               ),
             ],
           ),
@@ -187,7 +202,9 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
                                 ),
                               ].divide(SizedBox(width: 8.0)),
                             ),
-                            Container(
+                            InkWell(
+                              onTap: () => context.pushNamedAuth(IncentiveDetailsWidget.routeName, context.mounted),
+                              child: Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: FlutterFlowTheme.of(context)
@@ -409,7 +426,10 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
                                 ),
                               ),
                             ),
-                            Container(
+                            ),
+                            InkWell(
+                              onTap: () => context.pushNamedAuth(IncentiveDetailsWidget.routeName, context.mounted),
+                              child: Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: FlutterFlowTheme.of(context)
@@ -631,6 +651,7 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
                                 ),
                               ),
                             ),
+                            ),
                           ].divide(SizedBox(height: 16.0)),
                         ),
                       ),
@@ -642,6 +663,7 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
           ),
         ),
       ),
+    ),
     );
   }
 }

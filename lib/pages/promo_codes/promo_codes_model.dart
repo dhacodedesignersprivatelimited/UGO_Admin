@@ -1,41 +1,44 @@
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import 'promo_codes_widget.dart' show PromoCodesWidget;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+import '/flutter_flow/flutter_flow_util.dart';
 
 class PromoCodesModel extends FlutterFlowModel<PromoCodesWidget> {
-  ///  State fields for stateful widgets in this page.
+  FocusNode? codeNameFocusNode;
+  TextEditingController? codeNameTextController;
+  String? Function(BuildContext, String?)? codeNameTextControllerValidator;
 
-  // State field(s) for TextField widget.
-  FocusNode? textFieldFocusNode1;
-  TextEditingController? textController1;
-  String? Function(BuildContext, String?)? textController1Validator;
-  // State field(s) for TextField widget.
-  FocusNode? textFieldFocusNode2;
-  TextEditingController? textController2;
-  String? Function(BuildContext, String?)? textController2Validator;
-  // State field(s) for TextField widget.
-  FocusNode? textFieldFocusNode3;
-  TextEditingController? textController3;
-  String? Function(BuildContext, String?)? textController3Validator;
+  FocusNode? discountValueFocusNode;
+  TextEditingController? discountValueTextController;
+  String? Function(BuildContext, String?)? discountValueTextControllerValidator;
+
+  FocusNode? maxDiscountFocusNode;
+  TextEditingController? maxDiscountTextController;
+  String? Function(BuildContext, String?)? maxDiscountTextControllerValidator;
+
+  FocusNode? expiryDateFocusNode;
+  TextEditingController? expiryDateTextController;
+  String? Function(BuildContext, String?)? expiryDateTextControllerValidator;
+
+  FocusNode? usageLimitFocusNode;
+  TextEditingController? usageLimitTextController;
+  String? Function(BuildContext, String?)? usageLimitTextControllerValidator;
+
+  String? selectedDiscountType = 'percentage';
 
   @override
   void initState(BuildContext context) {}
 
   @override
   void dispose() {
-    textFieldFocusNode1?.dispose();
-    textController1?.dispose();
-
-    textFieldFocusNode2?.dispose();
-    textController2?.dispose();
-
-    textFieldFocusNode3?.dispose();
-    textController3?.dispose();
+    codeNameFocusNode?.dispose();
+    codeNameTextController?.dispose();
+    discountValueFocusNode?.dispose();
+    discountValueTextController?.dispose();
+    maxDiscountFocusNode?.dispose();
+    maxDiscountTextController?.dispose();
+    expiryDateFocusNode?.dispose();
+    expiryDateTextController?.dispose();
+    usageLimitFocusNode?.dispose();
+    usageLimitTextController?.dispose();
   }
 }

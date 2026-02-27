@@ -18,13 +18,16 @@ class LoginModel extends FlutterFlowModel<LoginWidget> {
   FocusNode? emailFocusNode;
   TextEditingController? emailTextController;
   String? Function(BuildContext, String?)? emailTextControllerValidator;
+
   // State field(s) for password widget.
   FocusNode? passwordFocusNode;
   TextEditingController? passwordTextController;
   late bool passwordVisibility;
   String? Function(BuildContext, String?)? passwordTextControllerValidator;
+
   // State field(s) for Checkbox widget.
   bool? checkboxValue;
+
   // Stores action output result for [Backend Call - API (login)] action in Button widget.
   ApiCallResponse? apiResultpnl;
 
