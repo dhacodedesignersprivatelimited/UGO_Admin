@@ -266,7 +266,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
         ),
         boxShadow: [
           BoxShadow(
-            color: FlutterFlowTheme.of(context).primary.withOpacity(0.35),
+            color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.35),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -277,7 +277,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha:0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.local_taxi_rounded, size: 48, color: Colors.white),
@@ -296,7 +296,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha:0.25),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Text(
@@ -322,7 +322,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha:0.06),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -471,7 +471,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: gradient.last.withOpacity(0.4),
+                  color: gradient.last.withValues(alpha:0.4),
                   blurRadius: 14,
                   offset: const Offset(0, 5),
                 ),
@@ -481,7 +481,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundColor: Colors.white.withOpacity(0.3),
+                  backgroundColor: Colors.white.withValues(alpha:0.3),
                   backgroundImage: avatarUrl != null
                       ? NetworkImage(avatarUrl)
                       : null,
@@ -499,7 +499,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha:0.9),
                           letterSpacing: 1,
                         ),
                       ),
@@ -518,7 +518,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
                           subtitle,
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha:0.9),
                           ),
                         ),
                       ],
@@ -529,7 +529,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha:0.8),
                   ),
               ],
             ),

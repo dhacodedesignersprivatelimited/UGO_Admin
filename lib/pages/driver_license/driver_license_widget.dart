@@ -34,6 +34,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _isLoading = true;
+  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -55,6 +56,94 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
     );
 
     setState(() => _isLoading = false);
+  }
+
+  dynamic _driverData() {
+    return GetDriverByIdCall.data(_model.getdriverid?.jsonBody ?? '');
+  }
+
+  bool _driverBool(String jsonPath, {bool fallback = false}) {
+    final value = getJsonField(_driverData() ?? {}, jsonPath);
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase() == 'true';
+    return fallback;
+  }
+
+  String _driverString(String jsonPath) {
+    return getJsonField(_driverData() ?? {}, jsonPath)?.toString() ?? '';
+  }
+
+  int? _driverInt(String jsonPath) {
+    final value = getJsonField(_driverData() ?? {}, jsonPath);
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  Future<void> _updateDriver({
+    bool? isOnline,
+    bool? isActive,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? mobileNumber,
+    int? preferredCityId,
+    String? accountStatus,
+  }) async {
+    if (widget.userId == null) return;
+    setState(() => _isUpdating = true);
+    final response = await UpdateDriverCall.call(
+      id: widget.userId!,
+      token: currentAuthenticationToken,
+      isOnline: isOnline,
+      isActive: isActive,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      mobileNumber: mobileNumber,
+      preferredCityId: preferredCityId,
+      accountStatus: accountStatus,
+    );
+    if (!mounted) return;
+    setState(() => _isUpdating = false);
+    if (response.succeeded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Driver updated successfully'),
+          backgroundColor: FlutterFlowTheme.of(context).success,
+        ),
+      );
+      await _fetchDriverData();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Update failed (${response.statusCode})'),
+          backgroundColor: FlutterFlowTheme.of(context).error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _openEditDriverDialog() async {
+    final result = await showDialog<_DriverEditData>(
+      context: context,
+      builder: (ctx) => _EditDriverDialog(
+        firstName: _driverString(r'''$.first_name'''),
+        lastName: _driverString(r'''$.last_name'''),
+        email: _driverString(r'''$.email'''),
+        mobileNumber: _driverString(r'''$.mobile_number'''),
+        preferredCityId: _driverInt(r'''$.preferred_city_id'''),
+        accountStatus: _driverString(r'''$.account_status'''),
+      ),
+    );
+    if (result == null) return;
+    await _updateDriver(
+      firstName: result.firstName,
+      lastName: result.lastName,
+      email: result.email,
+      mobileNumber: result.mobileNumber,
+      preferredCityId: result.preferredCityId,
+      accountStatus: result.accountStatus,
+    );
   }
 
   @override
@@ -139,7 +228,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
         border: Border.all(color: FlutterFlowTheme.of(context).alternate),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha:0.03),
             blurRadius: 6.0,
             offset: const Offset(0, 3),
           )
@@ -153,7 +242,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Icon(icon, color: iconColor, size: 28),
@@ -186,7 +275,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                 options: FFButtonOptions(
                   height: 36.0,
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  color: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
+                  color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
                   textStyle: FlutterFlowTheme.of(context).bodyMedium.override(
                     font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                     color: FlutterFlowTheme.of(context).primary,
@@ -284,6 +373,108 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
 
                         const SizedBox(height: 32.0),
 
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24.0),
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).secondaryBackground,
+                          borderRadius: BorderRadius.circular(16.0),
+                          border:
+                              Border.all(color: FlutterFlowTheme.of(context).alternate),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha:0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Driver Status',
+                                  style: FlutterFlowTheme.of(context)
+                                      .titleLarge
+                                      .override(
+                                        font: GoogleFonts.interTight(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                ),
+                                FFButtonWidget(
+                                  onPressed:
+                                      _isUpdating ? null : _openEditDriverDialog,
+                                  text: 'Edit Details',
+                                  options: FFButtonOptions(
+                                    height: 36,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14),
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    textStyle: FlutterFlowTheme.of(context)
+                                        .labelMedium
+                                        .override(
+                                          color: Colors.white,
+                                          font: GoogleFonts.inter(),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8.0),
+                            Text(
+                              'Update active and online status for this driver.',
+                              style: FlutterFlowTheme.of(context).bodyMedium,
+                            ),
+                            const SizedBox(height: 16.0),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Active'),
+                              subtitle: Text(
+                                _driverBool(r'''$.is_active''')
+                                    ? 'Driver is active'
+                                    : 'Driver is inactive',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodySmall
+                                    .override(
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                    ),
+                              ),
+                              value: _driverBool(r'''$.is_active'''),
+                              onChanged: _isUpdating
+                                  ? null
+                                  : (val) => _updateDriver(isActive: val),
+                            ),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Online'),
+                              subtitle: Text(
+                                _driverBool(r'''$.is_online''')
+                                    ? 'Driver is online'
+                                    : 'Driver is offline',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodySmall
+                                    .override(
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                    ),
+                              ),
+                              value: _driverBool(r'''$.is_online'''),
+                              onChanged: _isUpdating
+                                  ? null
+                                  : (val) => _updateDriver(isOnline: val),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32.0),
+
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(24.0),
@@ -293,7 +484,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                             border: Border.all(color: FlutterFlowTheme.of(context).alternate),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
+                                color: Colors.black.withValues(alpha:0.04),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               )
@@ -348,7 +539,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                       icon: const Icon(Icons.close_rounded, size: 18),
                                       options: FFButtonOptions(
                                         height: 50.0,
-                                        color: FlutterFlowTheme.of(context).error.withOpacity(0.1),
+                                        color: FlutterFlowTheme.of(context).error.withValues(alpha:0.1),
                                         textStyle: FlutterFlowTheme.of(context).titleSmall.override(
                                           font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                                           color: FlutterFlowTheme.of(context).error,
@@ -407,6 +598,27 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                             ],
                           ),
                         ),
+                        if (_driverString(r'''$.kyc_status''').toLowerCase() ==
+                            'pending') ...[
+                          const SizedBox(height: 20.0),
+                          FFButtonWidget(
+                            onPressed: () => context.goNamedAuth(
+                                DriverKycListWidget.routeName, context.mounted),
+                            text: 'Go to Driver KYC List',
+                            options: FFButtonOptions(
+                              height: 48.0,
+                              color: FlutterFlowTheme.of(context).primary,
+                              textStyle: FlutterFlowTheme.of(context)
+                                  .titleSmall
+                                  .override(
+                                    color: Colors.white,
+                                    font: GoogleFonts.interTight(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 40.0),
                       ],
                     ),
@@ -417,6 +629,163 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DriverEditData {
+  _DriverEditData({
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.mobileNumber,
+    required this.preferredCityId,
+    required this.accountStatus,
+  });
+
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String mobileNumber;
+  final int? preferredCityId;
+  final String accountStatus;
+}
+
+class _EditDriverDialog extends StatefulWidget {
+  const _EditDriverDialog({
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.mobileNumber,
+    required this.preferredCityId,
+    required this.accountStatus,
+  });
+
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String mobileNumber;
+  final int? preferredCityId;
+  final String accountStatus;
+
+  @override
+  State<_EditDriverDialog> createState() => _EditDriverDialogState();
+}
+
+class _EditDriverDialogState extends State<_EditDriverDialog> {
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _emailController;
+  late TextEditingController _mobileController;
+  late TextEditingController _preferredCityController;
+  late TextEditingController _accountStatusController;
+
+  @override
+  void initState() {
+    super.initState();
+    _firstNameController = TextEditingController(text: widget.firstName);
+    _lastNameController = TextEditingController(text: widget.lastName);
+    _emailController = TextEditingController(text: widget.email);
+    _mobileController = TextEditingController(text: widget.mobileNumber);
+    _preferredCityController = TextEditingController(
+        text: widget.preferredCityId?.toString() ?? '');
+    _accountStatusController = TextEditingController(text: widget.accountStatus);
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _mobileController.dispose();
+    _preferredCityController.dispose();
+    _accountStatusController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final preferredCityId =
+        int.tryParse(_preferredCityController.text.trim());
+    Navigator.pop(
+      context,
+      _DriverEditData(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        mobileNumber: _mobileController.text.trim(),
+        preferredCityId: preferredCityId,
+        accountStatus: _accountStatusController.text.trim(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Driver Details'),
+      content: SizedBox(
+        width: 360,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _firstNameController,
+                decoration: const InputDecoration(labelText: 'First Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _lastNameController,
+                decoration: const InputDecoration(labelText: 'Last Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _mobileController,
+                decoration: const InputDecoration(labelText: 'Mobile Number'),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _preferredCityController,
+                decoration: const InputDecoration(labelText: 'Preferred City ID'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _accountStatusController,
+                decoration: const InputDecoration(labelText: 'Account Status'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: FlutterFlowTheme.of(context).primary,
+            foregroundColor: Colors.white,
+            textStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  color: Colors.white,
+                  font: GoogleFonts.inter(),
+                  fontWeight: FontWeight.w600,
+                ),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

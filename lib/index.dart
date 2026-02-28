@@ -17,6 +17,8 @@ export '/pages/notifications/notifications_widget.dart'
 export '/pages/promo_codes/promo_codes_widget.dart' show PromoCodesWidget;
 export '/pages/driver_license/driver_license_widget.dart'
     show DriverLicenseWidget;
+export '/pages/driver_details/driver_details_widget.dart'
+    show DriverDetailsWidget;
 export '/pages/user_complaints/user_complaints_widget.dart'
     show UserComplaintsWidget;
 export '/pages/reviews/reviews_widget.dart' show ReviewsWidget;
@@ -25,6 +27,8 @@ export '/pages/allusers/allusers_widget.dart' show AllusersWidget;
 export '/pages/user_details/user_details_widget.dart' show UserDetailsWidget;
 export '/pages/blocked_users/blocked_users_widget.dart' show BlockedUsersWidget;
 export '/pages/kyc_pending/kyc_pending_widget.dart' show KycPendingWidget;
+export '/pages/driver_kyc_list/driver_kyc_list_widget.dart'
+    show DriverKycListWidget;
 export '/pages/add_user/add_user_widget.dart' show AddUserWidget;
 export '/pages/add_driver/add_driver_widget.dart' show AddDriverWidget;
 export '/pages/ride_management/ride_management_widget.dart'

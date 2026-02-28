@@ -84,7 +84,7 @@ class _AccountWidgetState extends State<AccountWidget> {
     return Container(
       width: 100,
       height: 100,
-      color: Colors.white.withOpacity(0.3),
+      color: Colors.white.withValues(alpha:0.3),
       child: Icon(Icons.person, size: 50, color: Colors.white),
     );
   }
@@ -115,7 +115,7 @@ class _AccountWidgetState extends State<AccountWidget> {
           border: Border.all(color: FlutterFlowTheme.of(context).alternate, width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha:0.02),
               blurRadius: 5.0,
               offset: const Offset(0, 2),
             )
@@ -126,7 +126,7 @@ class _AccountWidgetState extends State<AccountWidget> {
             Container(
               padding: const EdgeInsets.all(10.0),
               decoration: BoxDecoration(
-                color: iconBgColor.withOpacity(0.15),
+                color: iconBgColor.withValues(alpha:0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 24.0),
@@ -234,7 +234,7 @@ class _AccountWidgetState extends State<AccountWidget> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: FlutterFlowTheme.of(context).primary.withOpacity(0.3),
+                                color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.3),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               )
@@ -250,7 +250,7 @@ class _AccountWidgetState extends State<AccountWidget> {
                                   border: Border.all(color: Colors.white, width: 3.0),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha:0.2),
                                       blurRadius: 10,
                                       offset: const Offset(0, 5),
                                     )
@@ -282,7 +282,7 @@ class _AccountWidgetState extends State<AccountWidget> {
                                 _adminEmail,
                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
                                   font: GoogleFonts.inter(),
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha:0.9),
                                 ),
                               ),
                               const SizedBox(height: 8.0),
@@ -290,7 +290,7 @@ class _AccountWidgetState extends State<AccountWidget> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                 decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha:0.2),
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),
                                   child: Text(
@@ -308,7 +308,7 @@ class _AccountWidgetState extends State<AccountWidget> {
                                   _adminPhone!,
                                   style: FlutterFlowTheme.of(context).bodySmall.override(
                                     font: GoogleFonts.inter(),
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha:0.9),
                                   ),
                                 ),
                               ],

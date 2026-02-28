@@ -101,7 +101,7 @@ class _FareSurgeSettingsWidgetState extends State<FareSurgeSettingsWidget> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: theme.primary.withOpacity(0.2),
+            backgroundColor: theme.primary.withValues(alpha:0.2),
             child: Icon(icon, color: theme.primary),
           ),
           const SizedBox(width: 16),

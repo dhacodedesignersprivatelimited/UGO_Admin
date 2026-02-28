@@ -43,9 +43,9 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.primary.withOpacity(0.1),
+              color: theme.primary.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.primary.withOpacity(0.3)),
+              border: Border.all(color: theme.primary.withValues(alpha:0.3)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -90,7 +90,7 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: theme.primary.withOpacity(0.2),
+            backgroundColor: theme.primary.withValues(alpha:0.2),
             child: Text('${i + 1}', style: TextStyle(color: theme.primary, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 12),
@@ -107,7 +107,7 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
           const SizedBox(width: 12),
           Chip(
             label: Text(statuses[i], style: const TextStyle(fontSize: 11)),
-            backgroundColor: _statusColor(statuses[i]).withOpacity(0.2),
+            backgroundColor: _statusColor(statuses[i]).withValues(alpha:0.2),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           ),
         ],

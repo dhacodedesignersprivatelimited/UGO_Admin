@@ -131,14 +131,14 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
           gradient: LinearGradient(
             colors: isSelected
                 ? [theme.primary, theme.tertiary]
-                : [theme.secondaryBackground, theme.primary.withOpacity(0.05)],
+                : [theme.secondaryBackground, theme.primary.withValues(alpha:0.05)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: theme.primary.withOpacity(isSelected ? 0.3 : 0.1),
+              color: theme.primary.withValues(alpha:isSelected ? 0.3 : 0.1),
               blurRadius: isSelected ? 12 : 6,
               offset: const Offset(0, 4),
             ),
@@ -172,19 +172,19 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [theme.secondaryBackground, theme.primary.withOpacity(0.05)],
+          colors: [theme.secondaryBackground, theme.primary.withValues(alpha:0.05)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: theme.primary.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: theme.primary.withValues(alpha:0.08), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: theme.primary.withOpacity(0.2),
+            backgroundColor: theme.primary.withValues(alpha:0.2),
             child: Icon(Icons.account_balance_wallet, color: theme.primary, size: 20),
           ),
           const SizedBox(width: 12),

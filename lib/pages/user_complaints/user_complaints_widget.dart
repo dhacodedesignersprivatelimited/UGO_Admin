@@ -86,17 +86,17 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
         body: SafeArea(
           top: true,
           child: Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
+            padding: const EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
             child: Column(
               mainAxisSize: MainAxisSize.max,
               children: [
                 Container(
-                  decoration: BoxDecoration(),
+                  decoration: const BoxDecoration(),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
                             16.0, 0.0, 16.0, 0.0),
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
@@ -145,11 +145,11 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                         .fontStyle,
                                   ),
                             ),
-                          ].divide(SizedBox(width: 24.0)),
+                          ].divide(const SizedBox(width: 24.0)),
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
                             16.0, 0.0, 16.0, 0.0),
                         child: Column(
                           mainAxisSize: MainAxisSize.max,
@@ -162,7 +162,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -170,7 +170,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -241,7 +241,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -250,7 +250,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
@@ -262,7 +262,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -270,7 +270,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -341,7 +341,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -350,7 +350,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
@@ -362,7 +362,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -370,7 +370,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -441,7 +441,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -450,7 +450,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
@@ -462,7 +462,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -470,7 +470,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -541,7 +541,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -550,7 +550,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
@@ -562,7 +562,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -570,7 +570,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -641,7 +641,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -650,7 +650,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
@@ -662,7 +662,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -670,7 +670,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -741,7 +741,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -750,7 +750,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
@@ -762,7 +762,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -770,7 +770,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -841,7 +841,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -850,7 +850,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
@@ -862,7 +862,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     .secondaryBackground,
                               ),
                               child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 0.0, 16.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -870,7 +870,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                     Container(
                                       width: 50.0,
                                       height: 50.0,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
@@ -941,7 +941,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                        ].divide(SizedBox(height: 4.0)),
+                                        ].divide(const SizedBox(height: 4.0)),
                                       ),
                                     ),
                                     Icon(
@@ -950,14 +950,14 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                                           .secondaryText,
                                       size: 24.0,
                                     ),
-                                  ].divide(SizedBox(width: 12.0)),
+                                  ].divide(const SizedBox(width: 12.0)),
                                 ),
                               ),
                             ),
-                          ].divide(SizedBox(height: 1.0)),
+                          ].divide(const SizedBox(height: 1.0)),
                         ),
                       ),
-                    ].divide(SizedBox(height: 0.0)),
+                    ].divide(const SizedBox(height: 0.0)),
                   ),
                 ),
               ],

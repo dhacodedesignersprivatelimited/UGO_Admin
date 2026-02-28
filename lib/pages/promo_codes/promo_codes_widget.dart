@@ -141,7 +141,7 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
 
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Enter a code name'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Enter a code name'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -149,7 +149,7 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
     final discountVal = double.tryParse(discountStr) ?? 0;
     if (discountVal <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Enter valid discount value'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Enter valid discount value'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -193,10 +193,10 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
   }
 
   static List<Color> _cardGradients = [
-    Color(0xFFFF6B35),
-    Color(0xFFFF8F65),
-    Color(0xFFE85D04),
-    Color(0xFF249689),
+    const Color(0xFFFF6B35),
+    const Color(0xFFFF8F65),
+    const Color(0xFFE85D04),
+    const Color(0xFF249689),
   ];
 
   Widget _buildPromoCard(dynamic item, int index) {
@@ -214,24 +214,24 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
     final isDeactivating = id != null && _deactivatingIds.contains(id);
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [gradient, gradient.withOpacity(0.8)],
+          colors: [gradient, gradient.withValues(alpha:0.8)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: gradient.withOpacity(0.4),
+            color: gradient.withValues(alpha:0.4),
             blurRadius: 12,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -248,9 +248,9 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha:0.3),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -266,16 +266,16 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
             ),
             if (maxDiscount != null && maxDiscount != 'null' && double.tryParse(maxDiscount) != null && double.parse(maxDiscount) > 0)
               Padding(
-                padding: EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   'Max discount: ₹${maxDiscount}',
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha:0.9),
                   ),
                 ),
               ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -283,21 +283,21 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                   'Used: ${castToType<int>(usage) ?? 0}',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha:0.85),
                   ),
                 ),
                 Text(
                   'Exp: $expiry',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha:0.85),
                   ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: isActive ? Colors.green : Colors.orange,
                         borderRadius: BorderRadius.circular(8),
@@ -312,18 +312,18 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                       ),
                     ),
                     if (isActive && id != null) ...[
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       InkWell(
                         onTap: isDeactivating ? null : () => _deactivatePromo(id),
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
+                            color: Colors.white.withValues(alpha:0.25),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: isDeactivating
-                              ? SizedBox(
+                              ? const SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
@@ -334,8 +334,8 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                               : Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.block, size: 14, color: Colors.white),
-                                    SizedBox(width: 4),
+                                    const Icon(Icons.block, size: 14, color: Colors.white),
+                                    const SizedBox(width: 4),
                                     Text(
                                       'Deactivate',
                                       style: GoogleFonts.inter(
@@ -378,61 +378,61 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
         }
       },
       child: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          FocusManager.instance.primaryFocus?.unfocus();
-        },
-        child: Scaffold(
-          key: scaffoldKey,
-          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        key: scaffoldKey,
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
           drawer: buildAdminDrawer(context),
-          appBar: AppBar(
+        appBar: AppBar(
             backgroundColor: FlutterFlowTheme.of(context).primary,
             automaticallyImplyLeading: true,
-            leading: FlutterFlowIconButton(
-              borderColor: Colors.transparent,
-              borderRadius: 30.0,
-              borderWidth: 1.0,
-              buttonSize: 60.0,
-              icon: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 30.0),
-              onPressed: () async {
+          leading: FlutterFlowIconButton(
+            borderColor: Colors.transparent,
+            borderRadius: 30.0,
+            borderWidth: 1.0,
+            buttonSize: 60.0,
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 30.0),
+            onPressed: () async {
                 context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
-              },
-            ),
-            title: Text(
+            },
+          ),
+          title: Text(
               'Promo Codes',
-              style: FlutterFlowTheme.of(context).headlineMedium.override(
-                    font: GoogleFonts.interTight(
+            style: FlutterFlowTheme.of(context).headlineMedium.override(
+                  font: GoogleFonts.interTight(
                       fontWeight: FlutterFlowTheme.of(context).headlineMedium.fontWeight,
                       fontStyle: FlutterFlowTheme.of(context).headlineMedium.fontStyle,
-                    ),
-                    color: Colors.white,
-                    fontSize: 22.0,
                   ),
-            ),
-            centerTitle: true,
-            elevation: 2.0,
+                  color: Colors.white,
+                  fontSize: 22.0,
+                ),
           ),
-          body: SafeArea(
+          centerTitle: true,
+          elevation: 2.0,
+        ),
+        body: SafeArea(
             child: RefreshIndicator(
               onRefresh: _fetchData,
               child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: ResponsiveContainer(
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     // Create promo section
                     Container(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: FlutterFlowTheme.of(context).secondaryBackground,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: FlutterFlowTheme.of(context).primary.withOpacity(0.12),
+                            color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.12),
                             blurRadius: 20,
-                            offset: Offset(0, 8),
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
@@ -442,9 +442,9 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                           Row(
                             children: [
                               Icon(Icons.add_circle_outline, color: FlutterFlowTheme.of(context).primary, size: 28),
-                              SizedBox(width: 10),
-                              Text(
-                                'Create New Promo Code',
+                              const SizedBox(width: 10),
+                          Text(
+                            'Create New Promo Code',
                                 style: FlutterFlowTheme.of(context).headlineSmall.override(
                                       font: GoogleFonts.interTight(fontWeight: FontWeight.w700),
                                       color: FlutterFlowTheme.of(context).primaryText,
@@ -452,7 +452,7 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
                           TextFormField(
                             controller: _model.codeNameTextController,
@@ -460,76 +460,76 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                             decoration: InputDecoration(
                               labelText: 'Code Name',
                               hintText: 'e.g. NEWUSER50',
-                              prefixIcon: Icon(Icons.local_offer_outlined),
+                              prefixIcon: const Icon(Icons.local_offer_outlined),
                               filled: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             textCapitalization: TextCapitalization.characters,
                             onChanged: (_) => setState(() {}),
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                           DropdownButtonFormField<String>(
                             value: _model.selectedDiscountType ?? 'percentage',
-                            decoration: InputDecoration(
+                              decoration: InputDecoration(
                               labelText: 'Discount Type',
-                              prefixIcon: Icon(Icons.percent),
+                              prefixIcon: const Icon(Icons.percent),
                               filled: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             items: [
-                              DropdownMenuItem(value: 'percentage', child: Text('Percentage (%)')),
-                              DropdownMenuItem(value: 'fixed', child: Text('Fixed (₹)')),
+                              const DropdownMenuItem(value: 'percentage', child: Text('Percentage (%)')),
+                              const DropdownMenuItem(value: 'fixed', child: Text('Fixed (₹)')),
                             ],
                             onChanged: (v) {
                               setState(() => _model.selectedDiscountType = v ?? 'percentage');
                             },
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                           TextFormField(
                             controller: _model.discountValueTextController,
                             focusNode: _model.discountValueFocusNode,
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             decoration: InputDecoration(
                               labelText: _model.selectedDiscountType == 'percentage'
                                   ? 'Discount Value (%)'
                                   : 'Discount Value (₹)',
                               hintText: _model.selectedDiscountType == 'percentage' ? '50' : '100',
-                              prefixIcon: Icon(Icons.discount),
-                              filled: true,
+                              prefixIcon: const Icon(Icons.discount),
+                                filled: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                           TextFormField(
                             controller: _model.maxDiscountTextController,
                             focusNode: _model.maxDiscountFocusNode,
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             decoration: InputDecoration(
                               labelText: 'Max Discount Amount (₹)',
                               hintText: '150',
-                              prefixIcon: Icon(Icons.monetization_on_outlined),
+                              prefixIcon: const Icon(Icons.monetization_on_outlined),
                               filled: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                           TextFormField(
                             controller: _model.expiryDateTextController,
                             focusNode: _model.expiryDateFocusNode,
                             readOnly: true,
-                            decoration: InputDecoration(
+                              decoration: InputDecoration(
                               labelText: 'Expiry Date',
-                              prefixIcon: Icon(Icons.calendar_today),
+                              prefixIcon: const Icon(Icons.calendar_today),
                               filled: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             onTap: _pickExpiryDate,
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                           TextFormField(
                             controller: _model.usageLimitTextController,
@@ -538,17 +538,17 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                             decoration: InputDecoration(
                               labelText: 'Usage Limit',
                               hintText: '1000',
-                              prefixIcon: Icon(Icons.people_outline),
-                              filled: true,
+                              prefixIcon: const Icon(Icons.people_outline),
+                                filled: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
                           FFButtonWidget(
                             onPressed: _createPromo,
                             text: 'Create Promo Code',
-                            icon: Icon(Icons.add, color: Colors.white, size: 22),
+                            icon: const Icon(Icons.add, color: Colors.white, size: 22),
                             options: FFButtonOptions(
                               width: double.infinity,
                               height: 52,
@@ -564,51 +564,51 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 28),
+                    const SizedBox(height: 28),
 
                     // Promo list section
                     Row(
-                      children: [
+                                    children: [
                         Icon(Icons.list_alt, color: FlutterFlowTheme.of(context).primary, size: 26),
-                        SizedBox(width: 10),
-                        Text(
+                        const SizedBox(width: 10),
+                                          Text(
                           'Active Promo Codes',
                           style: FlutterFlowTheme.of(context).headlineSmall.override(
                                 font: GoogleFonts.interTight(fontWeight: FontWeight.w700),
                                 color: FlutterFlowTheme.of(context).primaryText,
-                              ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                    const SizedBox(height: 16),
 
                     if (_loadingPromos)
                       Center(
                         child: Padding(
-                          padding: EdgeInsets.all(40),
+                          padding: const EdgeInsets.all(40),
                           child: CircularProgressIndicator(color: FlutterFlowTheme.of(context).primary),
                         ),
                       )
                     else if (_promoCodes.isEmpty)
                       Container(
-                        padding: EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
                           color: FlutterFlowTheme.of(context).secondaryBackground,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Center(
                           child: Column(
-                            children: [
+                                    children: [
                               Icon(Icons.local_offer_outlined, size: 64, color: Colors.grey.shade400),
-                              SizedBox(height: 16),
-                              Text(
+                              const SizedBox(height: 16),
+                                          Text(
                                 'No promo codes yet',
                                 style: FlutterFlowTheme.of(context).bodyLarge.override(
                                       font: GoogleFonts.inter(),
                                       color: FlutterFlowTheme.of(context).secondaryText,
-                                    ),
-                              ),
-                              Text(
+                                                ),
+                                          ),
+                                          Text(
                                 'Create your first promo above',
                                 style: FlutterFlowTheme.of(context).bodySmall,
                               ),
@@ -621,7 +621,7 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
                         children: List.generate(_promoCodes.length, (i) => _buildPromoCard(_promoCodes[i], i)),
                       ),
                   ],
-                ),
+                  ),
                 ),
               ),
             ),

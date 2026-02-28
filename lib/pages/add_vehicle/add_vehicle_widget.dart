@@ -375,7 +375,7 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  FlutterFlowTheme.of(context).primary.withOpacity(0.12),
+                  FlutterFlowTheme.of(context).primary.withValues(alpha:0.12),
                   FlutterFlowTheme.of(context).secondaryBackground,
                 ],
               ),
@@ -424,12 +424,12 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha:0.06),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: FlutterFlowTheme.of(context).primary.withOpacity(0.08),
+                    color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 4),
                   ),
@@ -458,13 +458,13 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            FlutterFlowTheme.of(context).primary.withOpacity(0.1),
-                            FlutterFlowTheme.of(context).secondary.withOpacity(0.08),
+                            FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
+                            FlutterFlowTheme.of(context).secondary.withValues(alpha:0.08),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: FlutterFlowTheme.of(context).primary.withOpacity(0.3),
+                          color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.3),
                           width: 2,
                         ),
                       ),
@@ -578,12 +578,12 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha:0.06),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: FlutterFlowTheme.of(context).primary.withOpacity(0.08),
+                    color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 4),
                   ),
@@ -715,7 +715,7 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).primary.withOpacity(0.08),
+                        color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -825,13 +825,13 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            FlutterFlowTheme.of(context).primary.withOpacity(0.1),
-                            FlutterFlowTheme.of(context).secondary.withOpacity(0.08),
+                            FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
+                            FlutterFlowTheme.of(context).secondary.withValues(alpha:0.08),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: FlutterFlowTheme.of(context).primary.withOpacity(0.3),
+                          color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.3),
                           width: 2,
                         ),
                       ),

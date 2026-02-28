@@ -65,7 +65,7 @@ class _LiveDriverMapWidgetState extends State<LiveDriverMapWidget> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.map, size: 80, color: theme.primary.withOpacity(0.5)),
+                    Icon(Icons.map, size: 80, color: theme.primary.withValues(alpha:0.5)),
                     const SizedBox(height: 16),
                     Text(
                       'Map View',
@@ -105,7 +105,7 @@ class _LiveDriverMapWidgetState extends State<LiveDriverMapWidget> {
       label: Text(label),
       selected: selected,
       onSelected: (_) => safeSetState(() {}),
-      selectedColor: theme.primary.withOpacity(0.3),
+      selectedColor: theme.primary.withValues(alpha:0.3),
       checkmarkColor: theme.primary,
     );
   }

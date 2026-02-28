@@ -218,7 +218,7 @@ class _UserDetailsWidgetState extends State<UserDetailsWidget> {
                                 FlutterFlowTheme.of(context).primary,
                                 FlutterFlowTheme.of(context)
                                     .primary
-                                    .withOpacity(0.8),
+                                    .withValues(alpha:0.8),
                               ],
                             ),
                           ),
@@ -248,7 +248,7 @@ class _UserDetailsWidgetState extends State<UserDetailsWidget> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha:0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -276,7 +276,7 @@ class _UserDetailsWidgetState extends State<UserDetailsWidget> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.06),
+                                color: Colors.black.withValues(alpha:0.06),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -539,7 +539,7 @@ class _UserDetailsWidgetState extends State<UserDetailsWidget> {
 
     return CircleAvatar(
       radius: 56,
-      backgroundColor: Colors.white.withOpacity(0.3),
+      backgroundColor: Colors.white.withValues(alpha:0.3),
       child: imgUrl != null && imgUrl.isNotEmpty
           ? ClipOval(
               child: Image.network(
@@ -547,14 +547,14 @@ class _UserDetailsWidgetState extends State<UserDetailsWidget> {
                 width: 112,
                 height: 112,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Icon(
+                errorBuilder: (_, __, ___) => const Icon(
                   Icons.person,
                   size: 56,
                   color: Colors.white,
                 ),
               ),
             )
-          : Icon(Icons.person, size: 56, color: Colors.white),
+          : const Icon(Icons.person, size: 56, color: Colors.white),
     );
   }
 

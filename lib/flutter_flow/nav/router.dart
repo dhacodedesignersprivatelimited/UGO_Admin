@@ -81,6 +81,15 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         },
       ).toRoute(appStateNotifier),
       FFRoute(
+        name: DriverDetailsWidget.routeName,
+        path: DriverDetailsWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) {
+          final driverId = params.getParam('driverId', ParamType.int) as int?;
+          return DriverDetailsWidget(driverId: driverId);
+        },
+      ).toRoute(appStateNotifier),
+      FFRoute(
         name: UserDetailsWidget.routeName,
         path: UserDetailsWidget.routePath,
         requireAuth: true,
@@ -112,6 +121,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         path: KycPendingWidget.routePath,
         requireAuth: true,
         builder: (context, params) => const KycPendingWidget(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: DriverKycListWidget.routeName,
+        path: DriverKycListWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const DriverKycListWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: EarningsWidget.routeName,

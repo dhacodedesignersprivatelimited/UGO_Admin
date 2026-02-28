@@ -186,7 +186,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: FlutterFlowTheme.of(context).primary.withOpacity(0.12),
+                            color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.12),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -203,7 +203,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                   gradient: LinearGradient(
                                     colors: [
                                       FlutterFlowTheme.of(context).primary,
-                                      FlutterFlowTheme.of(context).primary.withOpacity(0.8),
+                                      FlutterFlowTheme.of(context).primary.withValues(alpha:0.8),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -425,12 +425,12 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [gradient, gradient.withOpacity(0.85)],
+          colors: [gradient, gradient.withValues(alpha:0.85)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: gradient.withOpacity(0.35),
+            color: gradient.withValues(alpha:0.35),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -458,7 +458,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha:0.9),
                     ),
                   ),
                 ],
@@ -468,7 +468,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
               time,
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha:0.85),
               ),
             ),
           ],

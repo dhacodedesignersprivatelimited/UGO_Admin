@@ -190,7 +190,7 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
                       Icon(
                         Icons.block_rounded,
                         size: 80,
-                        color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.5),
+                        color: FlutterFlowTheme.of(context).secondaryText.withValues(alpha:0.5),
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -260,7 +260,7 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       leading: CircleAvatar(
                         radius: 28,
-                        backgroundColor: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
+                        backgroundColor: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
                         backgroundImage: imgUrl != null ? NetworkImage(imgUrl) : null,
                         child: imgUrl == null
                             ? Icon(Icons.person, color: FlutterFlowTheme.of(context).primary, size: 28)
@@ -280,7 +280,7 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
+                                color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(

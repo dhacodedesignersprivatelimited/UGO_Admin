@@ -456,7 +456,7 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
           color: theme.secondaryBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: hasImage ? theme.primary.withOpacity(0.5) : theme.alternate,
+            color: hasImage ? theme.primary.withValues(alpha:0.5) : theme.alternate,
             width: hasImage ? 2 : 1,
           ),
         ),

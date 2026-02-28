@@ -1,8 +1,8 @@
-import 'allusers_widget.dart' show AllusersWidget;
+import 'driver_kyc_list_widget.dart' show DriverKycListWidget;
 import 'package:flutter/material.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
-class AllusersModel extends FlutterFlowModel<AllusersWidget> {
+class DriverKycListModel extends FlutterFlowModel<DriverKycListWidget> {
   @override
   void initState(BuildContext context) {}
 

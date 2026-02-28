@@ -83,12 +83,12 @@ class _RideManagementWidgetState extends State<RideManagementWidget>
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [theme.primary.withOpacity(0.1), theme.secondaryBackground],
+                colors: [theme.primary.withValues(alpha:0.1), theme.secondaryBackground],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
               boxShadow: [
-                BoxShadow(color: theme.primary.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2)),
+                BoxShadow(color: theme.primary.withValues(alpha:0.1), blurRadius: 8, offset: const Offset(0, 2)),
               ],
             ),
             child: TabBar(
@@ -189,7 +189,7 @@ class _RideManagementWidgetState extends State<RideManagementWidget>
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha:0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -198,7 +198,7 @@ class _RideManagementWidgetState extends State<RideManagementWidget>
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               leading: CircleAvatar(
-                backgroundColor: theme.primary.withOpacity(0.2),
+                backgroundColor: theme.primary.withValues(alpha:0.2),
                 child: Icon(Icons.local_taxi, color: theme.primary),
               ),
               title: Text(
@@ -216,7 +216,7 @@ class _RideManagementWidgetState extends State<RideManagementWidget>
                   (rideStatus).toUpperCase(),
                   style: const TextStyle(fontSize: 10),
                 ),
-                backgroundColor: _statusColor(rideStatus.toLowerCase()).withOpacity(0.2),
+                backgroundColor: _statusColor(rideStatus.toLowerCase()).withValues(alpha:0.2),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               ),
               onTap: id != null

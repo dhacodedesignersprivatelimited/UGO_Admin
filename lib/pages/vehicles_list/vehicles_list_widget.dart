@@ -196,7 +196,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                FlutterFlowTheme.of(context).primary.withOpacity(0.08),
+                FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
                 FlutterFlowTheme.of(context).secondaryBackground,
               ],
             ),
@@ -282,7 +282,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
                                         FFButtonWidget(
                                           onPressed: () => context.pushNamedAuth(AddVehicleWidget.routeName, context.mounted),
                                           text: 'Add Vehicle',
-                                          icon: Icon(
+                                          icon: const Icon(
                                             Icons.add,
                                             color: Colors.white,
                                             size: 20,
@@ -388,6 +388,19 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
             )
           else
             ...subVehicles.map((v) => _buildSubVehicleTile(v)),
+          if (subVehicles.isNotEmpty) ...[
+            const Divider(height: 24),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                'Pricing',
+                style: FlutterFlowTheme.of(context).titleMedium.override(
+                      font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                    ),
+              ),
+            ),
+            ...subVehicles.map((v) => _buildPricingTile(v)),
+          ],
         ],
       ),
     );
@@ -458,6 +471,88 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
     );
   }
 
+  Widget _buildPricingTile(Map<String, dynamic> vehicle) {
+    final name = getJsonField(vehicle, r'''$.vehicle_name''') ??
+        getJsonField(vehicle, r'''$.name''') ??
+        getJsonField(vehicle, r'''$.vehicleName''') ??
+        'Vehicle';
+    return ListTile(
+      leading: Icon(
+        Icons.payments_outlined,
+        color: FlutterFlowTheme.of(context).primary,
+      ),
+      title: Text(
+        name.toString(),
+        style: FlutterFlowTheme.of(context).titleSmall,
+      ),
+      trailing: FFButtonWidget(
+        onPressed: () => _openPricingDialog(vehicle),
+        text: 'Set Pricing',
+        options: FFButtonOptions(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          color: FlutterFlowTheme.of(context).primary,
+          textStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                color: Colors.white,
+                font: GoogleFonts.inter(),
+                fontWeight: FontWeight.w600,
+              ),
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openPricingDialog(Map<String, dynamic> vehicle) async {
+    final rawId = getJsonField(vehicle, r'''$.id''') ??
+        getJsonField(vehicle, r'''$.vehicle_id''') ??
+        getJsonField(vehicle, r'''$.vehicleId''');
+    final vehicleId = rawId is int ? rawId : int.tryParse(rawId.toString());
+    if (vehicleId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Vehicle ID missing.'),
+            backgroundColor: FlutterFlowTheme.of(context).error,
+          ),
+        );
+      }
+      return;
+    }
+
+    final result = await showDialog<_PricingFormData>(
+      context: context,
+      builder: (ctx) => const _SetPricingDialog(),
+    );
+    if (result == null) return;
+
+    final response = await SetPricingCall.call(
+      token: currentAuthenticationToken,
+      vehicleId: vehicleId,
+      baseKmStart: result.baseKmStart,
+      baseKmEnd: result.baseKmEnd,
+      baseFare: result.baseFare,
+      pricePerKm: result.pricePerKm,
+    );
+
+    if (!mounted) return;
+    if (response.succeeded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Pricing updated successfully'),
+          backgroundColor: FlutterFlowTheme.of(context).primary,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to set pricing (${response.statusCode})'),
+          backgroundColor: FlutterFlowTheme.of(context).error,
+        ),
+      );
+    }
+  }
+
   Widget _buildOrphanVehiclesSection() {
     final orphans = _getOrphanVehicles();
     if (orphans.isEmpty) return const SizedBox.shrink();
@@ -518,6 +613,161 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
         ),
         children: _adminVehicles.map((v) => _buildSubVehicleTile(v)).toList(),
       ),
+    );
+  }
+}
+
+class _PricingFormData {
+  _PricingFormData({
+    required this.baseKmStart,
+    required this.baseKmEnd,
+    required this.baseFare,
+    required this.pricePerKm,
+  });
+
+  final int baseKmStart;
+  final int baseKmEnd;
+  final num baseFare;
+  final num pricePerKm;
+}
+
+class _SetPricingDialog extends StatefulWidget {
+  const _SetPricingDialog();
+
+  @override
+  State<_SetPricingDialog> createState() => _SetPricingDialogState();
+}
+
+class _SetPricingDialogState extends State<_SetPricingDialog> {
+  late TextEditingController _baseKmStartController;
+  late TextEditingController _baseKmEndController;
+  late TextEditingController _baseFareController;
+  late TextEditingController _pricePerKmController;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _baseKmStartController = TextEditingController();
+    _baseKmEndController = TextEditingController();
+    _baseFareController = TextEditingController();
+    _pricePerKmController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _baseKmStartController.dispose();
+    _baseKmEndController.dispose();
+    _baseFareController.dispose();
+    _pricePerKmController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final baseKmStart = int.tryParse(_baseKmStartController.text.trim());
+    final baseKmEnd = int.tryParse(_baseKmEndController.text.trim());
+    final baseFare = num.tryParse(_baseFareController.text.trim());
+    final pricePerKm = num.tryParse(_pricePerKmController.text.trim());
+
+    if (baseKmStart == null ||
+        baseKmEnd == null ||
+        baseFare == null ||
+        pricePerKm == null) {
+      setState(() {
+        _errorText = 'Please enter valid numbers in all fields.';
+      });
+      return;
+    }
+
+    Navigator.pop(
+      context,
+      _PricingFormData(
+        baseKmStart: baseKmStart,
+        baseKmEnd: baseKmEnd,
+        baseFare: baseFare,
+        pricePerKm: pricePerKm,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Set Pricing'),
+      content: SizedBox(
+        width: 320,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _baseKmStartController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Base KM Start',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _baseKmEndController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Base KM End',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _baseFareController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Base Fare',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pricePerKmController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Price per KM',
+                ),
+              ),
+              if (_errorText != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _errorText!,
+                  style: FlutterFlowTheme.of(context).bodySmall.override(
+                        color: FlutterFlowTheme.of(context).error,
+                        font: GoogleFonts.inter(),
+                      ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: FlutterFlowTheme.of(context).primary,
+            foregroundColor: Colors.white,
+            textStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  color: Colors.white,
+                  font: GoogleFonts.inter(),
+                  fontWeight: FontWeight.w600,
+                ),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

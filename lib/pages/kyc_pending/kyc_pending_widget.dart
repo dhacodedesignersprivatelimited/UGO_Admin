@@ -202,7 +202,7 @@ class _KycPendingWidgetState extends State<KycPendingWidget> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.verified_user, size: 80, color: FlutterFlowTheme.of(context).primary.withOpacity(0.5)),
+                      Icon(Icons.verified_user, size: 80, color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.5)),
                       const SizedBox(height: 24),
                       Text('No pending KYC', style: FlutterFlowTheme.of(context).titleLarge.override(font: GoogleFonts.interTight(fontWeight: FontWeight.w600))),
                       const SizedBox(height: 8),
@@ -259,7 +259,7 @@ class _KycPendingWidgetState extends State<KycPendingWidget> {
                             children: [
                               CircleAvatar(
                                 radius: 24,
-                                backgroundColor: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
+                                backgroundColor: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
                                 child: Icon(Icons.person, color: FlutterFlowTheme.of(context).primary),
                               ),
                               const SizedBox(width: 16),
@@ -276,7 +276,7 @@ class _KycPendingWidgetState extends State<KycPendingWidget> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
+                                            color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Text('ID: $driverId', style: FlutterFlowTheme.of(context).labelSmall.override(font: GoogleFonts.inter(), color: FlutterFlowTheme.of(context).primary)),

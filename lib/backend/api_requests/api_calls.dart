@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import 'api_config.dart';
@@ -123,6 +122,50 @@ class AddVehicleCall {
       alwaysAllowBody: false,
     );
   }
+}
+
+class SetPricingCall {
+  /// POST /api/pricing/set
+  /// Body: { vehicle_id, base_km_start, base_km_end, base_fare, price_per_km }
+  static Future<ApiCallResponse> call({
+    required int vehicleId,
+    required int baseKmStart,
+    required int baseKmEnd,
+    required num baseFare,
+    required num pricePerKm,
+    String? token = '',
+  }) async {
+    final body = json.encode({
+      'vehicle_id': vehicleId,
+      'base_km_start': baseKmStart,
+      'base_km_end': baseKmEnd,
+      'base_fare': baseFare,
+      'price_per_km': pricePerKm,
+    });
+    return ApiManager.instance.makeApiCall(
+      callName: 'setPricing',
+      apiUrl: '${ApiConfig.apiBase}/pricing/set',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static dynamic pricing(dynamic response) => getJsonField(
+        response,
+        r'''$.pricing''',
+      );
 }
 
 class GetRidersCall {
@@ -419,10 +462,10 @@ class GetDriversCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'get drivers',
-      apiUrl: '${ApiConfig.apiBase}/drivers/getall',
+      apiUrl: 'https://ugo-api.icacorp.org/api/drivers/getall',
       callType: ApiCallType.GET,
       headers: {
-        'Authorization': 'Bearer ${token}',
+        'Authorization': 'Bearer $token',
       },
       params: {},
       returnBody: true,
@@ -600,6 +643,92 @@ class GetDriverByIdCall {
         response,
         r'''$.data.profile_image''',
       ));
+}
+
+class UpdateDriverCall {
+  /// PUT /api/drivers/:id
+  /// Body: { is_online, is_active, first_name, last_name, email, mobile_number, preferred_city_id, account_status }
+  static Future<ApiCallResponse> call({
+    required int id,
+    bool? isOnline,
+    bool? isActive,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? mobileNumber,
+    int? preferredCityId,
+    String? accountStatus,
+    String? token = '',
+  }) async {
+    final bodyMap = <String, dynamic>{};
+    if (isOnline != null) bodyMap['is_online'] = isOnline;
+    if (isActive != null) bodyMap['is_active'] = isActive;
+    if (firstName != null && firstName.isNotEmpty) {
+      bodyMap['first_name'] = firstName;
+    }
+    if (lastName != null && lastName.isNotEmpty) {
+      bodyMap['last_name'] = lastName;
+    }
+    if (email != null && email.isNotEmpty) bodyMap['email'] = email;
+    if (mobileNumber != null && mobileNumber.isNotEmpty) {
+      bodyMap['mobile_number'] = mobileNumber;
+    }
+    if (preferredCityId != null) {
+      bodyMap['preferred_city_id'] = preferredCityId;
+    }
+    if (accountStatus != null && accountStatus.isNotEmpty) {
+      bodyMap['account_status'] = accountStatus;
+    }
+
+    return ApiManager.instance.makeApiCall(
+      callName: 'UpdateDriver',
+      apiUrl: '${ApiConfig.apiBase}/drivers/$id',
+      callType: ApiCallType.PUT,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: json.encode(bodyMap),
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class UpdateDriverStatusCall {
+  /// PATCH /api/drivers/:id/status
+  /// Body: { active_driver: true/false }
+  static Future<ApiCallResponse> call({
+    required int id,
+    required bool activeDriver,
+    String? token = '',
+  }) async {
+    final body = json.encode({'active_driver': activeDriver});
+    return ApiManager.instance.makeApiCall(
+      callName: 'UpdateDriverStatus',
+      apiUrl: '${ApiConfig.apiBase}/drivers/$id/status',
+      callType: ApiCallType.PATCH,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
 }
 
 class ApiPagingParams {
@@ -973,6 +1102,9 @@ class GetCitiesCall {
       alwaysAllowBody: false,
     );
   }
+
+  static List? data(dynamic response) =>
+      getJsonField(response, r'''$.data''', true) as List?;
 }
 
 class GetZonesCall {
@@ -996,6 +1128,9 @@ class GetZonesCall {
       alwaysAllowBody: false,
     );
   }
+
+  static List? data(dynamic response) =>
+      getJsonField(response, r'''$.data''', true) as List?;
 }
 
 class AddCityCall {
@@ -1029,6 +1164,9 @@ class AddCityCall {
       alwaysAllowBody: false,
     );
   }
+
+  static Map<String, dynamic>? data(dynamic response) =>
+      getJsonField(response, r'''$.data''') as Map<String, dynamic>?;
 }
 
 class AddZoneCall {
@@ -1036,13 +1174,21 @@ class AddZoneCall {
     String? token = '',
     required String name,
     required int cityId,
-    String? coordinates,
+    String type = 'radius',
+    double? centerLat,
+    double? centerLng,
+    double? radiusKm,
+    String? polygonJson,
     bool? isActive = true,
   }) async {
     final body = json.encode({
-      'name': name,
       'city_id': cityId,
-      if (coordinates != null) 'coordinates': coordinates,
+      'name': name,
+      'type': type,
+      if (centerLat != null) 'center_lat': centerLat,
+      if (centerLng != null) 'center_lng': centerLng,
+      if (radiusKm != null) 'radius_km': radiusKm,
+      if (polygonJson != null) 'polygon_json': polygonJson,
       if (isActive != null) 'is_active': isActive,
     });
     return ApiManager.instance.makeApiCall(
@@ -1064,6 +1210,9 @@ class AddZoneCall {
       alwaysAllowBody: false,
     );
   }
+
+  static Map<String, dynamic>? data(dynamic response) =>
+      getJsonField(response, r'''$.data''') as Map<String, dynamic>?;
 }
 
 // ============ 8. Promo Codes ============
@@ -1895,33 +2044,8 @@ class UpdateFinanceSettingsCall {
 }
 
 
-String _toEncodable(dynamic item) {
-  return item;
-}
 
-String _serializeList(List? list) {
-  list ??= <String>[];
-  try {
-    return json.encode(list, toEncodable: _toEncodable);
-  } catch (_) {
-    if (kDebugMode) {
-      print("List serialization failed. Returning empty list.");
-    }
-    return '[]';
-  }
-}
 
-String _serializeJson(dynamic jsonVar, [bool isList = false]) {
-  jsonVar ??= (isList ? [] : {});
-  try {
-    return json.encode(jsonVar, toEncodable: _toEncodable);
-  } catch (_) {
-    if (kDebugMode) {
-      print("Json serialization failed. Returning empty json.");
-    }
-    return isList ? '[]' : '{}';
-  }
-}
 
 String? escapeStringForJson(String? input) {
   if (input == null) {

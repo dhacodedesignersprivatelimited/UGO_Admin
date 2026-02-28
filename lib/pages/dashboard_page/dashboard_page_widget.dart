@@ -48,9 +48,9 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
   Future<void> _fetchDashboardData() async {
     setState(() => _isLoading = true);
 
-    _model.dashboard = await DashBoardCall.call(
-      token: currentAuthenticationToken,
-    );
+      _model.dashboard = await DashBoardCall.call(
+        token: currentAuthenticationToken,
+      );
 
     if (_model.dashboard?.succeeded ?? false) {
       FFAppState().totalUsers = getJsonField(
@@ -101,7 +101,7 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: gradientColors.last.withOpacity(0.3),
+            color: gradientColors.last.withValues(alpha:0.3),
             blurRadius: 10,
             offset: const Offset(0, 5),
           )
@@ -114,23 +114,23 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               // RESPONSIVE FIX: Let the column size to its children
               mainAxisSize: MainAxisSize.min,
-              children: [
+                              children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                                  children: [
                     // RESPONSIVE FIX: Expanded allows text to wrap if it's too long
-                    Expanded(
+                                    Expanded(
                       child: Text(
                         title,
                         style: FlutterFlowTheme.of(context).titleSmall.override(
                           font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha:0.9),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -152,13 +152,13 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                       font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                       color: Colors.white,
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                                                        ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
     );
   }
 
@@ -171,13 +171,13 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
     required VoidCallback onTap,
   }) {
     return Container(
-      decoration: BoxDecoration(
+                                        decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(color: FlutterFlowTheme.of(context).alternate),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha:0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           )
@@ -188,45 +188,45 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12.0),
           onTap: onTap,
-          child: Padding(
+                                        child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Row(
-              children: [
+                                            children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
+                                        decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: FlutterFlowTheme.of(context).primary, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
+                                          child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+                                            children: [
+                                              Text(
                         title,
                         style: FlutterFlowTheme.of(context).titleMedium.override(
                           font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Text(
+                                                        ),
+                                              ),
+                                              Text(
                         subtitle,
                         style: FlutterFlowTheme.of(context).bodySmall.override(
                           font: GoogleFonts.inter(),
                           color: FlutterFlowTheme.of(context).secondaryText,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                                                        ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                 Icon(Icons.chevron_right, color: FlutterFlowTheme.of(context).secondaryText),
-              ],
-            ),
-          ),
-        ),
-      ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
     );
   }
 
@@ -270,10 +270,10 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                 : SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: ResponsiveContainer(
-                child: Column(
+                                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+                                      children: [
+                                        Text(
                       'Overview',
                       style: FlutterFlowTheme.of(context).headlineSmall.override(
                         font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
@@ -284,7 +284,7 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                     // Vibrant Stat Cards Grid
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                                      children: [
                         Expanded(
                           child: _buildStatCard(
                             context: context,
@@ -314,7 +314,7 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                     const SizedBox(height: 12.0),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                                          children: [
                         Expanded(
                           child: _buildStatCard(
                             context: context,
@@ -343,7 +343,7 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                         .slideY(begin: 0.08, end: 0, duration: 380.ms, delay: 80.ms, curve: Curves.easeOutCubic),
 
                     const SizedBox(height: 32.0),
-                    Text(
+                                            Text(
                       'Quick Actions',
                       style: FlutterFlowTheme.of(context).headlineSmall.override(
                         font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
@@ -398,32 +398,32 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                     const SizedBox(height: 32.0),
 
                     // --- Settings Module ---
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
                         color: FlutterFlowTheme.of(context).secondaryBackground,
                         borderRadius: BorderRadius.circular(16.0),
                         border: Border.all(color: FlutterFlowTheme.of(context).alternate),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: Colors.black.withValues(alpha:0.03),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
                         ],
                       ),
                       padding: const EdgeInsets.all(20.0),
-                      child: Column(
+                                    child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
+                                          children: [
+                                            Text(
                             'Referral System Settings',
                             style: FlutterFlowTheme.of(context).titleMedium.override(
                               font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(height: 4.0),
-                          Text(
+                                            Text(
                             'Set the percentage amount awarded on referral rides.',
                             style: FlutterFlowTheme.of(context).bodySmall,
                           ),
@@ -450,7 +450,7 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                           ),
                           const SizedBox(height: 16.0),
                           Row(
-                            children: [
+                                          children: [
                               Expanded(
                                 child: FFButtonWidget(
                                   onPressed: () => _model.textController?.clear(),
@@ -493,12 +493,12 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
                     const SizedBox(height: 40.0),
                   ],
                 ),
-              ),
-            ),
+                                    ),
+                                  ),
+                                ),
           ),
         ),
       ),
-    ),
     );
   }
 }

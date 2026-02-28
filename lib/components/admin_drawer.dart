@@ -27,7 +27,7 @@ Widget buildAdminDrawer(BuildContext context) {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 32),
@@ -46,7 +46,7 @@ Widget buildAdminDrawer(BuildContext context) {
                 'Control Center',
                 style: theme.bodySmall.override(
                   font: GoogleFonts.inter(),
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha:0.8),
                   fontSize: 12,
                 ),
               ),
@@ -64,6 +64,8 @@ Widget buildAdminDrawer(BuildContext context) {
         _drawerSection(context, 'Users & Drivers'),
         _drawerItem(context, Icons.people, 'All Users & Drivers', () =>
             context.goNamedAuth(AllusersWidget.routeName, context.mounted)),
+        _drawerItem(context, Icons.drive_eta, 'Drivers', () =>
+            context.goNamedAuth(DriversWidget.routeName, context.mounted)),
         _drawerItem(context, Icons.person_add, 'Add User', () =>
             context.goNamedAuth(AddUserWidget.routeName, context.mounted)),
         _drawerItem(context, Icons.drive_eta, 'Add Driver', () =>
@@ -72,6 +74,8 @@ Widget buildAdminDrawer(BuildContext context) {
             context.goNamedAuth(BlockedUsersWidget.routeName, context.mounted)),
         _drawerItem(context, Icons.verified_user, 'KYC Pending', () =>
             context.goNamedAuth(KycPendingWidget.routeName, context.mounted)),
+        _drawerItem(context, Icons.assignment_turned_in, 'Driver KYC List', () =>
+            context.goNamedAuth(DriverKycListWidget.routeName, context.mounted)),
         _drawerDivider(context),
         _drawerSection(context, 'Finance'),
         _drawerItem(context, Icons.account_balance_wallet, 'Wallet Management', () =>

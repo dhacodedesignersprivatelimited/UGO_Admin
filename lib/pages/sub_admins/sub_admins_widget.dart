@@ -160,7 +160,7 @@ class _SubAdminsWidgetState extends State<SubAdminsWidget> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: theme.primary.withOpacity(0.2),
+            backgroundColor: theme.primary.withValues(alpha:0.2),
             child: Icon(Icons.admin_panel_settings, color: theme.primary, size: 20),
           ),
           const SizedBox(width: 16),
@@ -191,7 +191,7 @@ class _SubAdminsWidgetState extends State<SubAdminsWidget> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: theme.primary.withOpacity(0.2),
+            backgroundColor: theme.primary.withValues(alpha:0.2),
             child: Text(
               email.isNotEmpty ? email[0].toUpperCase() : '?',
               style: TextStyle(color: theme.primary, fontWeight: FontWeight.bold),

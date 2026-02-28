@@ -41,6 +41,40 @@ class _LoginWidgetState extends State<LoginWidget> {
     _model.passwordFocusNode ??= FocusNode();
   }
 
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: TextField(
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'Admin Email',
+            hintText: 'Enter your email',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              showSnackbar(
+                context,
+                'Password reset is not configured yet.',
+              );
+            },
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _model.dispose();
@@ -74,7 +108,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     boxShadow: [
                       BoxShadow(
                         blurRadius: 12.0,
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha:0.08),
                         offset: const Offset(0, 4),
                       )
                     ],
@@ -90,18 +124,20 @@ class _LoginWidgetState extends State<LoginWidget> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Admin Icon / Logo Placeholder
+                        // Admin Logo
                         Container(
                           width: 80.0,
                           height: 80.0,
                           decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
+                            color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            Icons.admin_panel_settings_rounded,
-                            color: FlutterFlowTheme.of(context).primary,
-                            size: 44.0,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(40),
+                            child: Image.asset(
+                              'assets/images/admin_icon.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24.0),
@@ -248,13 +284,15 @@ class _LoginWidgetState extends State<LoginWidget> {
                                 ),
                               ],
                             ),
-                            // Optional: Forgot Password Button (Can hook up later)
-                            Text(
-                              'Forgot Password?',
-                              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                font: GoogleFonts.inter(),
-                                color: FlutterFlowTheme.of(context).primary,
-                                fontWeight: FontWeight.w600,
+                            InkWell(
+                              onTap: () => _showForgotPasswordDialog(),
+                              child: Text(
+                                'Forgot Password?',
+                                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                  font: GoogleFonts.inter(),
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
