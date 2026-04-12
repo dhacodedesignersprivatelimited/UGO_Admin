@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/safe_network_avatar.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -137,26 +138,13 @@ class _DriverKycListWidgetState extends State<DriverKycListWidget>
                 ),
                 child: Row(
                   children: [
-                    CircleAvatar(
+                    SafeNetworkAvatar(
+                      imageUrl: img != null && img.isNotEmpty && img != 'null'
+                          ? (img.startsWith('http')
+                              ? img
+                              : '${ApiConfig.baseUrl}/${img.replaceFirst(RegExp(r'^/'), '')}')
+                          : '',
                       radius: 28,
-                      backgroundColor: FlutterFlowTheme.of(context)
-                          .primary
-                          .withValues(alpha:0.1),
-                      backgroundImage:
-                          img != null && img.isNotEmpty && img != 'null'
-                              ? NetworkImage(
-                                  img.startsWith('http')
-                                      ? img
-                                      : '${ApiConfig.baseUrl}/${img.replaceFirst(RegExp(r'^/'), '')}',
-                                )
-                              : null,
-                      child: img == null || img.isEmpty || img == 'null'
-                          ? Icon(
-                              Icons.person,
-                              color: FlutterFlowTheme.of(context).primary,
-                              size: 28,
-                            )
-                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(

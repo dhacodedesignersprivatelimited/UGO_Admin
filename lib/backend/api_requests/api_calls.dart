@@ -234,6 +234,8 @@ class GetAnalyticsCall {
 class ActiveDriversCall {
   static Future<ApiCallResponse> call({
     String? token = '',
+    int page = 1,
+    int limit = 20,
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'ActiveDrivers',
@@ -242,7 +244,10 @@ class ActiveDriversCall {
       headers: {
         'Authorization': 'Bearer ${token}',
       },
-      params: {},
+      params: {
+        'page': page.toString(),
+        'limit': limit.toString(),
+      },
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
@@ -1841,17 +1846,26 @@ class RidesAnalyticsCall {
 }
 
 class EarningsAnalyticsCall {
+  /// [vehicleId] — admin sub-vehicle id from `GET .../admins/vehicles` (`data[].id`).
+  /// When null, analytics are not scoped to a single vehicle (`vehicle_type: all`).
   static Future<ApiCallResponse> call({
     String? token = '',
     String period = 'monthly',
-    String vehicleType = 'all',
+    int? vehicleId,
   }) async {
+    final params = <String, dynamic>{
+      'period': period,
+      'vehicle_type': 'all',
+    };
+    if (vehicleId != null) {
+      params['vehicle_id'] = vehicleId.toString();
+    }
     return ApiManager.instance.makeApiCall(
       callName: 'earningsAnalytics',
       apiUrl: '${ApiConfig.apiBase}/admins/earnings-analytics',
       callType: ApiCallType.GET,
       headers: {'Authorization': 'Bearer $token'},
-      params: {'period': period, 'vehicle_type': vehicleType},
+      params: params,
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
@@ -1908,7 +1922,64 @@ class GetRideByIdCall {
       getJsonField(response, r'''$.data''');
 }
 
+/// Full ride payload for admin/support: `GET /admins/rides/:id/details`
+/// (nested `user`, `driver`, `vehicle`, `adminVehicle`, all ride columns).
+class GetAdminRideDetailsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int rideId,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminRideDetails',
+      apiUrl: '${ApiConfig.apiBase}/admins/rides/$rideId/details',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static dynamic data(dynamic response) =>
+      getJsonField(response, r'''$.data''');
+}
+
 // ============ Payments ============
+/// GET /api/payments/admin/payouts/pending — recent payout rows for admin dashboard.
+class GetAdminPendingPayoutsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int page = 1,
+    int limit = 10,
+    String status = 'pending_manual_transfer',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminPendingPayouts',
+      apiUrl: '${ApiConfig.apiBase}/payments/admin/payouts/pending',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {
+        'page': page.toString(),
+        'limit': limit.toString(),
+        'status': status,
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? payouts(dynamic response) =>
+      getJsonField(response, r'''$.data.payouts''', true) as List?;
+}
+
 class GetPaymentsCall {
   static Future<ApiCallResponse> call({String? token = ''}) async {
     return ApiManager.instance.makeApiCall(

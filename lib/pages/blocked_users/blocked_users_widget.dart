@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/safe_network_avatar.dart';
 import '/components/responsive_body.dart';
 import '/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -101,7 +102,7 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+        if (!didPop) context.goNamedAuth(DashboardScreen.routeName, context.mounted);
       },
       child: Scaffold(
         key: scaffoldKey,
@@ -112,7 +113,7 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
           automaticallyImplyLeading: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-            onPressed: () => context.goNamedAuth(DashboardPageWidget.routeName, context.mounted),
+            onPressed: () => context.goNamedAuth(DashboardScreen.routeName, context.mounted),
           ),
           title: Text(
             'Blocked Users',
@@ -258,13 +259,9 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      leading: CircleAvatar(
+                      leading: SafeNetworkAvatar(
+                        imageUrl: imgUrl ?? '',
                         radius: 28,
-                        backgroundColor: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                        backgroundImage: imgUrl != null ? NetworkImage(imgUrl) : null,
-                        child: imgUrl == null
-                            ? Icon(Icons.person, color: FlutterFlowTheme.of(context).primary, size: 28)
-                            : null,
                       ),
                       title: Row(
                         children: [

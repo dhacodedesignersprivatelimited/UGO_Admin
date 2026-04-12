@@ -126,7 +126,7 @@ class _KycPendingWidgetState extends State<KycPendingWidget> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+        if (!didPop) context.goNamedAuth(DashboardScreen.routeName, context.mounted);
       },
       child: Scaffold(
         key: scaffoldKey,
@@ -137,7 +137,7 @@ class _KycPendingWidgetState extends State<KycPendingWidget> {
           automaticallyImplyLeading: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-            onPressed: () => context.goNamedAuth(DashboardPageWidget.routeName, context.mounted),
+            onPressed: () => context.goNamedAuth(DashboardScreen.routeName, context.mounted),
           ),
           title: Text(
             'KYC Pending',

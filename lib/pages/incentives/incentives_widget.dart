@@ -45,7 +45,7 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
         }
       },
       child: GestureDetector(
@@ -71,7 +71,7 @@ class _IncentivesWidgetState extends State<IncentivesWidget> {
               size: 30.0,
             ),
             onPressed: () async {
-              context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+              context.goNamedAuth(DashboardScreen.routeName, context.mounted);
             },
           ),
           title: Row(

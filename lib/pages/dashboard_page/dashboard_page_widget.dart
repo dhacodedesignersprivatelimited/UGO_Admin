@@ -1,77 +1,37 @@
-import 'package:flutter_animate/flutter_animate.dart';
-import '/auth/custom_auth/auth_util.dart';
-import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
-import '/components/responsive_body.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import '/index.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+
 import 'dashboard_page_model.dart';
+import 'widget/CHART TABS.dart';
+import 'widget/METRIC CARD.dart';
+import 'widget/QUICK ACTION GRID.dart';
+import 'widget/RECENT RIDES TABLE.dart';
+import 'widget/TOP DRIVERS.dart';
+
 export 'dashboard_page_model.dart';
 
-class DashboardPageWidget extends StatefulWidget {
-  const DashboardPageWidget({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
-  static String routeName = 'dashboardPage';
+  static String routeName = 'DashboardPage';
   static String routePath = '/dashboardPage';
 
   @override
-  State<DashboardPageWidget> createState() => _DashboardPageWidgetState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardPageWidgetState extends State<DashboardPageWidget> {
-  late DashboardPageModel _model;
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-
-  bool _isLoading = true;
+class _DashboardScreenState extends State<DashboardScreen> {
+  late final DashboardPageModel _model;
 
   @override
   void initState() {
     super.initState();
-    _model = createModel(context, () => DashboardPageModel());
-
-    // Fetch data on load
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      await _fetchDashboardData();
-    });
-
-    _model.textController ??= TextEditingController();
-    _model.textFieldFocusNode ??= FocusNode();
-  }
-
-  Future<void> _fetchDashboardData() async {
-    setState(() => _isLoading = true);
-
-      _model.dashboard = await DashBoardCall.call(
-        token: currentAuthenticationToken,
-      );
-
-    if (_model.dashboard?.succeeded ?? false) {
-      FFAppState().totalUsers = getJsonField(
-        (_model.dashboard?.jsonBody ?? ''),
-        r'''$.data.total_users''',
-      ).toString();
-      FFAppState().totalEarnings = getJsonField(
-        (_model.dashboard?.jsonBody ?? ''),
-        r'''$.data.total_earnings''',
-      ).toString();
-      FFAppState().activeDrivers = getJsonField(
-        (_model.dashboard?.jsonBody ?? ''),
-        r'''$.data.active_drivers''',
-      ).toString();
-      FFAppState().totalrides = getJsonField(
-        (_model.dashboard?.jsonBody ?? ''),
-        r'''$.data.total_rides''',
-      ).toString();
-    }
-
-    setState(() => _isLoading = false);
+    _model = DashboardPageModel();
+    _model.loadAll();
   }
 
   @override
@@ -80,425 +40,254 @@ class _DashboardPageWidgetState extends State<DashboardPageWidget> {
     super.dispose();
   }
 
-  // --- Helper Widget: Vibrant & RESPONSIVE Stat Cards ---
-  Widget _buildStatCard({
-    required BuildContext context,
-    required String title,
-    required String value,
-    required IconData icon,
-    required List<Color> gradientColors,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      // RESPONSIVE FIX: Use minHeight instead of fixed height
-      constraints: const BoxConstraints(minHeight: 110.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: gradientColors.last.withValues(alpha:0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          )
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16.0),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-              child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              // RESPONSIVE FIX: Let the column size to its children
-              mainAxisSize: MainAxisSize.min,
-                              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                    // RESPONSIVE FIX: Expanded allows text to wrap if it's too long
-                                    Expanded(
-                      child: Text(
-                        title,
-                        style: FlutterFlowTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
-                          color: Colors.white.withValues(alpha:0.9),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8.0),
-                    Icon(icon, color: Colors.white, size: 24),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // RESPONSIVE FIX: FittedBox shrinks huge numbers automatically
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
-                    // Slightly smaller base font size (headlineMedium instead of displaySmall)
-                    style: FlutterFlowTheme.of(context).headlineMedium.override(
-                      font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                      color: Colors.white,
-                    ),
-                                                        ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+  String _fmtInt(int n) {
+    return formatNumber(
+      n,
+      formatType: FormatType.decimal,
+      decimalType: DecimalType.automatic,
     );
   }
 
-  // --- Helper Widget: Quick Action Cards ---
-  Widget _buildQuickActionCard({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-                                        decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: FlutterFlowTheme.of(context).alternate),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha:0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          )
-        ],
+  String _fmtMoney(num n) {
+    return formatNumber(
+      n,
+      formatType: FormatType.compact,
+      decimalType: DecimalType.periodDecimal,
+      currency: '₹',
+    );
+  }
+
+  Widget _sectionTitle(BuildContext context, String title) {
+    return Text(
+      title,
+      style: GoogleFonts.inter(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: FlutterFlowTheme.of(context).primaryText,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12.0),
-          onTap: onTap,
-                                        child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            child: Row(
-                                            children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: FlutterFlowTheme.of(context).primary, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                                          child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                        title,
-                        style: FlutterFlowTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                                                        ),
-                                              ),
-                                              Text(
-                        subtitle,
-                        style: FlutterFlowTheme.of(context).bodySmall.override(
-                          font: GoogleFonts.inter(),
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                                                        ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                Icon(Icons.chevron_right, color: FlutterFlowTheme.of(context).secondaryText),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
+    final theme = FlutterFlowTheme.of(context);
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
-        }
-      },
-      child: GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        drawer: buildAdminDrawer(context),
-        appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
-          foregroundColor: Colors.white,
-          title: Text(
-            'Admin Dashboard',
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-              font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-              color: Colors.white,
-              fontSize: 22.0,
+    return ListenableBuilder(
+      listenable: _model,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: theme.primaryBackground,
+          appBar: AppBar(
+            backgroundColor: theme.primary,
+            foregroundColor: Colors.white,
+            elevation: 2,
+            title: Text(
+              'UGO Admin',
+              style: theme.headlineMedium.override(
+                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 22,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none),
+                onPressed: () => context.pushNamedAuth(
+                  NotificationsWidget.routeName,
+                  context.mounted,
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
+            centerTitle: false,
+          ),
+          drawer: buildAdminDrawer(context),
+          body: RefreshIndicator(
+            color: theme.primary,
+            onRefresh: _model.loadAll,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_model.errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Material(
+                              color: theme.error.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.warning_amber_rounded, color: theme.error),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        _model.errorMessage!,
+                                        style: GoogleFonts.inter(
+                                          color: theme.error,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: _model.loadAll,
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (!_model.isLoading)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              'Today: ${_model.ridesCompletedToday} rides completed · ${_model.newUsersToday} new users',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: theme.secondaryText,
+                              ),
+                            ),
+                          ),
+                        GridView.count(
+                          crossAxisCount: 2,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.3,
+                          children: [
+                            MetricCard(
+                              title: 'Total rides',
+                              value: _fmtInt(_model.totalRides),
+                              icon: Icons.directions_car,
+                              color: Colors.blue,
+                              onTap: () => context.pushNamedAuth(
+                                RideManagementWidget.routeName,
+                                context.mounted,
+                              ),
+                            ),
+                            MetricCard(
+                              title: 'Total users',
+                              value: _fmtInt(_model.totalUsers),
+                              icon: Icons.people,
+                              color: Colors.green,
+                              onTap: () => context.pushNamedAuth(
+                                AllusersWidget.routeName,
+                                context.mounted,
+                              ),
+                            ),
+                            MetricCard(
+                              title: 'Total drivers',
+                              value: _fmtInt(_model.totalDrivers),
+                              icon: Icons.badge,
+                              color: Colors.orange,
+                              onTap: () => context.pushNamedAuth(
+                                DriversWidget.routeName,
+                                context.mounted,
+                              ),
+                            ),
+                            MetricCard(
+                              title: 'Admin wallet',
+                              value: _fmtMoney(_model.adminWallet),
+                              icon: Icons.account_balance_wallet,
+                              color: Colors.purple,
+                              onTap: () => context.pushNamedAuth(
+                                WalletManagementWidget.routeName,
+                                context.mounted,
+                              ),
+                            ),
+                            MetricCard(
+                              title: 'Total earnings',
+                              value: _fmtMoney(_model.totalEarnings),
+                              icon: Icons.currency_rupee,
+                              color: Colors.red,
+                              onTap: () => context.pushNamedAuth(
+                                EarningsWidget.routeName,
+                                context.mounted,
+                              ),
+                            ),
+                            MetricCard(
+                              title: 'Online drivers',
+                              value: _fmtInt(_model.onlineDrivers),
+                              icon: Icons.access_time,
+                              color: Colors.cyan,
+                              onTap: () => context.pushNamedAuth(
+                                LiveDriverMapWidget.routeName,
+                                context.mounted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: ChartTabs(model: _model),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: RideTable(
+                      rides: _model.recentRides,
+                      userById: _model.recentRideUserById,
+                      driverById: _model.recentRideDriverById,
+                      isLoading: _model.isLoading && _model.recentRides.isEmpty,
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: TopDrivers(
+                      drivers: _model.topDrivers,
+                      isLoading: _model.isLoading && _model.topDrivers.isEmpty,
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                  sliver: SliverToBoxAdapter(child: _sectionTitle(context, 'Quick actions')),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  sliver: SliverToBoxAdapter(
+                    child: QuickActionsGrid(
+                      pendingPayoutCount: _model.pendingPayoutCount,
+                      onAddDriver: () => context.pushNamedAuth(
+                        AddDriverWidget.routeName,
+                        context.mounted,
+                      ),
+                      onAddUser: () => context.pushNamedAuth(
+                        AddUserWidget.routeName,
+                        context.mounted,
+                      ),
+                      onReports: () => context.pushNamedAuth(
+                        RideManagementWidget.routeName,
+                        context.mounted,
+                      ),
+                      onWithdraw: () => context.pushNamedAuth(
+                        DriverPayoutsWidget.routeName,
+                        context.mounted,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          elevation: 2.0,
-        ),
-        body: SafeArea(
-          top: true,
-          child: RefreshIndicator(
-            onRefresh: _fetchDashboardData,
-            color: FlutterFlowTheme.of(context).primary,
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: FlutterFlowTheme.of(context).primary))
-                : SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: ResponsiveContainer(
-                                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                      'Overview',
-                      style: FlutterFlowTheme.of(context).headlineSmall.override(
-                        font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 16.0),
-
-                    // Vibrant Stat Cards Grid
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            context: context,
-                            title: 'Total Rides',
-                            value: valueOrDefault<String>(FFAppState().totalrides, '0'),
-                            icon: Icons.local_taxi_rounded,
-                            gradientColors: const [Color(0xFFFF6B35), Color(0xFFFF8F65)],
-                            onTap: () => context.pushNamedAuth(RideManagementWidget.routeName, context.mounted),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            context: context,
-                            title: 'Active Drivers',
-                            value: valueOrDefault<String>(FFAppState().activeDrivers, '0'),
-                            icon: Icons.drive_eta_rounded,
-                            gradientColors: const [Color(0xFF2E7D32), Color(0xFF66BB6A)],
-                            onTap: () => context.pushNamedAuth(AllusersWidget.routeName, context.mounted),
-                          ),
-                        ),
-                      ],
-                    )
-                        .animate()
-                        .fadeIn(duration: 380.ms)
-                        .slideY(begin: 0.08, end: 0, duration: 380.ms, curve: Curves.easeOutCubic),
-                    const SizedBox(height: 12.0),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            context: context,
-                            title: 'Total Users',
-                            value: valueOrDefault<String>(FFAppState().totalUsers, '0'),
-                            icon: Icons.people_rounded,
-                            gradientColors: const [Color(0xFF1565C0), Color(0xFF42A5F5)],
-                            onTap: () => context.pushNamedAuth(AllusersWidget.routeName, context.mounted),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            context: context,
-                            title: 'Total Earnings',
-                            value: '₹${valueOrDefault<String>(FFAppState().totalEarnings, '0')}',
-                            icon: Icons.currency_rupee_rounded,
-                            gradientColors: const [Color(0xFF6A1B9A), Color(0xFFAB47BC)],
-                            onTap: () => context.pushNamedAuth(EarningsWidget.routeName, context.mounted),
-                          ),
-                        ),
-                      ],
-                    )
-                        .animate()
-                        .fadeIn(duration: 380.ms, delay: 80.ms)
-                        .slideY(begin: 0.08, end: 0, duration: 380.ms, delay: 80.ms, curve: Curves.easeOutCubic),
-
-                    const SizedBox(height: 32.0),
-                                            Text(
-                      'Quick Actions',
-                      style: FlutterFlowTheme.of(context).headlineSmall.override(
-                        font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 350.ms, delay: 150.ms)
-                        .slideX(begin: -0.02, end: 0, duration: 350.ms, delay: 150.ms),
-                    const SizedBox(height: 16.0),
-
-                    // Quick Action List
-                    _buildQuickActionCard(
-                      context: context,
-                      title: 'Ride Management',
-                      subtitle: 'View & manage all live rides',
-                      icon: Icons.local_taxi_rounded,
-                      onTap: () => context.pushNamedAuth(RideManagementWidget.routeName, context.mounted),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildQuickActionCard(
-                      context: context,
-                      title: 'User Management',
-                      subtitle: 'Manage riders & drivers',
-                      icon: Icons.group_rounded,
-                      onTap: () => context.pushNamedAuth(AllusersWidget.routeName, context.mounted),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildQuickActionCard(
-                      context: context,
-                      title: 'Add Vehicle Type',
-                      subtitle: 'Register new platform vehicle types',
-                      icon: Icons.directions_car_rounded,
-                      onTap: () => context.pushNamedAuth(AddVehicleTypeWidget.routeName, context.mounted),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildQuickActionCard(
-                      context: context,
-                      title: 'Promo Codes',
-                      subtitle: 'Create & distribute discount codes',
-                      icon: Icons.local_offer_rounded,
-                      onTap: () => context.pushNamedAuth(PromoCodesWidget.routeName, context.mounted),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildQuickActionCard(
-                      context: context,
-                      title: 'Notifications',
-                      subtitle: 'Broadcast FCM to users & drivers',
-                      icon: Icons.notifications_rounded,
-                      onTap: () => context.pushNamedAuth(NotificationsWidget.routeName, context.mounted),
-                    ),
-
-                    const SizedBox(height: 32.0),
-
-                    // --- Settings Module ---
-                                Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).secondaryBackground,
-                        borderRadius: BorderRadius.circular(16.0),
-                        border: Border.all(color: FlutterFlowTheme.of(context).alternate),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha:0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(20.0),
-                                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                            'Referral System Settings',
-                            style: FlutterFlowTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(height: 4.0),
-                                            Text(
-                            'Set the percentage amount awarded on referral rides.',
-                            style: FlutterFlowTheme.of(context).bodySmall,
-                          ),
-                          const SizedBox(height: 16.0),
-                          TextFormField(
-                            controller: _model.textController,
-                            focusNode: _model.textFieldFocusNode,
-                            decoration: InputDecoration(
-                              hintText: 'e.g. 5.0',
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: FlutterFlowTheme.of(context).alternate),
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: FlutterFlowTheme.of(context).primary),
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              filled: true,
-                              fillColor: FlutterFlowTheme.of(context).primaryBackground,
-                              suffixIcon: const Icon(Icons.percent, size: 18),
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            validator: _model.textControllerValidator.asValidator(context),
-                          ),
-                          const SizedBox(height: 16.0),
-                          Row(
-                                          children: [
-                              Expanded(
-                                child: FFButtonWidget(
-                                  onPressed: () => _model.textController?.clear(),
-                                  text: 'Reset',
-                                  options: FFButtonOptions(
-                                    height: 45.0,
-                                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                                    textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                                      font: GoogleFonts.interTight(color: FlutterFlowTheme.of(context).primaryText),
-                                    ),
-                                    borderSide: BorderSide(color: FlutterFlowTheme.of(context).alternate),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16.0),
-                              Expanded(
-                                child: FFButtonWidget(
-                                  onPressed: () async {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Settings Saved Successfully!')),
-                                    );
-                                  },
-                                  text: 'Save Changes',
-                                  options: FFButtonOptions(
-                                    height: 45.0,
-                                    color: const Color(0xFFFF6B35),
-                                    textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                                      font: GoogleFonts.interTight(color: Colors.white, fontWeight: FontWeight.bold),
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 40.0),
-                  ],
-                ),
-                                    ),
-                                  ),
-                                ),
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -153,7 +153,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
         }
       },
       child: Scaffold(
@@ -166,7 +166,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
             onPressed: () =>
-                context.goNamedAuth(DashboardPageWidget.routeName, context.mounted),
+                context.goNamedAuth(DashboardScreen.routeName, context.mounted),
           ),
           title: Text(
             'Vehicles',

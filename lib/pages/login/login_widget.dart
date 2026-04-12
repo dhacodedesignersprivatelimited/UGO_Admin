@@ -5,7 +5,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
-import '/index.dart'; // Assumes DashboardPageWidget is exported here
+import '/index.dart'; // Assumes DashboardScreen is exported here
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -336,7 +336,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                               );
 
                               _navigate = () => context.goNamedAuth(
-                                  DashboardPageWidget.routeName, context.mounted);
+                                  DashboardScreen.routeName, context.mounted);
                             } else {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(

@@ -132,7 +132,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
         }
       },
       child: GestureDetector(
@@ -154,7 +154,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
               buttonSize: 60.0,
               icon: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 30.0),
               onPressed: () =>
-                  context.goNamedAuth(DashboardPageWidget.routeName, context.mounted),
+                  context.goNamedAuth(DashboardScreen.routeName, context.mounted),
             ),
             title: Text(
               'Notifications',

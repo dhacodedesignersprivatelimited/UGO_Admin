@@ -374,7 +374,7 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
         }
       },
       child: GestureDetector(
@@ -396,7 +396,7 @@ class _PromoCodesWidgetState extends State<PromoCodesWidget> {
             buttonSize: 60.0,
               icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 30.0),
             onPressed: () async {
-                context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+                context.goNamedAuth(DashboardScreen.routeName, context.mounted);
             },
           ),
           title: Text(

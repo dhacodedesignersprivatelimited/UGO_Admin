@@ -27,7 +27,7 @@ class AdminScaffold extends StatelessWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
         }
       },
       child: Scaffold(

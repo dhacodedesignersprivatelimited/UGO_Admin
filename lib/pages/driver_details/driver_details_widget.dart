@@ -2,15 +2,192 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/safe_network_avatar.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'driver_details_model.dart';
 export 'driver_details_model.dart';
+
+// --- Dynamic / admin formatting (top-level) ---
+
+Map<String, dynamic>? _coerceMap(dynamic v) {
+  if (v == null) return null;
+  if (v is Map<String, dynamic>) return v;
+  if (v is Map) return Map<String, dynamic>.from(v);
+  return null;
+}
+
+bool _isHiddenDriverFieldKey(String key) {
+  final k = key.toLowerCase();
+  if (k == 'password' || k == 'otp_hash') return true;
+  const frags = [
+    'fcm_token',
+    'fcm',
+    'device_token',
+    'push_token',
+    'apns',
+    'refresh_token',
+    'api_key',
+    'secret_key',
+  ];
+  for (final f in frags) {
+    if (k.contains(f)) return true;
+  }
+  return false;
+}
+
+String _titleCaseKey(String key) {
+  return key
+      .split('_')
+      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
+}
+
+String _displayScalar(dynamic v) {
+  if (v == null) return '—';
+  final s = v.toString().trim();
+  return s.isEmpty || s == 'null' ? '—' : s;
+}
+
+String _displayDateTime(dynamic v) {
+  if (v == null) return '—';
+  try {
+    final dt = DateTime.tryParse(v.toString());
+    if (dt == null) return _displayScalar(v);
+    return DateFormat('yyyy-MM-dd HH:mm').format(dt.toLocal());
+  } catch (_) {
+    return v.toString();
+  }
+}
+
+bool _isMoneyKey(String kl) {
+  if (kl.endsWith('_id')) return false;
+  return kl.contains('fare') ||
+      kl.contains('earning') ||
+      kl.contains('balance') ||
+      kl.contains('wallet') ||
+      kl.contains('amount') ||
+      kl.contains('payout') ||
+      kl.endsWith('_inr');
+}
+
+bool _isNumericLike(dynamic v) {
+  if (v is num) return true;
+  if (v is String) return double.tryParse(v.trim()) != null;
+  return false;
+}
+
+String _formatDriverScalar(String key, dynamic value) {
+  final kl = key.toLowerCase();
+  if (kl.contains('_at') ||
+      kl.contains('_time') ||
+      kl == 'last_login' ||
+      kl == 'created_at' ||
+      kl == 'updated_at') {
+    return _displayDateTime(value);
+  }
+  if (_isMoneyKey(kl) && _isNumericLike(value)) {
+    final n = value is num ? value.toDouble() : double.parse(value.toString());
+    final fmt = NumberFormat('#,##0.00', 'en_IN');
+    return '₹${fmt.format(n)}';
+  }
+  if (value is bool) return value ? 'Yes' : 'No';
+  return _displayScalar(value);
+}
+
+bool _isImageKey(String key) {
+  final k = key.toLowerCase();
+  return k.contains('profile_image') ||
+      k.contains('_image') ||
+      k == 'photo' ||
+      k.contains('thumbnail');
+}
+
+bool _looksLikeImagePath(String s) {
+  final lower = s.toLowerCase();
+  if (lower.startsWith('http')) {
+    return RegExp(r'\.(jpg|jpeg|png|gif|webp)(\?|#|$)', caseSensitive: false)
+        .hasMatch(lower);
+  }
+  return lower.contains('upload') &&
+      RegExp(r'\.(jpg|jpeg|png|gif|webp)', caseSensitive: false).hasMatch(lower);
+}
+
+/// Admin-facing empty / missing value (avoid raw "null" or em dash in UI).
+String _elideForUi(String s) {
+  final t = s.trim();
+  if (t.isEmpty || t == '—' || t == 'null') return 'Not provided';
+  return t;
+}
+
+bool _isUncopyable(String? s) {
+  if (s == null) return true;
+  final t = s.trim();
+  return t.isEmpty ||
+      t == 'null' ||
+      t == '—' ||
+      t == 'Not provided';
+}
+
+String _friendlyLabelForKey(String key) {
+  const map = <String, String>{
+    'created_at': 'Profile created',
+    'updated_at': 'Last updated',
+    'last_login': 'Last sign-in',
+    'last_seen': 'Last seen',
+    'device_id': 'Device reference',
+    'gender': 'Gender',
+    'date_of_birth': 'Date of birth',
+    'dob': 'Date of birth',
+    'blood_group': 'Blood group',
+    'emergency_contact': 'Emergency contact',
+    'referral_code': 'Referral code',
+    'referred_by': 'Referred by',
+    'commission_rate': 'Commission rate',
+    'payout_cycle': 'Payout cycle',
+    'tax_id': 'Tax ID',
+    'gst_number': 'GST number',
+    'pan_number': 'PAN number',
+    'aadhaar_number': 'Aadhaar number',
+    'verification_status': 'Verification status',
+    'notes': 'Internal notes',
+    'remark': 'Remarks',
+    'status': 'Record status',
+    'user_id': 'Linked user ID',
+    'parent_id': 'Parent account',
+    'service_area': 'Service area',
+    'preferred_language': 'Preferred language',
+    'timezone': 'Time zone',
+    'country_code': 'Country code',
+    'postal_code': 'Postal code',
+    'pincode': 'PIN code',
+    'zip': 'Postal code',
+  };
+  if (map.containsKey(key)) return map[key]!;
+  return _titleCaseKey(key);
+}
+
+String _kycStatusPhrase(String kycLower) {
+  switch (kycLower) {
+    case 'approved':
+      return 'KYC · Verified';
+    case 'pending':
+      return 'KYC · Pending review';
+    case 'rejected':
+    case 'declined':
+      return 'KYC · Not approved';
+    default:
+      if (kycLower.isEmpty || kycLower == 'null') return 'KYC · Unknown';
+      return 'KYC · ${_titleCaseKey(kycLower)}';
+  }
+}
 
 class DriverDetailsWidget extends StatefulWidget {
   const DriverDetailsWidget({super.key, required this.driverId});
@@ -99,22 +276,61 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
     return fallback;
   }
 
-  String _formatDate(String raw) {
-    final parsed = DateTime.tryParse(raw);
-    if (parsed == null) return raw;
-    return dateTimeFormat('yMMMd', parsed);
-  }
-
-  String _displayDate(String raw) {
-    if (raw.isEmpty || raw == 'null') return '—';
-    return _formatDate(raw);
-  }
-
   String _safeUrl(String raw) {
     if (raw.isEmpty || raw == 'null') return '';
     if (raw.startsWith('http')) return raw;
     return '${ApiConfig.baseUrl}/${raw.replaceFirst(RegExp(r'^/'), '')}';
   }
+
+  Future<void> _copy(String label, String text) async {
+    if (_isUncopyable(text)) return;
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$label copied'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// Keys already shown in curated sections or document cards.
+  static const Set<String> _curatedTopLevelKeys = {
+    'id',
+    'first_name',
+    'last_name',
+    'mobile_number',
+    'email',
+    'profile_image',
+    'driver_rating',
+    'total_rides_completed',
+    'total_earnings',
+    'wallet_balance',
+    'kyc_status',
+    'is_active',
+    'is_online',
+    'vehicle_number',
+    'license_number',
+    'address',
+    'city',
+    'state',
+    'current_location_latitude',
+    'current_location_longitude',
+    'bank_account_number',
+    'bank_ifsc_code',
+    'bank_holder_name',
+    'license_front_image',
+    'license_back_image',
+    'aadhaar_front_image',
+    'aadhaar_back_image',
+    'pan_image',
+    'vehicle_image',
+    'rc_front_image',
+    'rc_back_image',
+    'adminVehicle',
+    'vehicle',
+    'driver',
+  };
 
   Future<void> _toggleOnline(bool nextValue) async {
     if (widget.driverId == null || _isUpdatingStatus) return;
@@ -140,7 +356,25 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
 
   // --- UI Helpers ---
 
-  Widget _buildStatusBadge(String text, Color color) {
+  Widget _buildStatusBadge(String text, Color color, {bool onDark = false}) {
+    if (onDark) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
+        ),
+        child: Text(
+          text.toUpperCase(),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -159,20 +393,27 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
     );
   }
 
-  Widget _buildQuickStat(IconData icon, String label, String value, Color color) {
+  Widget _buildQuickStat(IconData icon, String label, String value, Color accent) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
         decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha:0.3)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              accent.withValues(alpha: 0.14),
+              FlutterFlowTheme.of(context).secondaryBackground,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: accent.withValues(alpha: 0.35)),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha:0.05),
-              blurRadius: 10,
+              color: accent.withValues(alpha: 0.12),
+              blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -180,16 +421,32 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withValues(alpha:0.1),
+                gradient: LinearGradient(
+                  colors: [
+                    accent.withValues(alpha: 0.9),
+                    accent.withValues(alpha: 0.65),
+                  ],
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: Colors.white, size: 22),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
-              value.isEmpty ? '0' : value,
-              style: FlutterFlowTheme.of(context).headlineSmall.override(
-                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+              _elideForUi(value.isEmpty ? '—' : value),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.interTight(
+                fontWeight: FontWeight.w800,
+                fontSize: 17,
                 color: FlutterFlowTheme.of(context).primaryText,
               ),
             ),
@@ -197,8 +454,10 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: FlutterFlowTheme.of(context).labelSmall.override(
-                font: GoogleFonts.inter(fontWeight: FontWeight.w500),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                color: FlutterFlowTheme.of(context).secondaryText,
               ),
             ),
           ],
@@ -207,78 +466,435 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(
+    IconData icon,
+    String label,
+    String value, {
+    String? copyValue,
+  }) {
+    final display = _elideForUi(value.isEmpty ? '—' : value);
+    final canCopy = copyValue != null && !_isUncopyable(copyValue);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: FlutterFlowTheme.of(context).primaryBackground,
-              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                colors: [
+                  FlutterFlowTheme.of(context).primary.withValues(alpha: 0.15),
+                  FlutterFlowTheme.of(context).primary.withValues(alpha: 0.06),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, size: 20, color: FlutterFlowTheme.of(context).primary),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: FlutterFlowTheme.of(context).labelMedium.override(
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                    letterSpacing: 0.3,
                     color: FlutterFlowTheme.of(context).secondaryText,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  value.isEmpty ? '—' : value,
-                  style: FlutterFlowTheme.of(context).bodyLarge.override(
-                    font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                  display,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: FlutterFlowTheme.of(context).primaryText,
                   ),
                 ),
               ],
             ),
           ),
+          if (canCopy)
+            IconButton(
+              tooltip: 'Copy',
+              icon: Icon(
+                Icons.copy_rounded,
+                size: 20,
+                color: FlutterFlowTheme.of(context).secondaryText,
+              ),
+              onPressed: () => _copy(label, copyValue),
+            ),
         ],
       ),
     );
   }
 
   Widget _buildSection(String title, List<Widget> children, int delayMs) {
+    final theme = FlutterFlowTheme.of(context);
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: theme.alternate.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          )
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: FlutterFlowTheme.of(context).titleLarge.override(
-              font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-            ),
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 22,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      const Color(0xFFFF7A00),
+                      const Color(0xFFFFB347),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: GoogleFonts.interTight(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  color: theme.primaryText,
+                ),
+              ),
+            ],
           ),
-          const Divider(height: 32, thickness: 1),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
+          const SizedBox(height: 8),
           ...children,
         ],
       ),
     ).animate().fadeIn(duration: 400.ms, delay: delayMs.ms).slideY(
-        begin: 0.05, end: 0, duration: 400.ms, delay: delayMs.ms, curve: Curves.easeOut);
+          begin: 0.05,
+          end: 0,
+          duration: 400.ms,
+          delay: delayMs.ms,
+          curve: Curves.easeOut,
+        );
+  }
+
+  List<MapEntry<String, dynamic>> _extraFieldEntries(Map<String, dynamic> data) {
+    return data.entries
+        .where((e) =>
+            !_curatedTopLevelKeys.contains(e.key) &&
+            !_isHiddenDriverFieldKey(e.key))
+        .where((e) {
+          final v = e.value;
+          if (v == null) return false;
+          if (v is Map && (_coerceMap(v)?.isEmpty ?? true)) return false;
+          if (v is List && v.isEmpty) return false;
+          final s = v.toString().trim();
+          return s.isNotEmpty && s != 'null';
+        })
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+  }
+
+  bool _hasExtraFields(Map<String, dynamic> data) =>
+      _extraFieldEntries(data).isNotEmpty;
+
+  List<Widget> _buildDynamicFieldTiles(Map<String, dynamic> data) {
+    final theme = FlutterFlowTheme.of(context);
+    final entries = _extraFieldEntries(data);
+    if (entries.isEmpty) return [];
+
+    return entries.map((e) {
+      final key = e.key;
+      final value = e.value;
+      final label = _friendlyLabelForKey(key);
+
+      if (value is Map) {
+        final m = _coerceMap(value)!;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(left: 8, bottom: 8),
+              title: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: theme.primaryText,
+                ),
+              ),
+              children: m.entries
+                  .where((x) => !_isHiddenDriverFieldKey(x.key))
+                  .map((x) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 128,
+                              child: Text(
+                                _friendlyLabelForKey(x.key),
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: theme.secondaryText,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                _elideForUi(_formatDriverScalar(x.key, x.value)),
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+        );
+      }
+
+      if (value is List) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 130,
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: theme.secondaryText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  value.every((e) => e is! Map && e is! List)
+                      ? value.map((e) => e.toString()).join(', ')
+                      : '${value.length} linked records',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      final strVal = value.toString().trim();
+      if (_isImageKey(key) || _looksLikeImagePath(strVal)) {
+        final url = _safeUrl(strVal);
+        if (url.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 130,
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: theme.secondaryText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: CachedNetworkImage(
+                        imageUrl: url,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => Container(
+                          width: 100,
+                          height: 100,
+                          color: theme.alternate.withValues(alpha: 0.35),
+                          child: Icon(Icons.broken_image_outlined,
+                              color: theme.secondaryText),
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _showImageDialog(label, url),
+                      icon: Icon(Icons.open_in_new_rounded,
+                          size: 16, color: theme.primary),
+                      label: Text(
+                        'Open',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          color: theme.primary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      final formatted = _formatDriverScalar(key, value);
+      final shown = _elideForUi(formatted);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 130,
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: theme.secondaryText,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                shown,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (key.contains('phone') ||
+                key.contains('mobile') ||
+                key.contains('email') ||
+                key == 'id')
+              IconButton(
+                tooltip: 'Copy',
+                icon: Icon(Icons.copy_rounded,
+                    size: 18, color: theme.secondaryText),
+                onPressed: _isUncopyable(formatted) || shown == 'Not provided'
+                    ? null
+                    : () => _copy(label, formatted),
+              ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  void _showExtraProfileDetailsSheet() {
+    final data = _driverData;
+    if (data == null || !_hasExtraFields(data)) return;
+    final theme = FlutterFlowTheme.of(context);
+    final tiles = _buildDynamicFieldTiles(data);
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.secondaryBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.58,
+          minChildSize: 0.38,
+          maxChildSize: 0.94,
+          builder: (_, scrollController) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 12, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'More profile details',
+                              style: GoogleFonts.interTight(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 20,
+                                color: theme.primaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Only shown here when the record has extra fields.',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: theme.secondaryText,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close_rounded),
+                        tooltip: 'Close',
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+                    children: [
+                      ...tiles,
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showImageDialog(String title, String url) {
@@ -320,18 +936,25 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
                     panEnabled: true,
                     minScale: 1.0,
                     maxScale: 4.0,
-                    child: Image.network(
-                      url,
+                    child: CachedNetworkImage(
+                      imageUrl: url,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Center(
+                      placeholder: (_, __) => const Center(
+                        child: CircularProgressIndicator(color: Colors.white54),
+                      ),
+                      errorWidget: (_, __, ___) => Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.broken_image,
                                 color: FlutterFlowTheme.of(context).alternate, size: 64),
                             const SizedBox(height: 16),
-                            Text("Image not available",
-                                style: FlutterFlowTheme.of(context).bodyMedium.override(color: Colors.white70))
+                            Text(
+                              'Image not available',
+                              style: FlutterFlowTheme.of(context)
+                                  .bodyMedium
+                                  .override(color: Colors.white70),
+                            ),
                           ],
                         ),
                       ),
@@ -428,6 +1051,36 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
     );
   }
 
+  List<Widget> _documentCardsForDriver(Map<String, dynamic> d) {
+    const known = <(String, String)>[
+      ('License front', 'license_front_image'),
+      ('License back', 'license_back_image'),
+      ('Aadhaar front', 'aadhaar_front_image'),
+      ('Aadhaar back', 'aadhaar_back_image'),
+      ('PAN card', 'pan_image'),
+      ('Vehicle photo', 'vehicle_image'),
+      ('RC front', 'rc_front_image'),
+      ('RC back', 'rc_back_image'),
+    ];
+    final seen = <String>{};
+    final out = <Widget>[];
+    for (final pair in known) {
+      seen.add(pair.$2);
+      out.add(_buildDocCard(pair.$1, d[pair.$2]?.toString() ?? ''));
+    }
+    for (final k in d.keys) {
+      if (seen.contains(k)) continue;
+      final kl = k.toLowerCase();
+      if (!kl.contains('image') && !kl.endsWith('_photo')) continue;
+      final v = d[k];
+      if (v == null) continue;
+      final s = v.toString().trim();
+      if (s.isEmpty || s == 'null') continue;
+      out.add(_buildDocCard(_titleCaseKey(k), s));
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
     final photoRaw = _string(r'''$.profile_image''');
@@ -444,14 +1097,63 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
     final vehicleNumber = _string(r'''$.vehicle_number''');
     final rating = _string(r'''$.driver_rating''');
     final totalRides = _string(r'''$.total_rides_completed''');
-    final earnings = _string(r'''$.total_earnings''');
+    final earningsRaw = _string(r'''$.total_earnings''');
+    final walletBal = _string(r'''$.wallet_balance''');
     final kycStatus = _string(r'''$.kyc_status''').toLowerCase();
     final isActive = _bool(r'''$.is_active''');
     final isOnline = _bool(r'''$.is_online''');
 
+    var moneyValue = '—';
+    var moneyLabel = 'Lifetime earnings';
+    final eNum = double.tryParse(earningsRaw);
+    if (eNum != null) {
+      moneyValue =
+          '₹${NumberFormat('#,##0.00', 'en_IN').format(eNum)}';
+    } else if (earningsRaw.isNotEmpty && earningsRaw != 'null') {
+      moneyValue = '₹$earningsRaw';
+    } else if (walletBal.isNotEmpty && walletBal != 'null') {
+      moneyValue = _formatDriverScalar('wallet_balance', walletBal);
+      moneyLabel = 'Wallet balance';
+    }
+
+    final apiDriverId = _string(r'''$.id''');
+    final driverIdDisplay = (apiDriverId.isNotEmpty && apiDriverId != 'null')
+        ? apiDriverId
+        : (widget.driverId?.toString() ?? '—');
+    final driverIdCopy = (apiDriverId.isNotEmpty && apiDriverId != 'null')
+        ? apiDriverId
+        : (widget.driverId?.toString() ?? '');
+    final lat = _string(r'''$.current_location_latitude''');
+    final lng = _string(r'''$.current_location_longitude''');
+    final latLngCombined = (lat.isNotEmpty &&
+            lat != 'null' &&
+            lng.isNotEmpty &&
+            lng != 'null')
+        ? '$lat, $lng'
+        : '';
+
     // Determine colors
-    final kycColor = kycStatus == 'approved' ? const Color(0xFF2E7D32) :
-    kycStatus == 'pending' ? const Color(0xFFF57C00) : FlutterFlowTheme.of(context).error;
+    final kycColor = kycStatus == 'approved'
+        ? const Color(0xFF2E7D32)
+        : kycStatus == 'pending'
+            ? const Color(0xFFF57C00)
+            : FlutterFlowTheme.of(context).error;
+
+    final theme = FlutterFlowTheme.of(context);
+
+    var ratingDisplay = rating.isNotEmpty && rating != 'null' ? rating : 'Not provided';
+    final ratingNum = double.tryParse(rating);
+    if (ratingNum != null) {
+      final dec = ratingNum == ratingNum.roundToDouble() ? 0 : 1;
+      ratingDisplay = '${ratingNum.toStringAsFixed(dec)} / 5';
+    }
+
+    var ridesDisplay =
+        totalRides.isNotEmpty && totalRides != 'null' ? totalRides : 'Not provided';
+    final ridesInt = int.tryParse(totalRides);
+    if (ridesInt != null) {
+      ridesDisplay = NumberFormat.decimalPattern('en_IN').format(ridesInt);
+    }
 
     return PopScope(
       canPop: false,
@@ -460,25 +1162,39 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: const Color(0xFFF4F6FA),
         drawer: buildAdminDrawer(context),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: const Color(0xFFFF7A00),
+          foregroundColor: Colors.white,
           automaticallyImplyLeading: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
             onPressed: () => context.pop(),
           ),
           title: Text(
-            'Driver Profile',
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-              font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+            'Driver',
+            style: GoogleFonts.interTight(
+              fontWeight: FontWeight.w800,
               color: Colors.white,
               fontSize: 22,
             ),
           ),
           elevation: 0,
           centerTitle: true,
+          actions: [
+            if (_driverData != null && _hasExtraFields(_driverData!))
+              IconButton(
+                tooltip: 'More profile details',
+                icon: const Icon(Icons.article_outlined, color: Colors.white),
+                onPressed: _isLoading ? null : _showExtraProfileDetailsSheet,
+              ),
+            IconButton(
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+              onPressed: _isLoading ? null : _fetchDriver,
+            ),
+          ],
         ),
         body: _isLoading
             ? Center(
@@ -521,80 +1237,110 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).secondaryBackground,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFFF8A00),
+                        Color(0xFFFF6D00),
+                        Color(0xFFE65100),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF7A00).withValues(alpha: 0.38),
+                        blurRadius: 22,
+                        offset: const Offset(0, 10),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha:0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ]
+                    ],
                   ),
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
                   child: Column(
                     children: [
                       Hero(
                         tag: 'driver_photo_${widget.driverId}',
                         child: Container(
                           decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: FlutterFlowTheme.of(context).primary, width: 4),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                )
-                              ]
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              width: 4,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 18,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
-                          child: CircleAvatar(
+                          child: SafeNetworkAvatar(
+                            imageUrl: photoUrl,
                             radius: 50,
-                            backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-                            backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                            child: photoUrl.isEmpty
-                                ? Icon(Icons.person, size: 50, color: FlutterFlowTheme.of(context).secondaryText)
-                                : null,
+                            placeholderIcon: Icons.person,
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         name.isNotEmpty ? name : 'Unknown Driver',
-                        style: FlutterFlowTheme.of(context).headlineMedium.override(
-                          font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.interTight(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 26,
+                          color: Colors.white,
+                          height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.phone_iphone_rounded, size: 16, color: FlutterFlowTheme.of(context).secondaryText),
-                          const SizedBox(width: 4),
-                          Text(phone.isNotEmpty ? phone : '—', style: FlutterFlowTheme.of(context).bodyMedium),
-                          if (email.isNotEmpty) ...[
-                            const SizedBox(width: 16),
-                            Icon(Icons.email_rounded, size: 16, color: FlutterFlowTheme.of(context).secondaryText),
-                            const SizedBox(width: 4),
-                            Text(email, style: FlutterFlowTheme.of(context).bodyMedium),
-                          ],
-                        ],
+                      const SizedBox(height: 10),
+                      Text(
+                        _elideForUi(phone.isEmpty || phone == 'null' ? '—' : phone),
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: Colors.white.withValues(alpha: 0.92),
+                        ),
                       ),
+                      if (email.isNotEmpty && email != 'null') ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          email,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 10,
+                        runSpacing: 8,
                         children: [
-                          _buildStatusBadge('KYC: $kycStatus', kycColor),
-                          const SizedBox(width: 12),
-                          _buildStatusBadge(isActive ? 'ACTIVE' : 'INACTIVE', isActive ? const Color(0xFF2E7D32) : FlutterFlowTheme.of(context).error),
+                          _buildStatusBadge(_kycStatusPhrase(kycStatus), kycColor, onDark: true),
+                          _buildStatusBadge(
+                            isActive ? 'Account active' : 'Account disabled',
+                            isActive
+                                ? const Color(0xFF2E7D32)
+                                : FlutterFlowTheme.of(context).error,
+                            onDark: true,
+                          ),
+                          _buildStatusBadge(
+                            isOnline ? 'On duty' : 'Off duty',
+                            isOnline
+                                ? const Color(0xFF00C853)
+                                : const Color(0xFFB0BEC5),
+                            onDark: true,
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 22),
 
-                      // Direct Actions inside Hero
                       if (kycStatus == 'pending')
                         FFButtonWidget(
                           onPressed: () => context.goNamedAuth(
@@ -607,27 +1353,48 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
                           options: FFButtonOptions(
                             height: 48,
                             width: 250,
-                            color: const Color(0xFFF57C00),
-                            textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                              color: Colors.white,
-                              font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                            color: Colors.white,
+                            textStyle: GoogleFonts.interTight(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: const Color(0xFFE65100),
                             ),
                             borderRadius: BorderRadius.circular(24),
-                            elevation: 3,
+                            elevation: 4,
                           ),
-                        ).animate(onPlay: (controller) => controller.repeat()).shimmer(duration: 2000.ms, color: Colors.white24)
+                        ).animate(onPlay: (controller) => controller.repeat()).shimmer(duration: 2000.ms, color: Colors.orange.shade100)
                       else if (kycStatus == 'approved')
                         Container(
-                          width: 250,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          width: double.infinity,
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).primaryBackground,
-                            borderRadius: BorderRadius.circular(24),
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.35),
+                            ),
                           ),
                           child: SwitchListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: Text('Online Status', style: FlutterFlowTheme.of(context).bodyLarge.override(font: GoogleFonts.inter(fontWeight: FontWeight.bold))),
-                            activeColor: const Color(0xFF2E7D32),
+                            title: Text(
+                              'Online status',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            subtitle: Text(
+                              isOnline ? 'Visible to dispatch' : 'Not accepting rides',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                            ),
+                            activeThumbColor: Colors.white,
+                            activeTrackColor: const Color(0xFF2E7D32),
+                            inactiveThumbColor: Colors.white70,
+                            inactiveTrackColor: Colors.white.withValues(alpha: 0.25),
                             value: isOnline,
                             onChanged: _isUpdatingStatus ? null : (val) => _toggleOnline(val),
                           ),
@@ -644,72 +1411,205 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
                       // 2. QUICK STATS GRID
                       Row(
                         children: [
-                          _buildQuickStat(Icons.star_rounded, 'Rating', rating.isNotEmpty ? rating : 'New', const Color(0xFFFBC02D)),
+                          _buildQuickStat(
+                            Icons.star_rounded,
+                            'Rating',
+                            ratingDisplay,
+                            const Color(0xFFFBC02D),
+                          ),
                           const SizedBox(width: 12),
-                          _buildQuickStat(Icons.route_rounded, 'Total Rides', totalRides, FlutterFlowTheme.of(context).primary),
+                          _buildQuickStat(
+                            Icons.route_rounded,
+                            'Trips completed',
+                            ridesDisplay,
+                            FlutterFlowTheme.of(context).primary,
+                          ),
                           const SizedBox(width: 12),
-                          _buildQuickStat(Icons.payments_rounded, 'Earnings', '₹$earnings', const Color(0xFF2E7D32)),
+                          _buildQuickStat(
+                            Icons.payments_rounded,
+                            moneyLabel,
+                            moneyValue,
+                            const Color(0xFF2E7D32),
+                          ),
                         ],
                       ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.1, end: 0),
                       const SizedBox(height: 32),
 
                       // 3. STAGGERED SECTIONS
-                      _buildSection('Vehicle Info', [
-                        _buildInfoRow(Icons.directions_car_filled, 'Vehicle Assigned', vehicle),
-                        _buildInfoRow(Icons.confirmation_number, 'Plate Number', vehicleNumber),
-                        _buildInfoRow(Icons.category_rounded, 'Ride Category', _string(r'''$.adminVehicle.ride_category''')),
-                        _buildInfoRow(Icons.work_rounded, 'Luggage Capacity', _string(r'''$.adminVehicle.luggage_capacity''')),
+                      _buildSection('Contact & reference', [
+                        _buildInfoRow(
+                          Icons.tag_rounded,
+                          'Driver ID',
+                          driverIdDisplay,
+                          copyValue: driverIdCopy.isNotEmpty ? driverIdCopy : null,
+                        ),
+                        _buildInfoRow(
+                          Icons.phone_iphone_rounded,
+                          'Phone',
+                          phone,
+                          copyValue: (phone.isNotEmpty && phone != 'null') ? phone : null,
+                        ),
+                        if (email.isNotEmpty && email != 'null')
+                          _buildInfoRow(
+                            Icons.email_rounded,
+                            'Email',
+                            email,
+                            copyValue: email,
+                          ),
+                      ], 180),
+
+                      _buildSection('Vehicle', [
+                        _buildInfoRow(
+                          Icons.directions_car_filled,
+                          'Vehicle model',
+                          vehicle,
+                        ),
+                        _buildInfoRow(
+                          Icons.confirmation_number,
+                          'Registration number',
+                          vehicleNumber,
+                          copyValue: (vehicleNumber.isNotEmpty &&
+                                  vehicleNumber != 'null')
+                              ? vehicleNumber
+                              : null,
+                        ),
+                        _buildInfoRow(
+                          Icons.category_rounded,
+                          'Service category',
+                          _string(r'''$.adminVehicle.ride_category'''),
+                        ),
+                        _buildInfoRow(
+                          Icons.work_rounded,
+                          'Luggage capacity',
+                          _string(r'''$.adminVehicle.luggage_capacity'''),
+                        ),
                       ], 200),
 
-                      _buildSection('Personal & Location', [
-                        _buildInfoRow(Icons.badge_rounded, 'License Number', _string(r'''$.license_number''')),
-                        _buildInfoRow(Icons.home_rounded, 'Address', _string(r'''$.address''')),
-                        _buildInfoRow(Icons.location_city_rounded, 'City & State', '${_string(r'''$.city''')}, ${_string(r'''$.state''')}'),
-                        _buildInfoRow(Icons.my_location_rounded, 'Last Known Location', '${_string(r'''$.current_location_latitude''')}, ${_string(r'''$.current_location_longitude''')}'),
+                      _buildSection('Address & last location', [
+                        _buildInfoRow(
+                          Icons.badge_rounded,
+                          'Driving licence number',
+                          _string(r'''$.license_number'''),
+                          copyValue: _string(r'''$.license_number'''),
+                        ),
+                        _buildInfoRow(
+                          Icons.home_work_rounded,
+                          'Street address',
+                          _string(r'''$.address'''),
+                        ),
+                        _buildInfoRow(
+                          Icons.location_city_rounded,
+                          'City',
+                          _string(r'''$.city'''),
+                        ),
+                        _buildInfoRow(
+                          Icons.flag_rounded,
+                          'State',
+                          _string(r'''$.state'''),
+                        ),
+                        _buildInfoRow(
+                          Icons.explore_rounded,
+                          'Latitude',
+                          lat,
+                          copyValue: (lat.isNotEmpty && lat != 'null') ? lat : null,
+                        ),
+                        _buildInfoRow(
+                          Icons.explore_outlined,
+                          'Longitude',
+                          lng,
+                          copyValue: (lng.isNotEmpty && lng != 'null') ? lng : null,
+                        ),
+                        if (latLngCombined.isNotEmpty)
+                          _buildInfoRow(
+                            Icons.content_copy_rounded,
+                            'Coordinates (for maps)',
+                            latLngCombined,
+                            copyValue: latLngCombined,
+                          ),
                       ], 300),
 
-                      _buildSection('Banking Details', [
-                        _buildInfoRow(Icons.account_balance, 'Account Number', _string(r'''$.bank_account_number''')),
-                        _buildInfoRow(Icons.confirmation_num_rounded, 'IFSC Code', _string(r'''$.bank_ifsc_code''')),
-                        _buildInfoRow(Icons.person, 'Account Holder', _string(r'''$.bank_holder_name''')),
+                      _buildSection('Payout bank account', [
+                        _buildInfoRow(
+                          Icons.account_balance,
+                          'Account Number',
+                          _string(r'''$.bank_account_number'''),
+                          copyValue: _string(r'''$.bank_account_number'''),
+                        ),
+                        _buildInfoRow(
+                          Icons.confirmation_num_rounded,
+                          'IFSC Code',
+                          _string(r'''$.bank_ifsc_code'''),
+                          copyValue: _string(r'''$.bank_ifsc_code'''),
+                        ),
+                        _buildInfoRow(
+                          Icons.person,
+                          'Account Holder',
+                          _string(r'''$.bank_holder_name'''),
+                          copyValue: _string(r'''$.bank_holder_name'''),
+                        ),
                       ], 400),
 
-                      // DOCUMENTS GRID
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 24),
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: FlutterFlowTheme.of(context).alternate),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Verified Documents',
-                              style: FlutterFlowTheme.of(context).titleLarge.override(
-                                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                      if (_driverData != null) ...[
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 24),
+                          padding: const EdgeInsets.all(22),
+                          decoration: BoxDecoration(
+                            color: theme.secondaryBackground,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: theme.alternate.withValues(alpha: 0.45)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF7A00).withValues(alpha: 0.08),
+                                blurRadius: 18,
+                                offset: const Offset(0, 6),
                               ),
-                            ),
-                            const Divider(height: 32, thickness: 1),
-                            Wrap(
-                              alignment: WrapAlignment.start,
-                              children: [
-                                _buildDocCard('License Front', _string(r'''$.license_front_image''')),
-                                _buildDocCard('License Back', _string(r'''$.license_back_image''')),
-                                _buildDocCard('Aadhaar Front', _string(r'''$.aadhaar_front_image''')),
-                                _buildDocCard('Aadhaar Back', _string(r'''$.aadhaar_back_image''')),
-                                _buildDocCard('PAN Card', _string(r'''$.pan_image''')),
-                                _buildDocCard('Vehicle Image', _string(r'''$.vehicle_image''')),
-                                _buildDocCard('RC Book Front', _string(r'''$.rc_front_image''')),
-                                _buildDocCard('RC Book Back', _string(r'''$.rc_back_image''')),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ).animate().fadeIn(duration: 400.ms, delay: 500.ms).slideY(begin: 0.05, end: 0),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 4,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(4),
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Color(0xFFFF7A00),
+                                          Color(0xFFFFB347),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Documents',
+                                      style: GoogleFonts.interTight(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 18,
+                                        color: theme.primaryText,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                alignment: WrapAlignment.start,
+                                children: _documentCardsForDriver(_driverData!),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(duration: 400.ms, delay: 500.ms).slideY(begin: 0.05, end: 0),
+                      ],
                     ],
                   ),
                 ),

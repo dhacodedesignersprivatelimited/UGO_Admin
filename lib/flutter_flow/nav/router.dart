@@ -54,10 +54,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const LoginWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: DashboardPageWidget.routeName,
-        path: DashboardPageWidget.routePath,
+        name: DashboardScreen.routeName,
+        path: DashboardScreen.routePath,
         requireAuth: true,
-        builder: (context, params) => const DashboardPageWidget(),
+        builder: (context, params) => const DashboardScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: AllusersWidget.routeName,

@@ -1,7 +1,7 @@
 // Export pages
 export '/pages/login/login_widget.dart' show LoginWidget;
 export '/pages/dashboard_page/dashboard_page_widget.dart'
-    show DashboardPageWidget;
+    show DashboardScreen;
 export '/pages/earnings/earnings_widget.dart' show EarningsWidget;
 export '/pages/account/account_widget.dart' show AccountWidget;
 export '/pages/add_vehicle/add_vehicle_widget.dart' show AddVehicleWidget;

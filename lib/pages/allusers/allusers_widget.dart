@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/safe_network_avatar.dart';
 import '/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -282,15 +283,13 @@ class _AllusersWidgetState extends State<AllusersWidget>
                       children: [
                         Hero(
                           tag: 'driver_photo_${driverId ?? index}',
-                          child: CircleAvatar(
+                          child: SafeNetworkAvatar(
+                            imageUrl: img != null && img.isNotEmpty && img != 'null'
+                                ? (img.startsWith('http')
+                                    ? img
+                                    : '${ApiConfig.baseUrl}/${img.replaceFirst(RegExp(r'^/'), '')}')
+                                : '',
                             radius: 32,
-                            backgroundColor: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                            backgroundImage: img != null && img.isNotEmpty && img != 'null'
-                                ? NetworkImage(img.startsWith('http') ? img : '${ApiConfig.baseUrl}/${img.replaceFirst(RegExp(r'^/'), '')}')
-                                : null,
-                            child: img == null || img.isEmpty || img == 'null'
-                                ? Icon(Icons.person, color: FlutterFlowTheme.of(context).primary, size: 32)
-                                : null,
                           ),
                         ),
                         if (isOnline)
@@ -436,13 +435,9 @@ class _AllusersWidgetState extends State<AllusersWidget>
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    CircleAvatar(
+                    SafeNetworkAvatar(
+                      imageUrl: imgUrl ?? '',
                       radius: 28,
-                      backgroundColor: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                      backgroundImage: imgUrl != null ? NetworkImage(imgUrl) : null,
-                      child: imgUrl == null
-                          ? Icon(Icons.person, color: FlutterFlowTheme.of(context).primary, size: 28)
-                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -524,7 +519,7 @@ class _AllusersWidgetState extends State<AllusersWidget>
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
         }
       },
       child: GestureDetector(
@@ -541,7 +536,7 @@ class _AllusersWidgetState extends State<AllusersWidget>
             automaticallyImplyLeading: true,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-              onPressed: () => context.goNamedAuth(DashboardPageWidget.routeName, context.mounted),
+              onPressed: () => context.goNamedAuth(DashboardScreen.routeName, context.mounted),
             ),
             title: Text(
               'Users & Drivers',

@@ -179,7 +179,7 @@ class _AccountWidgetState extends State<AccountWidget> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.goNamedAuth(DashboardPageWidget.routeName, context.mounted);
+        if (!didPop) context.goNamedAuth(DashboardScreen.routeName, context.mounted);
       },
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
