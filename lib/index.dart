@@ -37,7 +37,7 @@ export '/pages/ride_details/ride_details_widget.dart'
     show RideDetailsWidget;
 export '/pages/live_driver_map/live_driver_map_widget.dart'
     show LiveDriverMapWidget;
-export '/pages/wallet_management/wallet_management_widget.dart'
+export 'pages/wallet_management/screens/wallet_management_widget.dart'
     show WalletManagementWidget;
 export '/pages/fare_surge_settings/fare_surge_settings_widget.dart'
     show FareSurgeSettingsWidget;

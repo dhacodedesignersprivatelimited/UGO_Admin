@@ -1951,22 +1951,28 @@ class GetAdminRideDetailsCall {
 // ============ Payments ============
 /// GET /api/payments/admin/payouts/pending — recent payout rows for admin dashboard.
 class GetAdminPendingPayoutsCall {
+  /// When [includeStatusParam] is false, the `status` query is omitted (backend may return all).
+  /// When true, [status] defaults to `pending_manual_transfer` if null.
   static Future<ApiCallResponse> call({
     String? token = '',
     int page = 1,
     int limit = 10,
-    String status = 'pending_manual_transfer',
+    String? status,
+    bool includeStatusParam = true,
   }) async {
+    final params = <String, dynamic>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (includeStatusParam) {
+      params['status'] = status ?? 'pending_manual_transfer';
+    }
     return ApiManager.instance.makeApiCall(
       callName: 'getAdminPendingPayouts',
       apiUrl: '${ApiConfig.apiBase}/payments/admin/payouts/pending',
       callType: ApiCallType.GET,
       headers: {'Authorization': 'Bearer $token'},
-      params: {
-        'page': page.toString(),
-        'limit': limit.toString(),
-        'status': status,
-      },
+      params: params,
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
@@ -1978,6 +1984,53 @@ class GetAdminPendingPayoutsCall {
 
   static List? payouts(dynamic response) =>
       getJsonField(response, r'''$.data.payouts''', true) as List?;
+
+  /// Normalized list: `data.payouts`, or `data` as list, or top-level `payouts`.
+  static List<dynamic> payoutsList(dynamic response) {
+    final fromNested = payouts(response);
+    if (fromNested != null && fromNested.isNotEmpty) {
+      return List<dynamic>.from(fromNested);
+    }
+    final data = getJsonField(response, r'''$.data''');
+    if (data is List && data.isNotEmpty) {
+      return List<dynamic>.from(data);
+    }
+    final top = getJsonField(response, r'''$.payouts''');
+    if (top is List) {
+      return List<dynamic>.from(top);
+    }
+    return [];
+  }
+}
+
+/// POST `/api/payments/payout/mark-paid` — admin confirms bank transfer completed.
+class MarkPayoutPaidCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int payoutId,
+    String? paymentReference,
+  }) async {
+    final ref = escapeStringForJson(paymentReference ?? 'Admin app');
+    final body = '{"payout_id": $payoutId, "payment_reference": "$ref"}';
+    return ApiManager.instance.makeApiCall(
+      callName: 'markPayoutPaid',
+      apiUrl: '${ApiConfig.apiBase}/payments/payout/mark-paid',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
 }
 
 class GetPaymentsCall {
@@ -1999,9 +2052,27 @@ class GetPaymentsCall {
 
   static List? data(dynamic response) =>
       getJsonField(response, r'''$.data''', true) as List?;
+
+  /// Normalized list: `data` as list, or nested `data.payments`, or top-level `payments`.
+  static List<dynamic> paymentsList(dynamic response) {
+    final direct = getJsonField(response, r'''$.data''');
+    if (direct is List && direct.isNotEmpty) {
+      return List<dynamic>.from(direct);
+    }
+    final nested = getJsonField(response, r'''$.data.payments''', true) as List?;
+    if (nested != null && nested.isNotEmpty) {
+      return List<dynamic>.from(nested);
+    }
+    final top = getJsonField(response, r'''$.payments''');
+    if (top is List) {
+      return List<dynamic>.from(top);
+    }
+    return [];
+  }
 }
 
 // ============ Wallets ============
+/// GET `https://ugo-api.icacorp.org/api/wallets/getall` (via [ApiConfig.apiBase]).
 class GetWalletsCall {
   static Future<ApiCallResponse> call({String? token = ''}) async {
     return ApiManager.instance.makeApiCall(
@@ -2021,6 +2092,100 @@ class GetWalletsCall {
 
   static List? data(dynamic response) =>
       getJsonField(response, r'''$.data''', true) as List?;
+
+  /// Normalized list: `data` as list, or `data.wallets`, or top-level `wallets`.
+  static List<dynamic> walletsList(dynamic response) {
+    final direct = getJsonField(response, r'''$.data''');
+    if (direct is List && direct.isNotEmpty) {
+      return List<dynamic>.from(direct);
+    }
+    final nested = getJsonField(response, r'''$.data.wallets''', true) as List?;
+    if (nested != null && nested.isNotEmpty) {
+      return List<dynamic>.from(nested);
+    }
+    final top = getJsonField(response, r'''$.wallets''');
+    if (top is List) {
+      return List<dynamic>.from(top);
+    }
+    return [];
+  }
+}
+
+/// GET `/api/wallets/admin/transactions` — paginated wallet ledger (admin).
+class GetAdminWalletTransactionsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int page = 1,
+    int limit = 10,
+    String? q,
+    String? flow,
+    int? driverId,
+    String? from,
+    String? to,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    final query = q?.trim();
+    if (query != null && query.isNotEmpty) {
+      params['q'] = query;
+    }
+    final f = flow?.trim().toLowerCase();
+    if (f == 'credit' || f == 'debit') {
+      params['flow'] = f;
+    }
+    if (driverId != null && driverId > 0) {
+      params['driver_id'] = driverId.toString();
+    }
+    final fromText = from?.trim();
+    if (fromText != null && fromText.isNotEmpty) {
+      params['from'] = fromText;
+    }
+    final toText = to?.trim();
+    if (toText != null && toText.isNotEmpty) {
+      params['to'] = toText;
+    }
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminWalletTransactions',
+      apiUrl: '${ApiConfig.apiBase}/wallets/admin/transactions',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static int total(dynamic response) {
+    final v = getJsonField(response, r'''$.data.total''');
+    if (v is int) return v;
+    if (v is double) return v.round();
+    return int.tryParse(v?.toString() ?? '') ?? 0;
+  }
+
+  static int totalPages(dynamic response) {
+    final v = getJsonField(response, r'''$.data.totalPages''');
+    if (v is int) return v;
+    if (v is double) return v.round();
+    return int.tryParse(v?.toString() ?? '') ?? 1;
+  }
+
+  static List<dynamic> transactionsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.transactions''', true) as List?;
+    if (list != null && list.isNotEmpty) {
+      return List<dynamic>.from(list);
+    }
+    final data = getJsonField(response, r'''$.data''');
+    if (data is List) {
+      return List<dynamic>.from(data);
+    }
+    return [];
+  }
 }
 
 // ============ Admin Finance ============

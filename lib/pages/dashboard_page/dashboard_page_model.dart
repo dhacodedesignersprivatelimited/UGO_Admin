@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -13,6 +15,16 @@ class DashboardPageModel extends ChangeNotifier {
   int totalUsers = 0;
   int totalDrivers = 0;
   int onlineDrivers = 0;
+
+  /// From all-users list (or dashboard keys when list missing).
+  int usersActive = 0;
+  int usersInactive = 0;
+  int usersBlocked = 0;
+
+  /// From full drivers list (KYC + active flags).
+  int driversActiveAccounts = 0;
+  int driversPendingKyc = 0;
+  int driversBlockedAccounts = 0;
   int ridesCompletedToday = 0;
   int newUsersToday = 0;
 
@@ -53,7 +65,28 @@ class DashboardPageModel extends ChangeNotifier {
   /// 0 = all time; else last N days for status pie.
   int chartStatusDays = 0;
 
-  int get pendingPayoutCount => pendingPayouts.length;
+  /// Rows that still need admin action (excludes completed / paid / failed).
+  int get pendingPayoutCount {
+    var n = 0;
+    for (final raw in pendingPayouts) {
+      if (raw is! Map) continue;
+      final s = (raw['status']?.toString() ?? '').toLowerCase();
+      if (s.contains('completed') ||
+          s.contains('paid') ||
+          s.contains('success')) {
+        continue;
+      }
+      if (s.contains('fail') || s.contains('reject') || s.contains('error')) {
+        continue;
+      }
+      n++;
+    }
+    return n;
+  }
+
+  /// Background refresh for user/driver stats cards (lightweight vs [loadAll]).
+  Timer? _userDriverStatsTimer;
+  static const Duration userDriverStatsPollInterval = Duration(seconds: 45);
 
   static const List<String> earningsPeriodOptions = [
     'weekly',
@@ -77,6 +110,46 @@ class DashboardPageModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Polls dashboard + users + drivers to keep stat gauges fresh without a full reload.
+  void startUserDriverStatsPolling() {
+    _userDriverStatsTimer?.cancel();
+    _userDriverStatsTimer =
+        Timer.periodic(userDriverStatsPollInterval, (_) {
+      unawaited(refreshUserDriverStats());
+    });
+  }
+
+  void stopUserDriverStatsPolling() {
+    _userDriverStatsTimer?.cancel();
+    _userDriverStatsTimer = null;
+  }
+
+  /// Updates headline totals, user buckets, driver buckets, and top-drivers list.
+  Future<void> refreshUserDriverStats() async {
+    final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) return;
+    try {
+      final r = await Future.wait([
+        DashBoardCall.call(token: token),
+        AllUsersCall.call(token: token),
+        GetDriversCall.call(token: token),
+      ]);
+      _applyDashboardResponse(r[0]);
+      _applyAllUsersStatsResponse(r[1]);
+      _applyDriversResponse(r[2]);
+      notifyListeners();
+    } catch (_) {
+      // Silent: avoid spamming errors for background poll
+    }
+  }
+
+  @override
+  @mustCallSuper
+  void dispose() {
+    stopUserDriverStatsPolling();
+    super.dispose();
+  }
+
   Future<void> loadAll() async {
     isLoading = true;
     errorMessage = null;
@@ -88,9 +161,21 @@ class DashboardPageModel extends ChangeNotifier {
     _allRides = [];
     recentRideUserById = {};
     recentRideDriverById = {};
+    usersActive = 0;
+    usersInactive = 0;
+    usersBlocked = 0;
+    driversActiveAccounts = 0;
+    driversPendingKyc = 0;
+    driversBlockedAccounts = 0;
     notifyListeners();
 
     final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) {
+      isLoading = false;
+      errorMessage = 'Session expired. Please log in again.';
+      notifyListeners();
+      return;
+    }
 
     try {
       final results = await Future.wait([
@@ -103,7 +188,12 @@ class DashboardPageModel extends ChangeNotifier {
         ),
         GetRidesCall.call(token: token),
         GetDriversCall.call(token: token),
-        GetAdminPendingPayoutsCall.call(token: token, limit: 25),
+        GetAdminPendingPayoutsCall.call(
+          token: token,
+          limit: 25,
+          includeStatusParam: false,
+        ),
+        AllUsersCall.call(token: token),
         GetAllVehiclesCall.call(token: token),
       ]);
 
@@ -114,12 +204,13 @@ class DashboardPageModel extends ChangeNotifier {
       final ridesList = _parseRidesList(results[3]);
       _applyRidesDerivedData(ridesList);
 
-      await _enrichRecentRideParties(token ?? '');
+      await _enrichRecentRideParties(token);
 
       _applyDriversResponse(results[4]);
       _applyPayoutsResponse(results[5]);
+      _applyAllUsersStatsResponse(results[6]);
 
-      final earningsStale = _applyChartVehiclesResponse(results[6]);
+      final earningsStale = _applyChartVehiclesResponse(results[7]);
       if (earningsStale) {
         final redo = await EarningsAnalyticsCall.call(
           token: token,
@@ -128,11 +219,6 @@ class DashboardPageModel extends ChangeNotifier {
         );
         earningsWeekly = [];
         _applyEarningsAnalyticsResponse(redo);
-      }
-
-      if (earningsWeekly.isEmpty && totalEarnings > 0) {
-        final n = chartEarningsPeriod == 'yearly' ? 12 : 7;
-        earningsWeekly = List<double>.filled(n, totalEarnings / n);
       }
 
       if (errorMessage == null && !results[0].succeeded) {
@@ -162,20 +248,23 @@ class DashboardPageModel extends ChangeNotifier {
   }
 
   Future<void> refreshEarningsChartFromApi() async {
+    final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) {
+      chartRefreshing = false;
+      errorMessage = 'Session expired. Please log in again.';
+      notifyListeners();
+      return;
+    }
     chartRefreshing = true;
     notifyListeners();
     try {
       final resp = await EarningsAnalyticsCall.call(
-        token: currentAuthenticationToken,
+        token: token,
         period: chartEarningsPeriod,
         vehicleId: chartVehicleId,
       );
       earningsWeekly = [];
       _applyEarningsAnalyticsResponse(resp);
-      if (earningsWeekly.isEmpty && totalEarnings > 0) {
-        final n = chartEarningsPeriod == 'yearly' ? 12 : 7;
-        earningsWeekly = List<double>.filled(n, totalEarnings / n);
-      }
     } finally {
       chartRefreshing = false;
       _bumpChartRevision();
@@ -241,21 +330,73 @@ class DashboardPageModel extends ChangeNotifier {
     if (!response.succeeded || response.jsonBody is! Map) return;
     final root = Map<String, dynamic>.from(response.jsonBody as Map);
     final data = root['data'];
-    if (data is! Map) return;
-    final m = Map<String, dynamic>.from(data);
+    final m = data is Map
+        ? Map<String, dynamic>.from(data)
+        : Map<String, dynamic>.from(root);
 
-    totalRides = _parseInt(m['total_rides']) ?? 0;
-    totalUsers = _parseInt(m['total_users']) ?? 0;
-    totalDrivers = _parseInt(m['total_drivers']) ?? 0;
-    onlineDrivers = _parseInt(m['active_drivers']) ?? 0;
-    ridesCompletedToday = _parseInt(m['rides_completed_today']) ?? 0;
-    newUsersToday = _parseInt(m['new_users_today']) ?? 0;
-    totalEarnings = _parseDouble(m['total_earnings']) ?? 0;
+    totalRides = _firstInt(
+          m,
+          const ['total_rides', 'rides_total', 'totalRides'],
+        ) ??
+        0;
+    totalUsers = _firstInt(
+          m,
+          const ['total_users', 'users_total', 'totalUsers'],
+        ) ??
+        0;
+    totalDrivers = _firstInt(
+          m,
+          const ['total_drivers', 'drivers_total', 'totalDrivers'],
+        ) ??
+        0;
+    onlineDrivers = _firstInt(
+          m,
+          const ['active_drivers', 'online_drivers', 'drivers_online'],
+        ) ??
+        0;
+    ridesCompletedToday = _firstInt(
+          m,
+          const ['rides_completed_today', 'today_completed_rides'],
+        ) ??
+        0;
+    newUsersToday = _firstInt(
+          m,
+          const ['new_users_today', 'today_new_users'],
+        ) ??
+        0;
+    totalEarnings = _firstDouble(
+          m,
+          const ['total_earnings', 'earnings_total', 'totalEarnings'],
+        ) ??
+        0;
 
-    final w = _parseDouble(m['admin_wallet']) ??
-        _parseDouble(m['company_wallet']) ??
-        _parseDouble(m['platform_balance']) ??
-        _parseDouble(m['wallet_balance']);
+    final ua = _firstInt(m, const ['active_users', 'user_active', 'users_active']);
+    final ui = _firstInt(m, const ['inactive_users', 'user_inactive', 'users_inactive']);
+    final ub = _firstInt(m, const ['blocked_users', 'blockedUsers', 'users_blocked']);
+    if (ua != null) usersActive = ua;
+    if (ui != null) usersInactive = ui;
+    if (ub != null) usersBlocked = ub;
+
+    final da = _firstInt(
+      m,
+      const ['active_driver_accounts', 'drivers_active', 'active_drivers_count'],
+    );
+    final dp = _firstInt(
+      m,
+      const ['pending_drivers', 'drivers_pending'],
+    );
+    final db = _firstInt(
+      m,
+      const ['blocked_drivers', 'drivers_blocked'],
+    );
+    if (da != null) driversActiveAccounts = da;
+    if (dp != null) driversPendingKyc = dp;
+    if (db != null) driversBlockedAccounts = db;
+
+    final w = _firstDouble(
+      m,
+      const ['admin_wallet', 'company_wallet', 'platform_balance', 'wallet_balance'],
+    );
     if (w != null) adminWallet = w;
   }
 
@@ -323,7 +464,7 @@ class DashboardPageModel extends ChangeNotifier {
   List<double> _extractNumericSeries(dynamic body) {
     final out = <double>[];
     if (body is! Map) return out;
-    dynamic data = body['data'];
+    dynamic data = body['data'] ?? body;
 
     void addFromList(List list) {
       for (final item in list) {
@@ -371,6 +512,19 @@ class DashboardPageModel extends ChangeNotifier {
           addFromList(value);
         }
       });
+      if (out.isEmpty) {
+        final mapNums = <MapEntry<String, double>>[];
+        data.forEach((key, value) {
+          final numVal = _parseDouble(value);
+          if (numVal != null) {
+            mapNums.add(MapEntry(key.toString(), numVal));
+          }
+        });
+        if (mapNums.length >= 2) {
+          mapNums.sort((a, b) => a.key.compareTo(b.key));
+          out.addAll(mapNums.map((e) => e.value));
+        }
+      }
     }
     return out;
   }
@@ -380,8 +534,15 @@ class DashboardPageModel extends ChangeNotifier {
     final raw = GetRidesCall.data(response.jsonBody);
     if (raw is List) return List<dynamic>.from(raw);
     if (response.jsonBody is Map) {
-      final d = (response.jsonBody as Map)['data'];
+      final root = response.jsonBody as Map;
+      final d = root['data'];
       if (d is List) return List<dynamic>.from(d);
+      if (d is Map) {
+        final rides = d['rides'];
+        if (rides is List) return List<dynamic>.from(rides);
+      }
+      final top = root['rides'];
+      if (top is List) return List<dynamic>.from(top);
     }
     return [];
   }
@@ -477,13 +638,37 @@ class DashboardPageModel extends ChangeNotifier {
   }
 
   void _applyDriversResponse(ApiCallResponse response) {
+    driversActiveAccounts = 0;
+    driversPendingKyc = 0;
+    driversBlockedAccounts = 0;
     if (!response.succeeded) return;
-    final list = GetDriversCall.data(response.jsonBody);
+    var list = GetDriversCall.data(response.jsonBody);
+    list ??= getJsonField(response.jsonBody, r'''$.data.drivers''') as List?;
+    list ??= getJsonField(response.jsonBody, r'''$.drivers''') as List?;
     if (list == null || list.isEmpty) return;
 
     final scored = List<Map<String, dynamic>>.from(
       list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
     );
+
+    for (final d in scored) {
+      final kyc = (d['kyc_status']?.toString() ?? '').toLowerCase().trim();
+      final active =
+          _parseBool(d['is_active']) || _parseBool(d['active_driver']);
+      final blockedFlag = _parseBool(d['is_blocked']) ||
+          (d['account_status']?.toString().toLowerCase() == 'blocked') ||
+          (d['status']?.toString().toLowerCase() == 'blocked');
+      if (kyc == 'pending') {
+        driversPendingKyc++;
+      } else if (blockedFlag ||
+          !active ||
+          kyc == 'rejected' ||
+          kyc == 'declined') {
+        driversBlockedAccounts++;
+      } else {
+        driversActiveAccounts++;
+      }
+    }
 
     double score(Map<String, dynamic> d) {
       for (final k in [
@@ -501,14 +686,125 @@ class DashboardPageModel extends ChangeNotifier {
       return 0;
     }
 
+    final rankedByToday = _rankTopDriversByDailyEarnings(scored);
+    if (rankedByToday.isNotEmpty) {
+      topDrivers = rankedByToday.take(8).toList();
+      return;
+    }
+
     scored.sort((a, b) => score(b).compareTo(score(a)));
     topDrivers = scored.take(8).toList();
   }
 
+  List<Map<String, dynamic>> _rankTopDriversByDailyEarnings(
+    List<Map<String, dynamic>> drivers,
+  ) {
+    if (drivers.isEmpty || _allRides.isEmpty) return [];
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    final byDriverId = <int, Map<String, dynamic>>{};
+    for (final d in drivers) {
+      final id = _parseInt(d['id']);
+      if (id != null) byDriverId[id] = d;
+    }
+    if (byDriverId.isEmpty) return [];
+
+    final todayEarn = <int, double>{};
+    final ydayEarn = <int, double>{};
+    final todayRides = <int, int>{};
+
+    for (final raw in _allRides) {
+      if (raw is! Map) continue;
+      final ride = Map<String, dynamic>.from(raw);
+      final dt = _parseRideDate(ride);
+      if (dt == null) continue;
+      final day = DateTime(dt.year, dt.month, dt.day);
+      if (day != today && day != yesterday) continue;
+
+      final driverId = _rideDriverId(ride);
+      if (driverId == null || !byDriverId.containsKey(driverId)) continue;
+
+      final earn = _rideEarning(ride);
+      if (earn == null || earn <= 0) continue;
+
+      if (day == today) {
+        todayEarn[driverId] = (todayEarn[driverId] ?? 0) + earn;
+        todayRides[driverId] = (todayRides[driverId] ?? 0) + 1;
+      } else {
+        ydayEarn[driverId] = (ydayEarn[driverId] ?? 0) + earn;
+      }
+    }
+
+    final out = <Map<String, dynamic>>[];
+    for (final entry in byDriverId.entries) {
+      final id = entry.key;
+      final t = todayEarn[id] ?? 0;
+      final y = ydayEarn[id] ?? 0;
+      final rides = todayRides[id] ?? 0;
+      if (t <= 0 && y <= 0 && rides <= 0) continue;
+
+      final row = Map<String, dynamic>.from(entry.value);
+      row['today_earnings'] = t;
+      row['previous_day_earnings'] = y;
+      row['today_rides'] = rides;
+      out.add(row);
+    }
+
+    out.sort((a, b) {
+      final ta = _parseDouble(a['today_earnings']) ?? 0;
+      final tb = _parseDouble(b['today_earnings']) ?? 0;
+      final byToday = tb.compareTo(ta);
+      if (byToday != 0) return byToday;
+      final ya = _parseDouble(a['previous_day_earnings']) ?? 0;
+      final yb = _parseDouble(b['previous_day_earnings']) ?? 0;
+      return yb.compareTo(ya);
+    });
+    return out;
+  }
+
   void _applyPayoutsResponse(ApiCallResponse response) {
     if (!response.succeeded) return;
-    final list = GetAdminPendingPayoutsCall.payouts(response.jsonBody);
-    pendingPayouts = list != null ? List<dynamic>.from(list) : [];
+    pendingPayouts = GetAdminPendingPayoutsCall.payoutsList(response.jsonBody);
+  }
+
+  void _applyAllUsersStatsResponse(ApiCallResponse response) {
+    if (!response.succeeded) return;
+    var list = AllUsersCall.usersdata(response.jsonBody);
+    list ??= getJsonField(response.jsonBody, r'''$.data.users''') as List?;
+    list ??= getJsonField(response.jsonBody, r'''$.users''') as List?;
+    if (list == null || list.isEmpty) return;
+
+    var a = 0, i = 0, b = 0;
+    for (final u in list.whereType<Map>()) {
+      final m = Map<String, dynamic>.from(u);
+      final blocked = _parseBool(m['is_blocked']) ||
+          (m['status']?.toString().toLowerCase() == 'blocked') ||
+          (m['account_status']?.toString().toLowerCase() == 'blocked');
+      final active = _parseBool(m['is_active']) || _parseBool(m['active']);
+      if (blocked) {
+        b++;
+      } else if (active) {
+        a++;
+      } else {
+        i++;
+      }
+    }
+    usersActive = a;
+    usersInactive = i;
+    usersBlocked = b;
+  }
+
+  static bool _parseBool(dynamic v) {
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    if (v is String) {
+      final s = v.toLowerCase();
+      return s == 'true' || s == '1' || s == 'yes';
+    }
+    return false;
   }
 
   static int? _parseInt(dynamic v) {
@@ -525,9 +821,54 @@ class DashboardPageModel extends ChangeNotifier {
     return double.tryParse(v.toString());
   }
 
+  static int? _firstInt(Map<String, dynamic> m, List<String> keys) {
+    for (final key in keys) {
+      final val = _parseInt(m[key]);
+      if (val != null) return val;
+    }
+    return null;
+  }
+
+  static double? _firstDouble(Map<String, dynamic> m, List<String> keys) {
+    for (final key in keys) {
+      final val = _parseDouble(m[key]);
+      if (val != null) return val;
+    }
+    return null;
+  }
+
   static String _rideStatus(dynamic r) {
     final s = r is Map ? r['ride_status'] : null;
     return s?.toString().toLowerCase() ?? '';
+  }
+
+  static int? _rideDriverId(Map<String, dynamic> r) {
+    final direct = _parseInt(r['driver_id']) ??
+        _parseInt(r['driverId']) ??
+        _parseInt(r['assigned_driver_id']);
+    if (direct != null) return direct;
+    final driver = r['driver'];
+    if (driver is Map) {
+      return _parseInt(driver['id']) ?? _parseInt(driver['driver_id']);
+    }
+    return null;
+  }
+
+  static double? _rideEarning(Map<String, dynamic> r) {
+    for (final key in [
+      'driver_earning',
+      'driver_earnings',
+      'driver_amount',
+      'fare',
+      'total_fare',
+      'amount',
+      'total_amount',
+      'final_amount',
+    ]) {
+      final v = _parseDouble(r[key]);
+      if (v != null) return v;
+    }
+    return null;
   }
 
   static DateTime? _parseRideDate(dynamic r) {

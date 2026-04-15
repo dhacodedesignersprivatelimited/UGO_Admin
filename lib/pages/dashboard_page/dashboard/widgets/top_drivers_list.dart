@@ -4,11 +4,13 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../dashboard_tokens.dart';
 
-/// Dashboard card: ranked drivers with avatar, name, ride count, and earnings.
-class TopDrivers extends StatelessWidget {
-  const TopDrivers({
+/// Ranked drivers: avatar, name, rides, earnings, View All.
+class TopDriversList extends StatelessWidget {
+  const TopDriversList({
     super.key,
     required this.drivers,
     this.isLoading = false,
@@ -50,6 +52,7 @@ class TopDrivers extends StatelessWidget {
   static String _earningsLabel(Map<String, dynamic> d) {
     for (final k in [
       'today_earnings',
+      'previous_day_earnings',
       'daily_earnings',
       'total_earnings',
       'lifetime_earnings',
@@ -63,6 +66,13 @@ class TopDrivers extends StatelessWidget {
       }
     }
     return '—';
+  }
+
+  static String? _previousDayEarningsLabel(Map<String, dynamic> d) {
+    final v = _parseDouble(d['previous_day_earnings']);
+    if (v == null) return null;
+    final fmt = NumberFormat('#,##0.00', 'en_IN');
+    return 'Prev: ₹${fmt.format(v)}';
   }
 
   static int? _parseInt(dynamic v) {
@@ -94,16 +104,9 @@ class TopDrivers extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.secondaryBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.alternate.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DashboardTokens.cardRadius),
+        boxShadow: DashboardTokens.cardShadow,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -130,8 +133,10 @@ class TopDrivers extends StatelessWidget {
                     context.mounted,
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.secondaryText,
-                    side: BorderSide(color: theme.alternate.withValues(alpha: 0.9)),
+                    foregroundColor: DashboardTokens.primaryOrange,
+                    side: BorderSide(
+                      color: DashboardTokens.primaryOrange.withValues(alpha: 0.45),
+                    ),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -153,7 +158,9 @@ class TopDrivers extends StatelessWidget {
           if (isLoading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(
+                child: CircularProgressIndicator(color: DashboardTokens.primaryOrange),
+              ),
             )
           else if (drivers.isEmpty)
             Padding(
@@ -177,7 +184,7 @@ class TopDrivers extends StatelessWidget {
               separatorBuilder: (_, __) => Divider(
                 height: 1,
                 thickness: 1,
-                color: theme.alternate.withValues(alpha: 0.35),
+                color: theme.alternate.withValues(alpha: 0.2),
               ),
               itemBuilder: (context, index) {
                 final d = visible[index];
@@ -187,6 +194,7 @@ class TopDrivers extends StatelessWidget {
                 final url = _imageUrl(d);
                 final rides = _ridesCount(m);
                 final earnings = _earningsLabel(m);
+                final prevEarnings = _previousDayEarningsLabel(m);
 
                 return Material(
                   color: Colors.transparent,
@@ -247,6 +255,17 @@ class TopDrivers extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                                if (prevEarnings != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    prevEarnings,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: theme.secondaryText,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -263,7 +282,10 @@ class TopDrivers extends StatelessWidget {
                       ),
                     ),
                   ),
-                );
+                )
+                    .animate()
+                    .fadeIn(duration: 320.ms, delay: (40 * index).ms)
+                    .slideX(begin: 0.02, end: 0);
               },
             ),
         ],
