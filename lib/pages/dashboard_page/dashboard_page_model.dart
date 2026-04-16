@@ -5,11 +5,18 @@ import '/backend/api_requests/api_calls.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/pages/ride_management/ride_party_fetch.dart';
 import 'package:flutter/foundation.dart';
+import '/services/cache_service.dart';
+import '/services/cache_policy.dart';
 
 class DashboardPageModel extends ChangeNotifier {
+  static const String _cacheKey = CachePolicy.dashboardKey;
+  static const Duration _cacheTtl = CachePolicy.dashboardTtl;
+
   bool isLoading = false;
+  bool isBackgroundRefreshing = false;
   bool chartRefreshing = false;
   String? errorMessage;
+  DateTime? lastUpdatedAt;
 
   int totalRides = 0;
   int totalUsers = 0;
@@ -32,7 +39,10 @@ class DashboardPageModel extends ChangeNotifier {
   double adminWallet = 0;
 
   List<double> earningsWeekly = [];
+  List<double> earningsLastWeek = [];
   List<double> ridesWeekly = [];
+  List<String> earningsWeeklyLabels = [];
+  List<String> ridesWeeklyLabels = [];
 
   double completedPct = 0;
   double ongoingPct = 0;
@@ -48,6 +58,7 @@ class DashboardPageModel extends ChangeNotifier {
   List<dynamic> pendingPayouts = [];
 
   List<dynamic> _allRides = [];
+  bool _ridesWeekFromAnalytics = false;
 
   /// From [GetUserByIdCall] / [GetDriverByIdCall] for [recentRides] rows.
   Map<int, Map<String, dynamic>> recentRideUserById = {};
@@ -55,6 +66,8 @@ class DashboardPageModel extends ChangeNotifier {
 
   /// Bumps when chart series change so the UI can replay enter animations.
   int chartRevision = 0;
+  String _lastUiFingerprint = '';
+  Future<void>? _inFlightLoad;
 
   String chartEarningsPeriod = 'weekly';
   /// `null` = all admin vehicles; otherwise `data[].id` from [GetAllVehiclesCall].
@@ -150,28 +163,59 @@ class DashboardPageModel extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> loadAll() async {
-    isLoading = true;
+  Future<void> initialize() async {
+    await _hydrateFromCache();
+    final age = await CacheService.getCacheAge(_cacheKey);
+    final shouldRefresh =
+        age == null || age > _cacheTtl || !_hasPreviewData();
+    if (shouldRefresh) {
+      await loadAll(backgroundRefresh: true);
+    }
+  }
+
+  Future<void> loadAll({bool backgroundRefresh = false}) async {
+    if (_inFlightLoad != null) {
+      return _inFlightLoad;
+    }
+    _inFlightLoad = _loadAllInternal(backgroundRefresh: backgroundRefresh);
+    try {
+      await _inFlightLoad;
+    } finally {
+      _inFlightLoad = null;
+    }
+  }
+
+  Future<void> _loadAllInternal({bool backgroundRefresh = false}) async {
+    final hasPreview = _hasPreviewData();
+    isLoading = !hasPreview && !backgroundRefresh;
+    isBackgroundRefreshing = hasPreview || backgroundRefresh;
     errorMessage = null;
-    earningsWeekly = [];
-    ridesWeekly = [];
-    recentRides = [];
-    topDrivers = [];
-    pendingPayouts = [];
-    _allRides = [];
-    recentRideUserById = {};
-    recentRideDriverById = {};
-    usersActive = 0;
-    usersInactive = 0;
-    usersBlocked = 0;
-    driversActiveAccounts = 0;
-    driversPendingKyc = 0;
-    driversBlockedAccounts = 0;
+    if (!hasPreview) {
+      earningsWeekly = [];
+      earningsLastWeek = [];
+      ridesWeekly = [];
+      earningsWeeklyLabels = [];
+      ridesWeeklyLabels = [];
+      recentRides = [];
+      topDrivers = [];
+      pendingPayouts = [];
+      _allRides = [];
+      _ridesWeekFromAnalytics = false;
+      recentRideUserById = {};
+      recentRideDriverById = {};
+      usersActive = 0;
+      usersInactive = 0;
+      usersBlocked = 0;
+      driversActiveAccounts = 0;
+      driversPendingKyc = 0;
+      driversBlockedAccounts = 0;
+    }
     notifyListeners();
 
     final token = currentAuthenticationToken;
     if (token == null || token.isEmpty) {
       isLoading = false;
+      isBackgroundRefreshing = false;
       errorMessage = 'Session expired. Please log in again.';
       notifyListeners();
       return;
@@ -186,6 +230,7 @@ class DashboardPageModel extends ChangeNotifier {
           period: chartEarningsPeriod,
           vehicleId: chartVehicleId,
         ),
+        RidesAnalyticsCall.call(token: token),
         GetRidesCall.call(token: token),
         GetDriversCall.call(token: token),
         GetAdminPendingPayoutsCall.call(
@@ -200,17 +245,18 @@ class DashboardPageModel extends ChangeNotifier {
       _applyDashboardResponse(results[0]);
       _applyCompanyWalletResponse(results[1]);
       _applyEarningsAnalyticsResponse(results[2]);
+      _applyRidesAnalyticsResponse(results[3]);
 
-      final ridesList = _parseRidesList(results[3]);
+      final ridesList = _parseRidesList(results[4]);
       _applyRidesDerivedData(ridesList);
 
       await _enrichRecentRideParties(token);
 
-      _applyDriversResponse(results[4]);
-      _applyPayoutsResponse(results[5]);
-      _applyAllUsersStatsResponse(results[6]);
+      _applyDriversResponse(results[5]);
+      _applyPayoutsResponse(results[6]);
+      _applyAllUsersStatsResponse(results[7]);
 
-      final earningsStale = _applyChartVehiclesResponse(results[7]);
+      final earningsStale = _applyChartVehiclesResponse(results[8]);
       if (earningsStale) {
         final redo = await EarningsAnalyticsCall.call(
           token: token,
@@ -218,18 +264,27 @@ class DashboardPageModel extends ChangeNotifier {
           vehicleId: chartVehicleId,
         );
         earningsWeekly = [];
+        earningsLastWeek = [];
         _applyEarningsAnalyticsResponse(redo);
+      }
+
+      if (earningsWeekly.isEmpty && totalEarnings > 0) {
+        earningsWeekly = List<double>.filled(7, totalEarnings / 7);
+        earningsWeeklyLabels =
+            const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       }
 
       if (errorMessage == null && !results[0].succeeded) {
         errorMessage = 'Failed to load dashboard (${results[0].statusCode})';
       }
+      await _persistCache();
     } catch (e) {
       errorMessage = e.toString();
     } finally {
       isLoading = false;
+      isBackgroundRefreshing = false;
       chartRevision++;
-      notifyListeners();
+      _notifyIfChanged(force: true);
     }
   }
 
@@ -264,7 +319,14 @@ class DashboardPageModel extends ChangeNotifier {
         vehicleId: chartVehicleId,
       );
       earningsWeekly = [];
+      earningsLastWeek = [];
+      earningsWeeklyLabels = [];
       _applyEarningsAnalyticsResponse(resp);
+      if (earningsWeekly.isEmpty && totalEarnings > 0) {
+        earningsWeekly = List<double>.filled(7, totalEarnings / 7);
+        earningsWeeklyLabels = const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      }
+      await _persistCache();
     } finally {
       chartRefreshing = false;
       _bumpChartRevision();
@@ -300,10 +362,19 @@ class DashboardPageModel extends ChangeNotifier {
   }
 
   void _recomputeRidesBarFromCache() {
+    if (chartRideBarDays <= 7 &&
+        _ridesWeekFromAnalytics &&
+        ridesWeekly.isNotEmpty) {
+      return;
+    }
     if (chartRideBarDays <= 7) {
       ridesWeekly = _bucketRidesLast7Days(_allRides);
+      ridesWeeklyLabels = _labelsForLast7Days();
+      _ridesWeekFromAnalytics = false;
     } else {
       ridesWeekly = _bucketRidesOverDays(_allRides, 30, 10);
+      ridesWeeklyLabels = List<String>.generate(10, (i) => '${i + 1}');
+      _ridesWeekFromAnalytics = false;
     }
   }
 
@@ -395,7 +466,13 @@ class DashboardPageModel extends ChangeNotifier {
 
     final w = _firstDouble(
       m,
-      const ['admin_wallet', 'company_wallet', 'platform_balance', 'wallet_balance'],
+      const [
+        'admin_wallet',
+        'admin_wallet_balance',
+        'company_wallet',
+        'platform_balance',
+        'wallet_balance',
+      ],
     );
     if (w != null) adminWallet = w;
   }
@@ -455,18 +532,28 @@ class DashboardPageModel extends ChangeNotifier {
 
   void _applyEarningsAnalyticsResponse(ApiCallResponse response) {
     if (!response.succeeded) return;
-    final series = _extractNumericSeries(response.jsonBody);
+    final parsed = _extractEarningsSeriesAndLabels(response.jsonBody);
+    final series = parsed.$1;
+    final labels = parsed.$2;
+    final lastWeek = parsed.$3;
     if (series.isNotEmpty) {
       earningsWeekly = series;
+      earningsWeeklyLabels =
+          labels.isEmpty ? _labelsForLength(series.length) : labels;
     }
+    earningsLastWeek = lastWeek;
   }
 
-  List<double> _extractNumericSeries(dynamic body) {
+  (List<double>, List<String>, List<double>) _extractEarningsSeriesAndLabels(
+    dynamic body,
+  ) {
     final out = <double>[];
-    if (body is! Map) return out;
+    final labels = <String>[];
+    final lastWeek = <double>[];
+    if (body is! Map) return (out, labels, lastWeek);
     dynamic data = body['data'] ?? body;
 
-    void addFromList(List list) {
+    void addFromList(List list, {bool collectDateLabels = false}) {
       for (final item in list) {
         if (item is num) {
           out.add(item.toDouble());
@@ -477,16 +564,47 @@ class DashboardPageModel extends ChangeNotifier {
               _parseDouble(item['total']) ??
               _parseDouble(item['count']) ??
               _parseDouble(item['rides']);
-          if (v != null) out.add(v);
+          if (v != null) {
+            out.add(v);
+            if (collectDateLabels) {
+              labels.add(
+                _dayLabelFromDate(item['date']) ??
+                    item['day']?.toString() ??
+                    '${labels.length + 1}',
+              );
+            }
+          }
         }
       }
     }
 
     if (data is List) {
-      addFromList(data);
-      return out;
+      addFromList(data, collectDateLabels: true);
+      return (out, labels, lastWeek);
     }
     if (data is Map) {
+      final thisWeek = data['this_week'];
+      if (thisWeek is Map) {
+        final daily = thisWeek['daily_earnings'];
+        if (daily is List && daily.isNotEmpty) {
+          addFromList(daily, collectDateLabels: true);
+          if (out.isNotEmpty) {
+            final lw = data['last_week'];
+            if (lw is Map) {
+              final lwDaily = lw['daily_earnings'];
+              if (lwDaily is List && lwDaily.isNotEmpty) {
+                lastWeek.clear();
+                for (final item in lwDaily.whereType<Map>()) {
+                  final row = Map<String, dynamic>.from(item);
+                  final val = _parseDouble(row['earnings']) ?? 0;
+                  lastWeek.add(val);
+                }
+              }
+            }
+            return (out, labels, lastWeek);
+          }
+        }
+      }
       for (final key in [
         'weekly_earnings',
         'monthly_earnings',
@@ -502,8 +620,8 @@ class DashboardPageModel extends ChangeNotifier {
       ]) {
         final v = data[key];
         if (v is List && v.isNotEmpty) {
-          addFromList(v);
-          if (out.isNotEmpty) return out;
+          addFromList(v, collectDateLabels: true);
+          if (out.isNotEmpty) return (out, labels, lastWeek);
         }
       }
       data.forEach((key, value) {
@@ -526,7 +644,38 @@ class DashboardPageModel extends ChangeNotifier {
         }
       }
     }
-    return out;
+    if (labels.isEmpty && out.isNotEmpty) {
+      labels.addAll(_labelsForLength(out.length));
+    }
+    return (out, labels, lastWeek);
+  }
+
+  void _applyRidesAnalyticsResponse(ApiCallResponse response) {
+    if (!response.succeeded || response.jsonBody is! Map) return;
+    final root = Map<String, dynamic>.from(response.jsonBody as Map);
+    final data = root['data'];
+    if (data is! Map) return;
+    final week = data['week'];
+    if (week is! List || week.isEmpty) return;
+
+    final values = <double>[];
+    final labels = <String>[];
+    for (final item in week.whereType<Map>()) {
+      final row = Map<String, dynamic>.from(item);
+      final completed = _parseDouble(row['completed']) ?? 0;
+      final cancelled = _parseDouble(row['cancelled']) ?? 0;
+      values.add(completed + cancelled);
+      labels.add(
+        row['day']?.toString() ??
+            _dayLabelFromDate(row['date']) ??
+            '${labels.length + 1}',
+      );
+    }
+    if (values.isNotEmpty) {
+      ridesWeekly = values;
+      ridesWeeklyLabels = labels;
+      _ridesWeekFromAnalytics = true;
+    }
   }
 
   List<dynamic> _parseRidesList(ApiCallResponse response) {
@@ -610,6 +759,16 @@ class DashboardPageModel extends ChangeNotifier {
       if (idx >= 0 && idx < 7) counts[idx] += 1;
     }
     return counts;
+  }
+
+  List<String> _labelsForLast7Days() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = today.subtract(const Duration(days: 6));
+    return List<String>.generate(7, (i) {
+      final day = start.add(Duration(days: i));
+      return _weekdayAbbr(day.weekday);
+    });
   }
 
   List<double> _bucketRidesOverDays(
@@ -882,5 +1041,159 @@ class DashboardPageModel extends ChangeNotifier {
       } catch (_) {}
     }
     return null;
+  }
+
+  static List<String> _labelsForLength(int n) {
+    if (n == 7) {
+      return const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    }
+    return List<String>.generate(n, (i) => '${i + 1}');
+  }
+
+  static String? _dayLabelFromDate(dynamic raw) {
+    if (raw == null) return null;
+    try {
+      final dt = DateTime.parse(raw.toString());
+      return _weekdayAbbr(dt.weekday);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String _weekdayAbbr(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'Mon';
+      case DateTime.tuesday:
+        return 'Tue';
+      case DateTime.wednesday:
+        return 'Wed';
+      case DateTime.thursday:
+        return 'Thu';
+      case DateTime.friday:
+        return 'Fri';
+      case DateTime.saturday:
+        return 'Sat';
+      case DateTime.sunday:
+      default:
+        return 'Sun';
+    }
+  }
+
+  bool _hasPreviewData() {
+    return totalRides > 0 ||
+        totalUsers > 0 ||
+        totalDrivers > 0 ||
+        earningsWeekly.isNotEmpty ||
+        ridesWeekly.isNotEmpty ||
+        recentRides.isNotEmpty;
+  }
+
+  bool get hasPreviewData => _hasPreviewData();
+
+  Map<String, dynamic> _toCacheMap() {
+    return {
+      'totalRides': totalRides,
+      'totalUsers': totalUsers,
+      'totalDrivers': totalDrivers,
+      'onlineDrivers': onlineDrivers,
+      'usersActive': usersActive,
+      'usersInactive': usersInactive,
+      'usersBlocked': usersBlocked,
+      'driversActiveAccounts': driversActiveAccounts,
+      'driversPendingKyc': driversPendingKyc,
+      'driversBlockedAccounts': driversBlockedAccounts,
+      'ridesCompletedToday': ridesCompletedToday,
+      'newUsersToday': newUsersToday,
+      'totalEarnings': totalEarnings,
+      'adminWallet': adminWallet,
+      'earningsWeekly': earningsWeekly,
+      'earningsLastWeek': earningsLastWeek,
+      'ridesWeekly': ridesWeekly,
+      'earningsWeeklyLabels': earningsWeeklyLabels,
+      'ridesWeeklyLabels': ridesWeeklyLabels,
+      'completedPct': completedPct,
+      'ongoingPct': ongoingPct,
+      'cancelledPct': cancelledPct,
+      'statusCompletedCount': statusCompletedCount,
+      'statusOngoingCount': statusOngoingCount,
+      'statusCancelledCount': statusCancelledCount,
+      'recentRides': recentRides,
+      'topDrivers': topDrivers,
+      'pendingPayouts': pendingPayouts,
+    };
+  }
+
+  Future<void> _hydrateFromCache() async {
+    final cached = await CacheService.getData(_cacheKey);
+    lastUpdatedAt = await CacheService.getLastUpdated(_cacheKey);
+    if (cached == null) return;
+
+    totalRides = _parseInt(cached['totalRides']) ?? totalRides;
+    totalUsers = _parseInt(cached['totalUsers']) ?? totalUsers;
+    totalDrivers = _parseInt(cached['totalDrivers']) ?? totalDrivers;
+    onlineDrivers = _parseInt(cached['onlineDrivers']) ?? onlineDrivers;
+    usersActive = _parseInt(cached['usersActive']) ?? usersActive;
+    usersInactive = _parseInt(cached['usersInactive']) ?? usersInactive;
+    usersBlocked = _parseInt(cached['usersBlocked']) ?? usersBlocked;
+    driversActiveAccounts =
+        _parseInt(cached['driversActiveAccounts']) ?? driversActiveAccounts;
+    driversPendingKyc =
+        _parseInt(cached['driversPendingKyc']) ?? driversPendingKyc;
+    driversBlockedAccounts =
+        _parseInt(cached['driversBlockedAccounts']) ?? driversBlockedAccounts;
+    ridesCompletedToday =
+        _parseInt(cached['ridesCompletedToday']) ?? ridesCompletedToday;
+    newUsersToday = _parseInt(cached['newUsersToday']) ?? newUsersToday;
+    totalEarnings = _parseDouble(cached['totalEarnings']) ?? totalEarnings;
+    adminWallet = _parseDouble(cached['adminWallet']) ?? adminWallet;
+    earningsWeekly = _toDoubleList(cached['earningsWeekly']);
+    earningsLastWeek = _toDoubleList(cached['earningsLastWeek']);
+    ridesWeekly = _toDoubleList(cached['ridesWeekly']);
+    earningsWeeklyLabels = _toStringList(cached['earningsWeeklyLabels']);
+    ridesWeeklyLabels = _toStringList(cached['ridesWeeklyLabels']);
+    completedPct = _parseDouble(cached['completedPct']) ?? completedPct;
+    ongoingPct = _parseDouble(cached['ongoingPct']) ?? ongoingPct;
+    cancelledPct = _parseDouble(cached['cancelledPct']) ?? cancelledPct;
+    statusCompletedCount =
+        _parseInt(cached['statusCompletedCount']) ?? statusCompletedCount;
+    statusOngoingCount = _parseInt(cached['statusOngoingCount']) ?? statusOngoingCount;
+    statusCancelledCount =
+        _parseInt(cached['statusCancelledCount']) ?? statusCancelledCount;
+    recentRides = _toMapList(cached['recentRides']);
+    topDrivers = _toMapList(cached['topDrivers']);
+    pendingPayouts = _toMapList(cached['pendingPayouts']);
+    _notifyIfChanged(force: true);
+  }
+
+  Future<void> _persistCache() async {
+    await CacheService.saveData(_cacheKey, _toCacheMap());
+    lastUpdatedAt = await CacheService.getLastUpdated(_cacheKey);
+  }
+
+  void _notifyIfChanged({bool force = false}) {
+    final fingerprint = _toCacheMap().toString();
+    if (force || _lastUiFingerprint != fingerprint) {
+      _lastUiFingerprint = fingerprint;
+      notifyListeners();
+    }
+  }
+
+  static List<double> _toDoubleList(dynamic value) {
+    if (value is! List) return [];
+    return value.map((e) => _parseDouble(e) ?? 0).toList();
+  }
+
+  static List<String> _toStringList(dynamic value) {
+    if (value is! List) return [];
+    return value.map((e) => e.toString()).toList();
+  }
+
+  static List<Map<String, dynamic>> _toMapList(dynamic value) {
+    if (value is! List) return [];
+    return value
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 }

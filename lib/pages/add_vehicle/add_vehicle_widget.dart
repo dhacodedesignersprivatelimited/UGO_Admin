@@ -880,8 +880,11 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 12,
+                    runSpacing: 8,
                     children: [
                       TextButton(
                         onPressed: _isSubmittingSubType ? null : _resetSubTypeForm,
@@ -892,7 +895,6 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                               ),
                         ),
                       ),
-                      const SizedBox(width: 12),
                       FFButtonWidget(
                         onPressed: _isSubmittingSubType ? null : _submitVehicleSubType,
                         text: _isSubmittingSubType ? 'Saving...' : 'Save Vehicle Sub Type',

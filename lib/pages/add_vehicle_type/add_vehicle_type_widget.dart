@@ -237,7 +237,7 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                             controller: _model.nameTextController,
                             focusNode: _model.nameFocusNode,
                             decoration: InputDecoration(
-                              hintText: 'e.g. AUTO, SEDAN, SUV',
+                              hintText: 'e.g. AUTO, BIKE, CAR',
                               filled: true,
                               fillColor: FlutterFlowTheme.of(context).secondaryBackground,
                               border: OutlineInputBorder(

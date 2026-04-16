@@ -14,6 +14,7 @@ import '../widgets/quick_actions.dart';
 import '../widgets/recent_rides_table.dart';
 import '../widgets/top_drivers_list.dart';
 import '../widgets/withdraw_requests.dart';
+import '/components/skeleton_block.dart';
 
 /// Scrollable dashboard body (MVVM: driven by [DashboardPageModel]).
 class DashboardScreenView extends StatelessWidget {
@@ -50,6 +51,46 @@ class DashboardScreenView extends StatelessWidget {
     return ListenableBuilder(
       listenable: model,
       builder: (context, _) {
+        if (model.isLoading && !model.hasPreviewData) {
+          return CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                sliver: SliverToBoxAdapter(
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: List.generate(
+                      6,
+                      (_) => const SkeletonBlock(width: 170, height: 100, radius: 14),
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                sliver: SliverToBoxAdapter(
+                  child: const SkeletonBlock(
+                    width: double.infinity,
+                    height: 300,
+                    radius: 14,
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                sliver: SliverToBoxAdapter(
+                  child: const SkeletonBlock(
+                    width: double.infinity,
+                    height: 250,
+                    radius: 14,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
         return RefreshIndicator(
           color: DashboardTokens.primaryOrange,
           onRefresh: onRefresh,
@@ -92,15 +133,34 @@ class DashboardScreenView extends StatelessWidget {
                             ),
                           ),
                         ),
+                      if (model.isBackgroundRefreshing)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: LinearProgressIndicator(minHeight: 2),
+                        ),
                       if (!model.isLoading)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            'Today: ${model.ridesCompletedToday} rides completed · ${model.newUsersToday} new users',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: theme.secondaryText,
-                            ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Today: ${model.ridesCompletedToday} rides completed · ${model.newUsersToday} new users',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: theme.secondaryText,
+                                  ),
+                                ),
+                              ),
+                              if (model.lastUpdatedAt != null)
+                                Text(
+                                  'Updated ${dateTimeFormat("relative", model.lastUpdatedAt)}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: theme.secondaryText,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       DashboardMetricGrid(

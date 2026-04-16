@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 class WithdrawItem extends StatelessWidget {
+  final String? requestId;
   final String driverName;
   final String phone;
   final String amount;
+  final String? transferMode;
   final String status;
   final String date;
   final VoidCallback onApprove;
@@ -11,9 +13,11 @@ class WithdrawItem extends StatelessWidget {
 
   const WithdrawItem({
     super.key,
+    this.requestId,
     required this.driverName,
     required this.phone,
     required this.amount,
+    this.transferMode,
     required this.status,
     required this.date,
     required this.onApprove,
@@ -89,6 +93,17 @@ class WithdrawItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (requestId != null && requestId!.trim().isNotEmpty)
+                      Text(
+                        requestId!.trim(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    if (requestId != null && requestId!.trim().isNotEmpty)
+                      const SizedBox(height: 2),
                     Text(
                       driverName,
                       style: const TextStyle(
@@ -118,6 +133,25 @@ class WithdrawItem extends StatelessWidget {
               ),
             ],
           ),
+
+          if (transferMode != null && transferMode!.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.account_balance_wallet_outlined,
+                    size: 14, color: Colors.grey.shade700),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    transferMode!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                  ),
+                ),
+              ],
+            ),
+          ],
 
           const SizedBox(height: 10),
 

@@ -2003,6 +2003,42 @@ class GetAdminPendingPayoutsCall {
   }
 }
 
+/// GET `/api/admin/withdraw/requests` — admin manual withdraw request queue.
+class GetAdminWithdrawRequestsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminWithdrawRequests',
+      apiUrl: '${ApiConfig.apiBase}/admin/withdraw/requests',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static int pendingCount(dynamic response) =>
+      castToType<int>(getJsonField(response, r'''$.data.pending_count''')) ?? 0;
+
+  static List<dynamic> requestsList(dynamic response) {
+    final nested = getJsonField(response, r'''$.data.requests''');
+    if (nested is List) {
+      return List<dynamic>.from(nested);
+    }
+    final direct = getJsonField(response, r'''$.requests''');
+    if (direct is List) {
+      return List<dynamic>.from(direct);
+    }
+    return [];
+  }
+}
+
 /// POST `/api/payments/payout/mark-paid` — admin confirms bank transfer completed.
 class MarkPayoutPaidCall {
   static Future<ApiCallResponse> call({

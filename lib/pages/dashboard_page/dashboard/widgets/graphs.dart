@@ -152,11 +152,31 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
 
   Widget _earningsPage(DashboardPageModel m) {
     final thisWeek = List<double>.from(m.earningsWeekly);
-    final labels = _dayLabels(thisWeek.length);
+    final lastWeekRaw = List<double>.from(m.earningsLastWeek);
+    final hasLastWeekData =
+        lastWeekRaw.isNotEmpty && lastWeekRaw.any((e) => e > 0);
+    final chartTitle =
+        hasLastWeekData ? 'This Week vs Last Week' : 'Earnings Overview';
+    final lastWeek = hasLastWeekData
+        ? List<double>.generate(
+            thisWeek.length,
+            (i) => i < lastWeekRaw.length ? lastWeekRaw[i] : 0,
+          )
+        : <double>[];
+    final labels = m.earningsWeeklyLabels.length == thisWeek.length
+        ? List<String>.from(m.earningsWeeklyLabels)
+        : _dayLabels(thisWeek.length);
 
-    if (thisWeek.isEmpty || thisWeek.every((e) => e == 0)) {
+    if (thisWeek.isEmpty) {
+      if (m.isLoading || m.chartRefreshing) {
+        return _chartShell(
+          title: chartTitle,
+          trailing: const SizedBox.shrink(),
+          child: _loadingChart('Loading earnings...'),
+        );
+      }
       return _chartShell(
-        title: 'Earnings Overview',
+        title: chartTitle,
         trailing: const SizedBox.shrink(),
         child: _emptyChart('No earnings data'),
       );
@@ -167,21 +187,38 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
       n,
       (i) => FlSpot(i.toDouble(), thisWeek[i] * _anim.value),
     );
-    final allY = [...spotsThis.map((e) => e.y)];
+    final spotsLast = List.generate(
+      thisWeek.length,
+      (i) => FlSpot(i.toDouble(), (i < lastWeek.length ? lastWeek[i] : 0) * _anim.value),
+    );
+    final allY = [
+      ...spotsThis.map((e) => e.y),
+      if (hasLastWeekData) ...spotsLast.map((e) => e.y),
+    ];
     final maxY = allY.reduce(math.max);
     final minY = allY.reduce(math.min);
     final pad = (maxY - minY).abs() < 1 ? 8.0 : (maxY - minY) * 0.15;
+    final chartMaxY = maxY <= 0 ? 8.0 : maxY + pad;
 
     return _chartShell(
-      title: 'Earnings Overview',
+      title: chartTitle,
       trailing: const SizedBox.shrink(),
-      legend: _legendDot(DashboardTokens.primaryOrange, 'Earnings'),
+      legend: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _legendDot(DashboardTokens.primaryOrange, 'This Week'),
+          if (hasLastWeekData) ...[
+            const SizedBox(width: 14),
+            _legendDot(Colors.grey.shade400, 'Last Week'),
+          ],
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.only(right: 8, left: 4, top: 4),
         child: LineChart(
           LineChartData(
             minY: (minY - pad).clamp(0, double.infinity),
-            maxY: maxY + pad,
+            maxY: chartMaxY,
             gridData: FlGridData(
               show: true,
               drawVerticalLine: false,
@@ -231,9 +268,12 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                 getTooltipItems: (spots) {
                   return spots.map((s) {
                     final idx = s.x.toInt().clamp(0, n - 1);
-                    final val = thisWeek[idx];
+                    final isThisWeek = s.barIndex == (hasLastWeekData ? 1 : 0);
+                    final val = isThisWeek
+                        ? thisWeek[idx]
+                        : (idx < lastWeek.length ? lastWeek[idx] : 0.0);
                     return LineTooltipItem(
-                      _fmtMoney(val),
+                      '${isThisWeek ? "This" : "Last"} week\n${_fmtMoney(val)}',
                       GoogleFonts.inter(color: Colors.white, fontSize: 12),
                     );
                   }).toList();
@@ -241,6 +281,14 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
               ),
             ),
             lineBarsData: [
+              if (hasLastWeekData)
+                LineChartBarData(
+                  spots: spotsLast,
+                  isCurved: true,
+                  color: Colors.grey.shade400,
+                  barWidth: 2.5,
+                  dotData: const FlDotData(show: false),
+                ),
               LineChartBarData(
                 spots: spotsThis,
                 isCurved: true,
@@ -269,21 +317,34 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
   Widget _ridesBarPage(DashboardPageModel m) {
     final vals = List<double>.from(m.ridesWeekly);
     final isSeven = m.chartRideBarDays <= 7;
-    final labels = isSeven ? _dayLabels(vals.length) : List.generate(vals.length, (i) => '${i + 1}');
+    final chartTitle = isSeven ? 'Rides Analytics (7 Days)' : 'Rides Analytics (30 Days)';
+    final allZero = vals.isNotEmpty && vals.every((e) => e == 0);
+    final labels = m.ridesWeeklyLabels.length == vals.length
+        ? List<String>.from(m.ridesWeeklyLabels)
+        : (isSeven
+            ? _dayLabels(vals.length)
+            : List.generate(vals.length, (i) => '${i + 1}'));
 
-    if (vals.isEmpty || vals.every((e) => e == 0)) {
+    if (vals.isEmpty) {
+      if (m.isLoading || m.chartRefreshing) {
+        return _chartShell(
+          title: chartTitle,
+          trailing: const SizedBox(),
+          child: _loadingChart('Loading rides...'),
+        );
+      }
       return _chartShell(
-        title: 'Weekly Rides',
+        title: chartTitle,
         trailing: const SizedBox(),
         child: _emptyChart('No rides in this window'),
       );
     }
 
     final maxY = vals.reduce(math.max);
-    final cap = maxY <= 0 ? 4.0 : maxY * 1.25;
+    final cap = allZero ? 1.0 : (maxY <= 0 ? 4.0 : maxY * 1.25);
 
     return _chartShell(
-      title: 'Weekly Rides',
+      title: chartTitle,
       trailing: const SizedBox.shrink(),
       legend: Row(
         mainAxisSize: MainAxisSize.min,
@@ -354,11 +415,15 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                 x: i,
                 barRods: [
                   BarChartRodData(
-                    toY: vals[i] * _anim.value,
+                    toY: (allZero ? 0.08 : vals[i]) * _anim.value,
                     gradient: LinearGradient(
                       colors: [
-                        DashboardTokens.primaryOrange,
-                        DashboardTokens.primaryOrange.withValues(alpha: 0.65),
+                        allZero
+                            ? const Color(0xFFD1D5DB)
+                            : DashboardTokens.primaryOrange,
+                        allZero
+                            ? const Color(0xFFE5E7EB)
+                            : DashboardTokens.primaryOrange.withValues(alpha: 0.65),
                       ],
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
@@ -557,6 +622,27 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
         text,
         textAlign: TextAlign.center,
         style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 13),
+      ),
+    );
+  }
+
+  Widget _loadingChart(String text) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 13),
+          ),
+        ],
       ),
     );
   }

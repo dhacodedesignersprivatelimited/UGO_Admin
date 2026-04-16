@@ -25,7 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _model = DashboardPageModel();
-    _model.loadAll();
+    _model.initialize();
     _model.startUserDriverStatsPolling();
   }
 

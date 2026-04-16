@@ -42,9 +42,11 @@ class WithdrawRequestList extends StatelessWidget {
           final w = withdraws[index];
 
           return WithdrawItem(
+            requestId: w['wr_id']?.toString(),
             driverName: w['driver_name'] ?? "Unknown",
             phone: w['phone'] ?? "",
             amount: w['amount']?.toString() ?? "0",
+            transferMode: w['upi_or_bank']?.toString(),
             status: w['status'] ?? "pending",
             date: w['date'] ?? "",
             onApprove: () {

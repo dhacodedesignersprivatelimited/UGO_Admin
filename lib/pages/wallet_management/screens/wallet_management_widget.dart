@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_scaffold.dart';
+import '/components/skeleton_block.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/services/cache_service.dart';
+import '/services/cache_policy.dart';
 
 import '../widgets/action_buttons.dart';
 import '../widgets/summary_cards.dart';
@@ -24,13 +27,17 @@ class WalletManagementWidget extends StatefulWidget {
 }
 
 class _WalletManagementWidgetState extends State<WalletManagementWidget> {
+  static const String _cacheKey = CachePolicy.walletKey;
+  static const Duration _cacheTtl = CachePolicy.walletTtl;
   static final _moneyFmt = NumberFormat('#,##0.00', 'en_IN');
   static final _moneyIntFmt = NumberFormat('#,##0', 'en_IN');
   static const int _txPageSize = 10;
 
   bool isLoading = false;
+  bool isBackgroundRefreshing = false;
   bool txLoading = false;
   String? loadError;
+  DateTime? _lastUpdatedAt;
 
   List<Map<String, dynamic>> transactions = [];
   List<Map<String, dynamic>> withdraws = [];
@@ -55,11 +62,12 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
   String statusFilter = 'all';
 
   Timer? _searchDebounce;
+  Future<void>? _inFlightFetch;
 
   @override
   void initState() {
     super.initState();
-    fetchData();
+    unawaited(_bootstrap());
   }
 
   @override
@@ -68,18 +76,43 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     super.dispose();
   }
 
-  Future<void> fetchData() async {
+  Future<void> _bootstrap() async {
+    await _loadCachedPreview();
+    final age = await CacheService.getCacheAge(_cacheKey);
+    final shouldRefresh = age == null || age > _cacheTtl || !_hasPreviewData();
+    if (shouldRefresh) {
+      await fetchData(backgroundRefresh: true);
+    }
+  }
+
+  Future<void> fetchData({bool backgroundRefresh = false}) async {
+    if (_inFlightFetch != null) {
+      return _inFlightFetch;
+    }
+    _inFlightFetch =
+        _fetchDataInternal(backgroundRefresh: backgroundRefresh);
+    try {
+      await _inFlightFetch;
+    } finally {
+      _inFlightFetch = null;
+    }
+  }
+
+  Future<void> _fetchDataInternal({bool backgroundRefresh = false}) async {
     final token = currentAuthenticationToken;
     if (token == null || token.isEmpty) {
       setState(() {
         isLoading = false;
+        isBackgroundRefreshing = false;
         loadError = 'Not signed in';
       });
       return;
     }
 
+    final hasPreview = _hasPreviewData();
     setState(() {
-      isLoading = true;
+      isLoading = !hasPreview && !backgroundRefresh;
+      isBackgroundRefreshing = hasPreview || backgroundRefresh;
       loadError = null;
     });
 
@@ -89,13 +122,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
         CompanyWalletCall.call(token: token),
         GetWalletsCall.call(token: token),
         GetDriversCall.call(token: token),
-        GetAdminPendingPayoutsCall.call(
-          token: token,
-          page: 1,
-          limit: 100,
-          status: 'all',
-          includeStatusParam: true,
-        ),
+        GetAdminWithdrawRequestsCall.call(token: token),
       ]);
 
       if (!mounted) return;
@@ -103,7 +130,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
       final companyResp = results[0];
       final walletsResp = results[1];
       final driversResp = results[2];
-      final payoutsResp = results[3];
+      final withdrawReqResp = results[3];
 
       final errs = <String>[];
       if (!companyResp.succeeded) {
@@ -115,8 +142,8 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
       if (!driversResp.succeeded) {
         errs.add('Drivers (${driversResp.statusCode})');
       }
-      if (!payoutsResp.succeeded) {
-        errs.add('Payouts (${payoutsResp.statusCode})');
+      if (!withdrawReqResp.succeeded) {
+        errs.add('Withdraw requests (${withdrawReqResp.statusCode})');
       }
 
       final walletRows = walletsResp.succeeded
@@ -134,30 +161,103 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
 
       _applyWalletAggregates(walletRows, companyResp);
 
-      final payoutRows = payoutsResp.succeeded
-          ? GetAdminPendingPayoutsCall.payoutsList(payoutsResp.jsonBody)
+      var payoutRows = <Map<String, dynamic>>[];
+      if (withdrawReqResp.succeeded) {
+        payoutRows = GetAdminWithdrawRequestsCall.requestsList(
+          withdrawReqResp.jsonBody,
+        ).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+      } else {
+        final fallback = await GetAdminPendingPayoutsCall.call(
+          token: token,
+          page: 1,
+          limit: 100,
+          status: 'all',
+          includeStatusParam: true,
+        );
+        if (fallback.succeeded) {
+          payoutRows = GetAdminPendingPayoutsCall.payoutsList(fallback.jsonBody)
               .whereType<Map>()
               .map((e) => Map<String, dynamic>.from(e))
-              .toList()
-          : <Map<String, dynamic>>[];
+              .toList();
+        }
+      }
 
       withdraws = payoutRows.map(_payoutToWithdrawRow).toList();
       _applyPendingWithdrawTotal(payoutRows);
 
       await _fetchTransactionPage(1, showTableSpinner: false);
+      await _persistCache();
 
       if (!mounted) return;
       setState(() {
         isLoading = false;
+        isBackgroundRefreshing = false;
         loadError = errs.isEmpty ? null : 'Some data failed: ${errs.join(', ')}';
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         isLoading = false;
-        loadError = e.toString();
+        isBackgroundRefreshing = false;
+        loadError = _hasPreviewData() ? 'Showing last updated data' : e.toString();
       });
+      if (_hasPreviewData()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Showing last updated data')),
+        );
+      }
     }
+  }
+
+  bool _hasPreviewData() {
+    return transactions.isNotEmpty ||
+        withdraws.isNotEmpty ||
+        totalBalanceLabel != '0' ||
+        totalCreditedLabel != '0' ||
+        totalDebitedLabel != '0';
+  }
+
+  Future<void> _loadCachedPreview() async {
+    final cached = await CacheService.getData(_cacheKey);
+    final ts = await CacheService.getLastUpdated(_cacheKey);
+    if (!mounted || cached == null) return;
+    setState(() {
+      transactions = _toMapList(cached['transactions']);
+      withdraws = _toMapList(cached['withdraws']);
+      totalBalanceLabel = cached['totalBalanceLabel']?.toString() ?? totalBalanceLabel;
+      totalCreditedLabel =
+          cached['totalCreditedLabel']?.toString() ?? totalCreditedLabel;
+      totalDebitedLabel = cached['totalDebitedLabel']?.toString() ?? totalDebitedLabel;
+      pendingWithdrawalsLabel =
+          cached['pendingWithdrawalsLabel']?.toString() ?? pendingWithdrawalsLabel;
+      topDriverName = cached['topDriverName']?.toString();
+      topDriverBalance = cached['topDriverBalance']?.toString();
+      _lastUpdatedAt = ts;
+      isLoading = false;
+      loadError = null;
+    });
+  }
+
+  Future<void> _persistCache() async {
+    await CacheService.saveData(_cacheKey, {
+      'transactions': transactions,
+      'withdraws': withdraws,
+      'totalBalanceLabel': totalBalanceLabel,
+      'totalCreditedLabel': totalCreditedLabel,
+      'totalDebitedLabel': totalDebitedLabel,
+      'pendingWithdrawalsLabel': pendingWithdrawalsLabel,
+      'topDriverName': topDriverName,
+      'topDriverBalance': topDriverBalance,
+    });
+    _lastUpdatedAt = await CacheService.getLastUpdated(_cacheKey);
+  }
+
+  List<Map<String, dynamic>> _toMapList(dynamic value) {
+    if (value is! List) return [];
+    return value
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
   Future<void> _fetchTransactionPage(
@@ -312,7 +412,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
   void _applyPendingWithdrawTotal(List<Map<String, dynamic>> payoutRows) {
     double pending = 0;
     for (final p in payoutRows) {
-      final raw = _parseDouble(p['amount_raw']);
+      final raw = _parseDouble(p['amount_raw']) ?? _parseDouble(p['amount']);
       final s = (p['status']?.toString() ?? '').toLowerCase();
       if (raw == null) continue;
       if (s.contains('paid') || s.contains('complete')) continue;
@@ -338,16 +438,22 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
 
   Map<String, dynamic> _payoutToWithdrawRow(Map<String, dynamic> p) {
     final id = _parseInt(p['payout_id']) ?? _parseInt(p['id']);
-    final raw = _parseDouble(p['amount_raw']);
+    final driver = p['driver'] is Map ? Map<String, dynamic>.from(p['driver']) : null;
+    final raw = _parseDouble(p['amount_raw']) ?? _parseDouble(p['amount']);
     final amountStr = raw != null
         ? _moneyFmt.format(raw)
         : (p['amount']?.toString().replaceAll('₹', '').trim() ?? '0');
     final name = p['driver_name']?.toString().trim().isNotEmpty == true
         ? p['driver_name'].toString().trim()
-        : 'Driver #${p['driver_id'] ?? ''}';
-    final phone = p['mobile']?.toString() ?? p['phone']?.toString() ?? '';
+        : (driver?['name']?.toString().trim().isNotEmpty == true
+            ? driver!['name'].toString().trim()
+            : 'Driver #${p['driver_id'] ?? driver?['id'] ?? ''}');
+    final phone = p['mobile']?.toString() ??
+        p['phone']?.toString() ??
+        driver?['mobile']?.toString() ??
+        '';
     final status = p['status']?.toString() ?? 'pending_manual_transfer';
-    final req = p['requested_date'] ?? p['created_at'];
+    final req = p['request_date'] ?? p['requested_date'] ?? p['created_at'];
     String dateStr = '';
     if (req != null) {
       try {
@@ -360,9 +466,12 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
 
     return {
       'id': id,
+      'wr_id': p['wr_id']?.toString(),
       'driver_name': name,
       'phone': phone,
       'amount': amountStr,
+      'amount_raw': raw,
+      'upi_or_bank': p['upi_or_bank']?.toString(),
       'status': status,
       'date': dateStr,
     };
@@ -732,17 +841,44 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
-          onPressed: (isLoading || txLoading) ? null : fetchData,
+          onPressed: (isLoading || txLoading || isBackgroundRefreshing)
+              ? null
+              : () => fetchData(backgroundRefresh: true),
         ),
       ],
       child: RefreshIndicator(
-        onRefresh: fetchData,
-        child: SingleChildScrollView(
+        onRefresh: () => fetchData(backgroundRefresh: true),
+        child: isLoading && !_hasPreviewData()
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(12),
+                children: const [
+                  SkeletonBlock(width: double.infinity, height: 110, radius: 14),
+                  SizedBox(height: 12),
+                  SkeletonBlock(width: double.infinity, height: 64, radius: 12),
+                  SizedBox(height: 12),
+                  SkeletonBlock(width: double.infinity, height: 320, radius: 12),
+                ],
+              )
+            : SingleChildScrollView(
           padding: const EdgeInsets.all(12),
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (isBackgroundRefreshing)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: LinearProgressIndicator(minHeight: 2),
+                ),
+              if (_lastUpdatedAt != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    'Updated ${dateTimeFormat("relative", _lastUpdatedAt)}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ),
               if (loadError != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),

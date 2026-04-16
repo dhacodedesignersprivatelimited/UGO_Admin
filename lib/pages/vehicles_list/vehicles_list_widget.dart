@@ -6,6 +6,10 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/cache_service.dart';
+import '/services/cache_policy.dart';
+import '/components/skeleton_block.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'vehicles_list_model.dart';
@@ -22,23 +26,69 @@ class VehiclesListWidget extends StatefulWidget {
 }
 
 class _VehiclesListWidgetState extends State<VehiclesListWidget> {
+  static const String _cacheKey = CachePolicy.vehiclesKey;
+  static const Duration _cacheTtl = CachePolicy.vehiclesTtl;
   late VehiclesListModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   List<Map<String, dynamic>> _vehicleTypes = [];
   List<Map<String, dynamic>> _adminVehicles = [];
   bool _isLoading = true;
+  bool _isBackgroundRefreshing = false;
   String? _errorMessage;
+  DateTime? _lastUpdatedAt;
+  Future<void>? _inFlightLoad;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => VehiclesListModel());
-    _loadData();
+    unawaited(_bootstrap());
   }
 
-  Future<void> _loadData() async {
+  Future<void> _bootstrap() async {
+    await _loadCachePreview();
+    final age = await CacheService.getCacheAge(_cacheKey);
+    final shouldRefresh = age == null ||
+        age > _cacheTtl ||
+        (_vehicleTypes.isEmpty && _adminVehicles.isEmpty);
+    if (shouldRefresh) {
+      await _loadData(backgroundRefresh: true);
+    }
+  }
+
+  Future<void> _loadCachePreview() async {
+    final cached = await CacheService.getData(_cacheKey);
+    final ts = await CacheService.getLastUpdated(_cacheKey);
+    if (!mounted || cached == null) return;
+    final types = _toMapList(cached['vehicleTypes']);
+    final vehicles = _toMapList(cached['adminVehicles']);
+    if (types.isEmpty && vehicles.isEmpty) return;
     setState(() {
-      _isLoading = true;
+      _vehicleTypes = types;
+      _adminVehicles = vehicles;
+      _lastUpdatedAt = ts;
+      _isLoading = false;
+      _errorMessage = null;
+    });
+  }
+
+  Future<void> _loadData({bool backgroundRefresh = false}) async {
+    if (_inFlightLoad != null) {
+      return _inFlightLoad;
+    }
+    _inFlightLoad = _loadDataInternal(backgroundRefresh: backgroundRefresh);
+    try {
+      await _inFlightLoad;
+    } finally {
+      _inFlightLoad = null;
+    }
+  }
+
+  Future<void> _loadDataInternal({bool backgroundRefresh = false}) async {
+    final hasPreview = _vehicleTypes.isNotEmpty || _adminVehicles.isNotEmpty;
+    setState(() {
+      _isLoading = !hasPreview && !backgroundRefresh;
+      _isBackgroundRefreshing = hasPreview || backgroundRefresh;
       _errorMessage = null;
     });
     try {
@@ -81,19 +131,54 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
         }
       }
 
+      final changed = _didVehiclesDataChange(types, vehicles);
       setState(() {
-        _vehicleTypes = types;
-        _adminVehicles = vehicles;
+        if (changed) {
+          _vehicleTypes = types;
+          _adminVehicles = vehicles;
+        }
         _isLoading = false;
+        _isBackgroundRefreshing = false;
       });
+      await CacheService.saveData(_cacheKey, {
+        'vehicleTypes': types,
+        'adminVehicles': vehicles,
+      });
+      _lastUpdatedAt = await CacheService.getLastUpdated(_cacheKey);
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = e.toString();
+          _isBackgroundRefreshing = false;
+          _errorMessage = (_vehicleTypes.isNotEmpty || _adminVehicles.isNotEmpty)
+              ? 'Showing last updated data'
+              : e.toString();
         });
+        if (_vehicleTypes.isNotEmpty || _adminVehicles.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Showing last updated data')),
+          );
+        }
       }
     }
+  }
+
+  bool _didVehiclesDataChange(
+    List<Map<String, dynamic>> types,
+    List<Map<String, dynamic>> vehicles,
+  ) {
+    if (_vehicleTypes.length != types.length) return true;
+    if (_adminVehicles.length != vehicles.length) return true;
+    return _vehicleTypes.toString() != types.toString() ||
+        _adminVehicles.toString() != vehicles.toString();
+  }
+
+  List<Map<String, dynamic>> _toMapList(dynamic value) {
+    if (value is! List) return <Map<String, dynamic>>[];
+    return value
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
   /// Get sub vehicles where vehicle_type_id matches the given type id
@@ -183,7 +268,9 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
             ),
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white, size: 26),
-              onPressed: _isLoading ? null : _loadData,
+              onPressed: (_isLoading || _isBackgroundRefreshing)
+                  ? null
+                  : () => _loadData(backgroundRefresh: true),
             ),
           ],
           elevation: 2,
@@ -202,22 +289,17 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
             ),
           ),
           child: _isLoading
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: FlutterFlowTheme.of(context).primary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Loading vehicles...',
-                        style: FlutterFlowTheme.of(context).bodyMedium,
-                      ),
-                    ],
-                  ),
+              ? ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  children: const [
+                    SkeletonBlock(width: double.infinity, height: 120, radius: 16),
+                    SizedBox(height: 12),
+                    SkeletonBlock(width: double.infinity, height: 120, radius: 16),
+                    SizedBox(height: 12),
+                    SkeletonBlock(width: double.infinity, height: 120, radius: 16),
+                  ],
                 )
-              : _errorMessage != null
+              : _errorMessage != null && _vehicleTypes.isEmpty && _adminVehicles.isEmpty
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
@@ -247,7 +329,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
                       ),
                     )
                   : RefreshIndicator(
-                      onRefresh: _loadData,
+                      onRefresh: () => _loadData(backgroundRefresh: true),
                       child: _vehicleTypes.isEmpty && _adminVehicles.isEmpty
                           ? ListView(
                               physics: const AlwaysScrollableScrollPhysics(),

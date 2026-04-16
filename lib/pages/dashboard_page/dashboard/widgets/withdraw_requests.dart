@@ -32,7 +32,10 @@ class WithdrawRequests extends StatelessWidget {
 
   static double? _payoutAmount(Map<String, dynamic> m) {
     for (final k in [
+      'amount_raw',
       'amount',
+      'requested_amount',
+      'withdraw_amount',
       'net_amount',
       'payout_amount',
       'total_amount',
@@ -45,13 +48,31 @@ class WithdrawRequests extends StatelessWidget {
   }
 
   static String _payoutTitle(Map<String, dynamic> m) {
+    final drv = m['driver'];
+    if (drv is Map) {
+      final dm = Map<String, dynamic>.from(drv);
+      final dn = dm['name']?.toString().trim();
+      if (dn != null && dn.isNotEmpty && dn != 'null') {
+        final wr = m['wr_id']?.toString().trim();
+        if (wr != null && wr.isNotEmpty && wr != 'null') {
+          return '$wr · $dn';
+        }
+        return dn;
+      }
+    }
     final fn = m['driver_first_name']?.toString().trim() ?? '';
     final ln = m['driver_last_name']?.toString().trim() ?? '';
     final n = '$fn $ln'.trim();
     if (n.isNotEmpty) return n;
     final name = m['driver_name']?.toString().trim() ??
         m['name']?.toString().trim();
-    if (name != null && name.isNotEmpty && name != 'null') return name;
+    if (name != null && name.isNotEmpty && name != 'null') {
+      final wr = m['wr_id']?.toString().trim();
+      if (wr != null && wr.isNotEmpty && wr != 'null') {
+        return '$wr · $name';
+      }
+      return name;
+    }
     final id = m['driver_id'] ?? m['user_id'];
     return id != null ? 'Driver #$id' : 'Driver';
   }
@@ -79,10 +100,18 @@ class WithdrawRequests extends StatelessWidget {
   }
 
   static String _paymentMethod(Map<String, dynamic> m) {
+    final upiOrBank = m['upi_or_bank']?.toString().trim();
+    if (upiOrBank != null && upiOrBank.isNotEmpty && upiOrBank != 'null') {
+      final t = upiOrBank.toLowerCase();
+      if (t.startsWith('upi:')) return 'UPI';
+      if (t.startsWith('bank:')) return 'Bank';
+    }
     final explicit = m['payout_method'] ??
         m['payment_method'] ??
         m['method'] ??
-        m['transfer_type'];
+        m['transfer_type'] ??
+        m['payout_channel'] ??
+        m['channel'];
     if (explicit != null) {
       final t = explicit.toString().toLowerCase();
       if (t.contains('upi')) return 'UPI';
@@ -96,6 +125,8 @@ class WithdrawRequests extends StatelessWidget {
       final v = m[k]?.toString().trim() ?? '';
       if (v.isNotEmpty && v != 'null') return 'Bank';
     }
+    final s = (m['status']?.toString() ?? '').toLowerCase();
+    if (s.contains('pending_manual_transfer')) return 'Manual';
     return '—';
   }
 
@@ -130,6 +161,7 @@ class WithdrawRequests extends StatelessWidget {
 
   static int? _driverId(Map<String, dynamic> m) =>
       castToType<int>(m['driver_id']) ??
+      castToType<int>(getJsonField(m, r'''$.driver.id''')) ??
       int.tryParse(m['driver_id']?.toString() ?? '');
 
   @override
@@ -140,6 +172,7 @@ class WithdrawRequests extends StatelessWidget {
     final viewport = math.max(screenW - horizontalPad, 280.0);
     const tableMinW = 620.0;
     final contentW = viewport < tableMinW ? tableMinW : viewport;
+    final totalCount = payouts.whereType<Map>().length;
     final rows = payouts
         .whereType<Map>()
         .map((e) => Map<String, dynamic>.from(e))
@@ -158,16 +191,45 @@ class WithdrawRequests extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Text(
-              'Recent Withdraw Requests',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: theme.primaryText,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Recent Withdraw Requests',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.primaryText,
+                    ),
+                  ),
+                ),
+                Text(
+                  'Total: $totalCount',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: theme.secondaryText,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
+          if (rows.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Showing ${rows.length} of $totalCount',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: theme.secondaryText,
+                  ),
+                ),
+              ),
+            ),
           if (isLoading)
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
