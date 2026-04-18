@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +9,8 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/components/admin_scaffold.dart';
 import '/pages/driver_details/driver_details_widget.dart';
+import '/pages/finance_audit/finance_audit_timeline_widget.dart';
+import '/pages/finance_control/finance_control_hub_widget.dart';
 import 'driver_payouts_model.dart';
 export 'driver_payouts_model.dart';
 
@@ -48,6 +52,112 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
   void dispose() {
     _model.dispose();
     super.dispose();
+  }
+
+  int? _payoutId(Map<String, dynamic> m) =>
+      castToType<int>(m['id']) ?? castToType<int>(m['payout_id']);
+
+  bool _canAdminAct(Map<String, dynamic> m) {
+    final s = _statusKey(m);
+    return s.contains('pending') || s.contains('manual') || s.contains('approved');
+  }
+
+  Future<void> _markPaidRow(Map<String, dynamic> m) async {
+    final id = _payoutId(m);
+    if (id == null) return;
+    final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) return;
+    final refCtrl = TextEditingController();
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Mark payout #$id paid'),
+          content: TextField(
+            controller: refCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Payment reference (optional)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirm')),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      final resp = await MarkPayoutPaidCall.call(
+        token: token,
+        payoutId: id,
+        paymentReference: refCtrl.text.trim().isEmpty ? null : refCtrl.text.trim(),
+      );
+      if (!mounted) return;
+      if (!resp.succeeded) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(getJsonField(resp.jsonBody, r'''$.message''')?.toString() ?? 'Failed'),
+        ));
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Marked paid')),
+      );
+      await _load();
+    } finally {
+      refCtrl.dispose();
+    }
+  }
+
+  Future<void> _rejectRow(Map<String, dynamic> m) async {
+    final id = _payoutId(m);
+    if (id == null) return;
+    final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) return;
+    final reasonCtrl = TextEditingController();
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Reject payout #$id'),
+          content: TextField(
+            controller: reasonCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Reason (min 3 chars)',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Reject')),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      final reason = reasonCtrl.text.trim();
+      if (reason.length < 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reason too short')),
+        );
+        return;
+      }
+      final resp = await PostAdminPayoutRejectCall.call(
+        token: token,
+        payoutId: id,
+        reason: reason,
+      );
+      if (!mounted) return;
+      if (!resp.succeeded) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(getJsonField(resp.jsonBody, r'''$.message''')?.toString() ?? 'Failed'),
+        ));
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rejected')));
+      await _load();
+    } finally {
+      reasonCtrl.dispose();
+    }
   }
 
   Future<void> _load() async {
@@ -434,7 +544,7 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
                                     child: SingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
                                       child: SizedBox(
-                                        width: 680,
+                                        width: 940,
                                         child: Column(
                                           children: [
                                             _tableHeader(theme),
@@ -483,6 +593,10 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
             width: 102,
             child: Text('Status', textAlign: TextAlign.center, style: hStyle()),
           ),
+          SizedBox(
+            width: 204,
+            child: Text('Actions', textAlign: TextAlign.center, style: hStyle()),
+          ),
         ],
       ),
     );
@@ -499,20 +613,20 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: did == null
-            ? null
-            : () => context.pushNamedAuth(
-                  DriverDetailsWidget.routeName,
-                  context.mounted,
-                  queryParameters: {'driverId': did.toString()},
-                ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 7,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 7,
+              child: InkWell(
+                onTap: did == null
+                    ? null
+                    : () => context.pushNamedAuth(
+                          DriverDetailsWidget.routeName,
+                          context.mounted,
+                          queryParameters: {'driverId': did.toString()},
+                        ),
                 child: Text(
                   title,
                   maxLines: 1,
@@ -524,6 +638,7 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
                   ),
                 ),
               ),
+            ),
               SizedBox(
                 width: 96,
                 child: Center(
@@ -572,11 +687,110 @@ class _DriverPayoutsWidgetState extends State<DriverPayoutsWidget> {
                   ),
                 ),
               ),
+              SizedBox(
+                width: 204,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_canAdminAct(m)) ...[
+                      TextButton(
+                        onPressed: () => unawaited(_markPaidRow(m)),
+                        child: const Text('Pay', style: TextStyle(fontSize: 11)),
+                      ),
+                      TextButton(
+                        onPressed: () => unawaited(_rejectRow(m)),
+                        child: Text(
+                          'Reject',
+                          style: TextStyle(fontSize: 11, color: theme.error),
+                        ),
+                      ),
+                    ],
+                    PopupMenuButton<String>(
+                      tooltip: 'Finance ops',
+                      icon: const Icon(Icons.more_vert_rounded, size: 20),
+                      onSelected: (v) => unawaited(_financeOpsMenuAction(context, v, m)),
+                      itemBuilder: (ctx) => [
+                        if (did != null)
+                          const PopupMenuItem(
+                            value: 'timeline',
+                            child: Text('Audit timeline'),
+                          ),
+                        if (did != null)
+                          const PopupMenuItem(
+                            value: 'hub',
+                            child: Text('Finance hub (driver)'),
+                          ),
+                        if (_canAdminAct(m) && _payoutId(m) != null)
+                          const PopupMenuItem(
+                            value: 'hold',
+                            child: Text('Hold payout'),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-      ),
     );
+  }
+
+  Future<void> _financeOpsMenuAction(
+    BuildContext context,
+    String value,
+    Map<String, dynamic> m,
+  ) async {
+    final did = _driverId(m);
+    final pid = _payoutId(m);
+    if (!context.mounted) return;
+    if (value == 'timeline' && did != null) {
+      context.pushNamedAuth(
+        FinanceAuditTimelineWidget.routeName,
+        context.mounted,
+        queryParameters: {'driverId': did.toString()},
+      );
+    } else if (value == 'hub' && did != null) {
+      context.pushNamedAuth(
+        FinanceControlHubWidget.routeName,
+        context.mounted,
+        queryParameters: {
+          'tab': '1',
+          'driverId': did.toString(),
+        },
+      );
+    } else if (value == 'hold' && pid != null) {
+      final token = currentAuthenticationToken;
+      if (token == null || token.isEmpty) return;
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Hold payout #$pid?'),
+          content: const Text('Sets status to ON_HOLD (workflow).'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Hold')),
+          ],
+        ),
+      );
+      if (ok != true || !context.mounted) return;
+      final r = await PostAdminFinanceWorkflowPayoutHoldCall.call(
+        token: token,
+        payoutId: pid,
+        reason: 'driver_payouts_ui',
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            r.succeeded
+                ? 'Payout on hold'
+                : (getJsonField(r.jsonBody, r'''$.message''')?.toString() ?? 'Failed'),
+          ),
+        ),
+      );
+      if (r.succeeded) await _load();
+    }
   }
 
   Widget _filterChip(
