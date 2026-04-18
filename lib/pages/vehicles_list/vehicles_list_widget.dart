@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/admin_pop_scope.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -9,6 +10,8 @@ import '/index.dart';
 import '/services/cache_service.dart';
 import '/services/cache_policy.dart';
 import '/components/skeleton_block.dart';
+import '/pages/dashboard_page/dashboard/dashboard_tokens.dart';
+import '/pages/dashboard_page/dashboard/widgets/metric_card.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -212,6 +215,105 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
 
   bool get _hasOrphans => _getOrphanVehicles().isNotEmpty;
 
+  int get _orphanCount => _getOrphanVehicles().length;
+
+  Widget _buildDashboardHeader(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final orphans = _orphanCount;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_isBackgroundRefreshing)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: LinearProgressIndicator(minHeight: 2),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${_vehicleTypes.length} types · ${_adminVehicles.length} vehicles',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: theme.secondaryText,
+                ),
+              ),
+            ),
+            if (_lastUpdatedAt != null)
+              Text(
+                'Updated ${dateTimeFormat('relative', _lastUpdatedAt)}',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: theme.secondaryText,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        DashboardMetricGrid(
+          maxWidthForThreeCols: 640,
+          children: [
+            DashboardMetricCard(
+              title: 'Vehicle types',
+              value: '${_vehicleTypes.length}',
+              backgroundColor: DashboardTokens.metricUsersBg,
+              accentColor: DashboardTokens.metricUsersAccent,
+              icon: Icons.category_outlined,
+              onTap: () => context.pushNamedAuth(
+                AddVehicleTypeWidget.routeName,
+                context.mounted,
+              ),
+            ),
+            DashboardMetricCard(
+              title: 'Fleet size',
+              value: '${_adminVehicles.length}',
+              backgroundColor: DashboardTokens.metricDriversBg,
+              accentColor: DashboardTokens.metricDriversAccent,
+              icon: Icons.directions_car_rounded,
+              onTap: () => context.pushNamedAuth(
+                AddVehicleWidget.routeName,
+                context.mounted,
+              ),
+            ),
+            DashboardMetricCard(
+              title: orphans > 0 ? 'Needs review' : 'Unassigned',
+              value: orphans > 0 ? '$orphans' : '—',
+              subtitle: orphans > 0 ? 'Untyped vehicles' : 'All grouped',
+              backgroundColor: orphans > 0
+                  ? DashboardTokens.metricEarningsBg
+                  : DashboardTokens.metricWalletBg,
+              accentColor: orphans > 0
+                  ? DashboardTokens.metricEarningsAccent
+                  : DashboardTokens.metricWalletAccent,
+              icon: orphans > 0
+                  ? Icons.warning_amber_rounded
+                  : Icons.check_circle_outline_rounded,
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Fleet by type',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: theme.primaryText,
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  /// White rounded surface matching dashboard cards.
+  BoxDecoration _fleetCardDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(DashboardTokens.cardRadius),
+      boxShadow: DashboardTokens.cardShadow,
+    );
+  }
+
   List<Map<String, dynamic>> _getVehiclesFromNested(Map<String, dynamic> type) {
     final nested = getJsonField(type, r'''$.vehicles''') ??
         getJsonField(type, r'''$.admin_vehicles''') ??
@@ -234,92 +336,120 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
-        }
-      },
+    return AdminPopScope(
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: DashboardTokens.pageBackground,
         drawer: buildAdminDrawer(context),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
-          automaticallyImplyLeading: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-            onPressed: () =>
-                context.goNamedAuth(DashboardScreen.routeName, context.mounted),
-          ),
+          backgroundColor: DashboardTokens.primaryOrange,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
           title: Text(
-            'Vehicles',
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                  color: Colors.white,
-                  fontSize: 22,
-                ),
+            'VEHICLES',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+              fontSize: 15,
+              color: Colors.white,
+            ),
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 28),
-              onPressed: () => context.pushNamedAuth(AddVehicleWidget.routeName, context.mounted),
+              tooltip: 'Add vehicle',
+              icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 26),
+              onPressed: () =>
+                  context.pushNamedAuth(AddVehicleWidget.routeName, context.mounted),
             ),
             IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white, size: 26),
+              tooltip: 'Add vehicle type',
+              icon: const Icon(Icons.category_outlined, color: Colors.white, size: 24),
+              onPressed: () => context.pushNamedAuth(
+                AddVehicleTypeWidget.routeName,
+                context.mounted,
+              ),
+            ),
+            IconButton(
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 24),
               onPressed: (_isLoading || _isBackgroundRefreshing)
                   ? null
                   : () => _loadData(backgroundRefresh: true),
             ),
           ],
-          elevation: 2,
         ),
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
-                FlutterFlowTheme.of(context).secondaryBackground,
-              ],
-            ),
-          ),
-          child: _isLoading
-              ? ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  children: const [
-                    SkeletonBlock(width: double.infinity, height: 120, radius: 16),
-                    SizedBox(height: 12),
-                    SkeletonBlock(width: double.infinity, height: 120, radius: 16),
-                    SizedBox(height: 12),
-                    SkeletonBlock(width: double.infinity, height: 120, radius: 16),
-                  ],
-                )
-              : _errorMessage != null && _vehicleTypes.isEmpty && _adminVehicles.isEmpty
-                  ? Center(
-                      child: Padding(
+        body: _isLoading
+            ? ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: List.generate(
+                      3,
+                      (_) => const SkeletonBlock(
+                        width: 108,
+                        height: 96,
+                        radius: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const SkeletonBlock(
+                    width: double.infinity,
+                    height: 120,
+                    radius: 14,
+                  ),
+                  const SizedBox(height: 12),
+                  const SkeletonBlock(
+                    width: double.infinity,
+                    height: 120,
+                    radius: 14,
+                  ),
+                ],
+              )
+            : _errorMessage != null &&
+                    _vehicleTypes.isEmpty &&
+                    _adminVehicles.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Container(
                         padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius:
+                              BorderRadius.circular(DashboardTokens.cardRadius),
+                          boxShadow: DashboardTokens.cardShadow,
+                        ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.error_outline, size: 48, color: FlutterFlowTheme.of(context).error),
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: FlutterFlowTheme.of(context).error,
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Failed to load: $_errorMessage',
                               textAlign: TextAlign.center,
-                              style: FlutterFlowTheme.of(context).bodyLarge,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                color: FlutterFlowTheme.of(context).primaryText,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             FFButtonWidget(
                               onPressed: _loadData,
                               text: 'Retry',
                               options: FFButtonOptions(
-                                color: FlutterFlowTheme.of(context).primary,
-                                textStyle: FlutterFlowTheme.of(context).titleSmall.override(
+                                color: DashboardTokens.primaryOrange,
+                                textStyle: FlutterFlowTheme.of(context)
+                                    .titleSmall
+                                    .override(
                                       color: Colors.white,
                                     ),
                               ),
@@ -327,80 +457,75 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
                           ],
                         ),
                       ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () => _loadData(backgroundRefresh: true),
-                      child: _vehicleTypes.isEmpty && _adminVehicles.isEmpty
-                          ? ListView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              children: [
-                                SizedBox(
-                                  height: MediaQuery.of(context).size.height * 0.5,
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.directions_car_outlined,
-                                          size: 80,
-                                          color: FlutterFlowTheme.of(context).secondaryText,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'No vehicles yet',
-                                          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                                                color: FlutterFlowTheme.of(context).secondaryText,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Add vehicle types and sub types to get started',
-                                          textAlign: TextAlign.center,
-                                          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                color: FlutterFlowTheme.of(context).secondaryText,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 24),
-                                        FFButtonWidget(
-                                          onPressed: () => context.pushNamedAuth(AddVehicleWidget.routeName, context.mounted),
-                                          text: 'Add Vehicle',
-                                          icon: const Icon(
-                                            Icons.add,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
-                                          options: FFButtonOptions(
-                                            color: FlutterFlowTheme.of(context).primary,
-                                            textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                                                  color: Colors.white,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              itemCount: _vehicleTypes.isEmpty
-                                  ? 1
-                                  : _vehicleTypes.length + (_hasOrphans ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                if (_vehicleTypes.isEmpty) {
-                                  return _buildUnassignedVehiclesSection();
-                                }
-                                if (index >= _vehicleTypes.length) {
-                                  return _buildOrphanVehiclesSection();
-                                }
-                                final type = _vehicleTypes[index];
-                                return _buildVehicleTypeSection(type);
-                              },
-                            ),
                     ),
-        ),
+                  )
+                : RefreshIndicator(
+                    color: DashboardTokens.primaryOrange,
+                    onRefresh: () => _loadData(backgroundRefresh: true),
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        _buildDashboardHeader(context),
+                        if (_vehicleTypes.isEmpty && _adminVehicles.isEmpty)
+                          _buildEmptyFleetPlaceholder(context)
+                        else if (_vehicleTypes.isEmpty)
+                          _buildUnassignedVehiclesSection()
+                        else ...[
+                          for (final type in _vehicleTypes)
+                            _buildVehicleTypeSection(type),
+                          if (_hasOrphans) _buildOrphanVehiclesSection(),
+                        ],
+                      ],
+                    ),
+                  ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyFleetPlaceholder(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 24),
+      decoration: _fleetCardDecoration(),
+      child: Column(
+        children: [
+          Icon(
+            Icons.directions_car_outlined,
+            size: 56,
+            color: theme.secondaryText.withValues(alpha: 0.75),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No vehicles yet',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              color: theme.primaryText,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create vehicle types and sub-types to build your fleet.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              height: 1.35,
+              color: theme.secondaryText,
+            ),
+          ),
+          const SizedBox(height: 24),
+          FFButtonWidget(
+            onPressed: () =>
+                context.pushNamedAuth(AddVehicleWidget.routeName, context.mounted),
+            text: 'Add vehicle',
+            icon: const Icon(Icons.add, color: Colors.white, size: 20),
+            options: FFButtonOptions(
+              color: DashboardTokens.primaryOrange,
+              textStyle: theme.titleSmall.override(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -418,11 +543,13 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
       subVehicles = _getVehiclesForType(typeId);
     }
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ExpansionTile(
+      decoration: _fleetCardDecoration(),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.white,
+        child: ExpansionTile(
         initiallyExpanded: true,
         tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         leading: imgUrl != null && imgUrl.isNotEmpty
@@ -435,27 +562,31 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Icon(
                     Icons.directions_car,
-                    color: FlutterFlowTheme.of(context).primary,
+                    color: DashboardTokens.primaryOrange,
                     size: 40,
                   ),
                 ),
               )
             : Icon(
                 Icons.directions_car,
-                color: FlutterFlowTheme.of(context).primary,
+                color: DashboardTokens.primaryOrange,
                 size: 40,
               ),
         title: Text(
           typeName,
-          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-              ),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            color: FlutterFlowTheme.of(context).primaryText,
+          ),
         ),
         subtitle: Text(
           '${subVehicles.length} sub vehicle${subVehicles.length == 1 ? '' : 's'}',
-          style: FlutterFlowTheme.of(context).bodySmall.override(
-                color: FlutterFlowTheme.of(context).secondaryText,
-              ),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: FlutterFlowTheme.of(context).secondaryText,
+          ),
         ),
         children: [
           if (subVehicles.isEmpty)
@@ -484,6 +615,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
             ...subVehicles.map((v) => _buildPricingTile(v)),
           ],
         ],
+        ),
       ),
     );
   }

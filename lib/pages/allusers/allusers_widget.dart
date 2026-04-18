@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/admin_pop_scope.dart';
 import '/components/safe_network_avatar.dart';
 import '/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -515,13 +516,7 @@ class _AllusersWidgetState extends State<AllusersWidget>
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
-        }
-      },
+    return AdminPopScope(
       child: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();

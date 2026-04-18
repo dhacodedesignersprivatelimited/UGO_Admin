@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
@@ -11,6 +12,8 @@ import '/services/cache_service.dart';
 import '/services/cache_policy.dart';
 
 import '../widgets/action_buttons.dart';
+import 'driver_wallet_detail_screen.dart';
+import '../widgets/filters_bar.dart';
 import '../widgets/summary_cards.dart';
 import '../widgets/transaction_list.dart';
 import '../widgets/withdraw_list.dart';
@@ -31,7 +34,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
   static const Duration _cacheTtl = CachePolicy.walletTtl;
   static final _moneyFmt = NumberFormat('#,##0.00', 'en_IN');
   static final _moneyIntFmt = NumberFormat('#,##0', 'en_IN');
-  static const int _txPageSize = 10;
+  static const int _txPageSize = 20;
 
   bool isLoading = false;
   bool isBackgroundRefreshing = false;
@@ -49,6 +52,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
   String totalCreditedLabel = '0';
   String totalDebitedLabel = '0';
   String pendingWithdrawalsLabel = '0';
+  int pendingWithdrawalsCount = 0;
 
   String? topDriverName;
   String? topDriverBalance;
@@ -119,6 +123,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     try {
       _txPage = 1;
       final results = await Future.wait([
+        GetAdminWalletSummaryCall.call(token: token),
         CompanyWalletCall.call(token: token),
         GetWalletsCall.call(token: token),
         GetDriversCall.call(token: token),
@@ -127,13 +132,17 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
 
       if (!mounted) return;
 
-      final companyResp = results[0];
-      final walletsResp = results[1];
-      final driversResp = results[2];
-      final withdrawReqResp = results[3];
+      final summaryResp = results[0];
+      final companyResp = results[1];
+      final walletsResp = results[2];
+      final driversResp = results[3];
+      final withdrawReqResp = results[4];
 
       final errs = <String>[];
-      if (!companyResp.succeeded) {
+      if (!summaryResp.succeeded) {
+        errs.add('Wallet summary (${summaryResp.statusCode})');
+      }
+      if (!companyResp.succeeded && !summaryResp.succeeded) {
         errs.add('Company wallet (${companyResp.statusCode})');
       }
       if (!walletsResp.succeeded) {
@@ -159,7 +168,11 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
               .toList()
           : <Map<String, dynamic>>[];
 
-      _applyWalletAggregates(walletRows, companyResp);
+      if (summaryResp.succeeded) {
+        _applyWalletSummaryResponse(summaryResp);
+      } else {
+        _applyWalletAggregates(walletRows, companyResp);
+      }
 
       var payoutRows = <Map<String, dynamic>>[];
       if (withdrawReqResp.succeeded) {
@@ -230,6 +243,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
       totalDebitedLabel = cached['totalDebitedLabel']?.toString() ?? totalDebitedLabel;
       pendingWithdrawalsLabel =
           cached['pendingWithdrawalsLabel']?.toString() ?? pendingWithdrawalsLabel;
+      pendingWithdrawalsCount = _parseInt(cached['pendingWithdrawalsCount']) ?? 0;
       topDriverName = cached['topDriverName']?.toString();
       topDriverBalance = cached['topDriverBalance']?.toString();
       _lastUpdatedAt = ts;
@@ -246,6 +260,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
       'totalCreditedLabel': totalCreditedLabel,
       'totalDebitedLabel': totalDebitedLabel,
       'pendingWithdrawalsLabel': pendingWithdrawalsLabel,
+      'pendingWithdrawalsCount': pendingWithdrawalsCount,
       'topDriverName': topDriverName,
       'topDriverBalance': topDriverBalance,
     });
@@ -281,6 +296,16 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     }
 
     try {
+      String? fromIso;
+      String? toIso;
+      if (_selectedDateRange != null) {
+        final s = _selectedDateRange!.start;
+        final e = _selectedDateRange!.end;
+        fromIso =
+            '${s.year.toString().padLeft(4, '0')}-${s.month.toString().padLeft(2, '0')}-${s.day.toString().padLeft(2, '0')}';
+        toIso =
+            '${e.year.toString().padLeft(4, '0')}-${e.month.toString().padLeft(2, '0')}-${e.day.toString().padLeft(2, '0')}';
+      }
       final resp = await GetAdminWalletTransactionsCall.call(
         token: token,
         page: page,
@@ -288,8 +313,8 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
         q: search.trim().isEmpty ? null : search.trim(),
         flow: typeFilter == 'all' ? null : typeFilter,
         driverId: _selectedDriverId,
-        from: _selectedDateRange?.start.toUtc().toIso8601String(),
-        to: _selectedDateRange?.end.toUtc().toIso8601String(),
+        from: fromIso,
+        to: toIso,
       );
 
       if (!mounted) return;
@@ -304,15 +329,16 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
         return;
       }
 
-      final raw =
-          GetAdminWalletTransactionsCall.transactionsList(resp.jsonBody);
+      final raw = GetAdminWalletTransactionsCall.transactionsList(resp.jsonBody)
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .map(_normalizeAdminWalletTransaction)
+          .toList();
+      final total = GetAdminWalletTransactionsCall.total(resp.jsonBody);
       setState(() {
         _txPage = page;
-        _txTotal = GetAdminWalletTransactionsCall.total(resp.jsonBody);
-        transactions = raw
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
+        _txTotal = total;
+        transactions = raw;
         if (_selectedTransaction == null && transactions.isNotEmpty) {
           _selectedTransaction = transactions.first;
         }
@@ -329,6 +355,33 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     }
   }
 
+  Map<String, dynamic> _normalizeAdminWalletTransaction(Map<String, dynamic> row) {
+    final driver = row['driver'] is Map
+        ? Map<String, dynamic>.from(row['driver'] as Map)
+        : const <String, dynamic>{};
+    final type = (row['type']?.toString() ?? '').toLowerCase();
+    final flow = type.contains('debit') || type.contains('withdrawal') ? 'debit' : 'credit';
+    final amount = _parseDouble(row['amount']) ?? 0;
+    final balance = _parseDouble(row['balance']) ??
+        _parseDouble(row['balance_after']) ??
+        0;
+    return <String, dynamic>{
+      ...row,
+      'transaction_id_display': row['txn_id']?.toString() ??
+          row['transaction_id']?.toString() ??
+          '#TXN${row['id'] ?? ''}',
+      'party_name': driver['name']?.toString() ?? row['party_name']?.toString() ?? 'Driver',
+      'party_phone': driver['mobile']?.toString() ?? row['party_phone']?.toString() ?? '',
+      'driver_id': _parseInt(driver['id']) ?? _parseInt(row['driver_id']),
+      'flow': flow,
+      'amount': amount,
+      'description': row['description']?.toString() ?? 'Wallet transaction',
+      'created_at': row['date']?.toString() ?? row['created_at']?.toString() ?? '',
+      'balance_after': balance,
+      'status': row['status']?.toString() ?? 'completed',
+    };
+  }
+
   void _onSearchChanged(String value) {
     setState(() => search = value);
     _searchDebounce?.cancel();
@@ -338,25 +391,189 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     });
   }
 
-  void _showTransactionDetail(Map<String, dynamic> row) {
-    setState(() => _selectedTransaction = row);
-    final buf = StringBuffer();
-    for (final e in row.entries) {
-      buf.writeln('${e.key}: ${e.value}');
+  void _onTopBarViewTap() {
+    _searchDebounce?.cancel();
+    final q = search.trim();
+    if (q.isNotEmpty) {
+      final matches = _findDriversByQuery(q);
+      if (matches.isNotEmpty) {
+        if (matches.length == 1) {
+          _openDriverWalletDetail(driver: matches.first);
+        } else {
+          _showDriverPicker(matches);
+        }
+        return;
+      }
     }
-    showDialog<void>(
+    _fetchTransactionPage(1, showTableSpinner: true);
+  }
+
+  void _showTransactionDetail(Map<String, dynamic> row) {
+    setState(() {
+      _selectedTransaction = row;
+      final resolved = _driverIdFromTransactionRow(row);
+      if (resolved != null) {
+        _selectedDriverId = resolved;
+      }
+    });
+
+    final driverId = _driverIdFromTransactionRow(row);
+    if (driverId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Driver id not available for this row.')),
+      );
+      return;
+    }
+    final driver = _drivers.cast<Map<String, dynamic>?>().firstWhere(
+          (d) => _parseInt(d?['id']) == driverId,
+          orElse: () => null,
+        );
+    _openDriverWalletDetail(driverId: driverId, driver: driver, row: row);
+  }
+
+  List<Map<String, dynamic>> _findDriversByQuery(String raw) {
+    final query = raw.trim().toLowerCase();
+    if (query.isEmpty) return const [];
+    final queryId = int.tryParse(query);
+    final compactQuery = query.replaceAll(' ', '');
+
+    int score(Map<String, dynamic> d) {
+      final id = _parseInt(d['id']);
+      final first = (d['first_name']?.toString() ?? '').trim();
+      final last = (d['last_name']?.toString() ?? '').trim();
+      final full = '$first $last'.trim().toLowerCase();
+      final phone = ((d['mobile'] ?? d['mobile_number'])?.toString() ?? '')
+          .replaceAll(' ', '')
+          .toLowerCase();
+      if (queryId != null && id == queryId) return 100;
+      if (full == query) return 90;
+      if (full.startsWith(query)) return 80;
+      if (full.contains(query)) return 70;
+      if (phone == compactQuery) return 60;
+      if (phone.endsWith(compactQuery)) return 50;
+      if (phone.contains(compactQuery)) return 40;
+      return -1;
+    }
+
+    final scored = <Map<String, dynamic>>[];
+    for (final d in _drivers) {
+      final s = score(d);
+      if (s < 0) continue;
+      scored.add({
+        'driver': d,
+        'score': s,
+      });
+    }
+    scored.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
+    return scored
+        .map((e) => Map<String, dynamic>.from(e['driver'] as Map))
+        .toList();
+  }
+
+  void _showDriverPicker(List<Map<String, dynamic>> matches) {
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(row['transaction_id_display']?.toString() ?? 'Transaction'),
-        content: SingleChildScrollView(
-          child: SelectableText(buf.toString()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: SizedBox(
+            height: 380,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    'Select driver (${matches.length} matches)',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: matches.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, index) {
+                      final d = matches[index];
+                      final id = _parseInt(d['id']);
+                      final first = (d['first_name']?.toString() ?? '').trim();
+                      final last = (d['last_name']?.toString() ?? '').trim();
+                      final full = '$first $last'.trim();
+                      final name = full.isNotEmpty ? full : 'Driver #${id ?? ''}';
+                      final phone = (d['mobile'] ?? d['mobile_number'] ?? '-').toString();
+                      return ListTile(
+                        title: Text(name),
+                        subtitle: Text('$phone · ID: ${id ?? '-'}'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _openDriverWalletDetail(driver: d);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  int? _driverIdFromTransactionRow(Map<String, dynamic> row) {
+    return _parseInt(row['driver_id']) ??
+        _parseInt(row['party_id']) ??
+        _parseInt(row['user_id']);
+  }
+
+  void _openDriverWalletDetail({
+    required Map<String, dynamic>? driver,
+    Map<String, dynamic>? row,
+    int? driverId,
+  }) {
+    final resolvedId = driverId ??
+        _parseInt(driver?['id']) ??
+        _driverIdFromTransactionRow(row ?? const {});
+    if (resolvedId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No matching driver found for this search.')),
+      );
+      return;
+    }
+
+    final name = (('${driver?['first_name'] ?? ''} ${driver?['last_name'] ?? ''}').trim().isNotEmpty)
+        ? '${driver?['first_name'] ?? ''} ${driver?['last_name'] ?? ''}'.trim()
+        : (row?['party_name']?.toString() ?? 'Driver #$resolvedId');
+    final phone = driver?['mobile']?.toString() ??
+        driver?['mobile_number']?.toString() ??
+        row?['party_phone']?.toString() ??
+        '-';
+    final balance = _moneyFmt.format(
+      _parseDouble(driver?['wallet_balance']) ??
+          _parseDouble(row?['balance_after']) ??
+          0,
+    );
+    final totalRides = _parseInt(driver?['total_rides']) ??
+        _parseInt(driver?['ride_count']) ??
+        _parseInt(driver?['completed_rides']) ??
+        0;
+    final totalEarnings = _moneyFmt.format(_parseDouble(driver?['total_earnings']) ?? 0);
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DriverWalletDetailScreen(
+          driverId: resolvedId,
+          driverName: name,
+          phone: phone,
+          balance: balance,
+          totalRides: totalRides,
+          totalEarnings: totalEarnings,
+          avatarUrl: driver?['profile_image']?.toString(),
+        ),
       ),
     );
   }
@@ -409,6 +626,18 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     }
   }
 
+  void _applyWalletSummaryResponse(ApiCallResponse response) {
+    final data = GetAdminWalletSummaryCall.data(response.jsonBody);
+    if (data == null) return;
+
+    totalBalanceLabel = _moneyIntFmt.format(_parseDouble(data['total_wallet_balance']) ?? 0);
+    totalCreditedLabel = _moneyIntFmt.format(_parseDouble(data['total_credited']) ?? 0);
+    totalDebitedLabel = _moneyIntFmt.format(_parseDouble(data['total_debited']) ?? 0);
+    pendingWithdrawalsLabel =
+        _moneyIntFmt.format(_parseDouble(data['pending_withdrawals_amount']) ?? 0);
+    pendingWithdrawalsCount = _parseInt(data['pending_withdrawals_count']) ?? 0;
+  }
+
   void _applyPendingWithdrawTotal(List<Map<String, dynamic>> payoutRows) {
     double pending = 0;
     for (final p in payoutRows) {
@@ -422,6 +651,7 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
       }
     }
     pendingWithdrawalsLabel = _moneyIntFmt.format(pending);
+    pendingWithdrawalsCount = payoutRows.length;
   }
 
   double? _companyPoolInr(dynamic body) {
@@ -490,33 +720,161 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     return int.tryParse(v.toString().trim());
   }
 
-  void addMoney() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Credit a rider from User details or wallet tools. Bulk add is not on this screen.',
-        ),
-      ),
+  Future<void> _promptWalletAdjust({required bool credit}) async {
+    final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) return;
+    final driverIdCtrl = TextEditingController();
+    final amountCtrl = TextEditingController();
+    final reasonCtrl = TextEditingController();
+    final idemCtrl = TextEditingController(
+      text: 'admin-${DateTime.now().millisecondsSinceEpoch}',
     );
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(credit ? 'Credit driver wallet' : 'Debit driver wallet'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: driverIdCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Driver ID',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: amountCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: credit ? 'Amount (INR)' : 'Amount (INR, positive number)',
+                    border: const OutlineInputBorder(),
+                    helperText: credit ? null : 'Will be applied as a negative ledger entry.',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: reasonCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Reason',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: idemCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Idempotency key',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Submit')),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      final did = int.tryParse(driverIdCtrl.text.trim());
+      final rawAmt = double.tryParse(amountCtrl.text.trim());
+      final reason = reasonCtrl.text.trim();
+      final idem = idemCtrl.text.trim();
+      if (did == null || did <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Valid driver ID required.')),
+        );
+        return;
+      }
+      if (rawAmt == null || rawAmt <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Valid positive amount required.')),
+        );
+        return;
+      }
+      if (reason.length < 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reason must be at least 3 characters.')),
+        );
+        return;
+      }
+      if (idem.length < 8) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Idempotency key must be at least 8 characters.')),
+        );
+        return;
+      }
+      final signed = credit ? rawAmt : -rawAmt;
+      final resp = await PostAdminWalletAdjustCall.call(
+        token: token,
+        driverId: did,
+        amount: signed,
+        reason: reason,
+        idempotencyKey: idem,
+      );
+      if (!mounted) return;
+      if (!resp.succeeded) {
+        final msg = getJsonField(resp.jsonBody, r'''$.message''')?.toString() ??
+            'Adjust failed (${resp.statusCode})';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wallet adjustment applied.')),
+      );
+      await fetchData(backgroundRefresh: true);
+    } finally {
+      driverIdCtrl.dispose();
+      amountCtrl.dispose();
+      reasonCtrl.dispose();
+      idemCtrl.dispose();
+    }
+  }
+
+  void addMoney() {
+    unawaited(_promptWalletAdjust(credit: true));
   }
 
   void deductMoney() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Use driver payouts and ride settlement flows to debit wallets.',
-        ),
-      ),
-    );
+    unawaited(_promptWalletAdjust(credit: false));
   }
 
   void adjustCommission() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          'Commission and finance settings use Admin Finance APIs when added to the app.',
-        ),
+        content: Text('Use Fare & finance settings for commission %; wallet row is for driver balance.'),
       ),
+    );
+  }
+
+  Future<void> _exportWalletSnapshot() async {
+    final rows = <String>[
+      'section,label,value',
+      'summary,Total Wallet,"$totalBalanceLabel"',
+      'summary,Total Credited,"$totalCreditedLabel"',
+      'summary,Total Debited,"$totalDebitedLabel"',
+      'summary,Pending Withdrawals,"$pendingWithdrawalsLabel"',
+    ];
+
+    for (final tx in transactions) {
+      final id = tx['transaction_id_display']?.toString() ?? tx['id']?.toString() ?? '';
+      final flow = tx['flow']?.toString() ?? '';
+      final amount = tx['amount']?.toString() ?? '';
+      final desc = tx['description']?.toString().replaceAll('"', "'") ?? '';
+      rows.add('transaction,"$id","$flow ₹$amount - $desc"');
+    }
+
+    await Clipboard.setData(ClipboardData(text: rows.join('\n')));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Wallet snapshot copied as CSV to clipboard.')),
     );
   }
 
@@ -587,18 +945,71 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     }
   }
 
-  void rejectWithdraw(int? id) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          id != null
-              ? 'Payout #$id: rejection is not exposed in the API. Use backend support if needed.'
-              : 'Cannot reject: missing payout id.',
+  Future<void> rejectWithdraw(int? id) async {
+    if (id == null) return;
+    final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) return;
+    final reasonCtrl = TextEditingController();
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Reject payout #$id'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Provide a short reason (required).'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Reason',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Reject'),
+            ),
+          ],
         ),
-      ),
-    );
+      );
+      if (ok != true || !mounted) return;
+      final reason = reasonCtrl.text.trim();
+      if (reason.length < 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reason must be at least 3 characters.')),
+        );
+        return;
+      }
+      final resp = await PostAdminPayoutRejectCall.call(
+        token: token,
+        payoutId: id,
+        reason: reason,
+      );
+      if (!mounted) return;
+      if (!resp.succeeded) {
+        final msg = getJsonField(resp.jsonBody, r'''$.message''')?.toString() ??
+            'Reject failed (${resp.statusCode})';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payout rejected.')),
+      );
+      await fetchData(backgroundRefresh: true);
+    } finally {
+      reasonCtrl.dispose();
+    }
   }
 
+  // ignore: unused_element
   Widget _buildTransactionToolbar() {
     InputDecoration dec(String hint, {Widget? suffixIcon}) {
       return InputDecoration(
@@ -721,116 +1132,68 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
     );
   }
 
-  Widget _buildRightDetailsPanel() {
-    final tx = _selectedTransaction;
-    final name = tx?['party_name']?.toString() ?? topDriverName ?? '—';
-    final phone = tx?['party_phone']?.toString() ?? '—';
-    final bal = tx?['balance_after'];
-    final balNum = bal is num ? bal.toDouble() : _parseDouble(bal) ?? 0;
-    final flow = tx?['flow']?.toString() ?? 'credit';
-    final amount = _parseDouble(tx?['amount']) ?? 0;
-    final recent = transactions.take(5).toList();
 
-    Color activityColor(String f) =>
-        f.toLowerCase() == 'debit' ? const Color(0xFFD32F2F) : const Color(0xFF2E7D32);
+  Widget _buildSummaryAndExport() {
+    Widget exportBtn({bool compact = false}) {
+      return FilledButton.icon(
+        onPressed: _exportWalletSnapshot,
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFFF7C948),
+          foregroundColor: const Color(0xFF1A1A1A),
+          elevation: 0,
+          minimumSize: Size(compact ? 110 : 128, 40),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        icon: const Icon(Icons.download_rounded, size: 18),
+        label: const Text(
+          'Export',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+      );
+    }
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Driver Wallet Details',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 12),
-          Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          Text(phone, style: TextStyle(color: Colors.grey.shade700, fontSize: 12)),
-          const SizedBox(height: 10),
-          Text(
-            'Wallet Balance: ₹${_moneyFmt.format(balNum)}',
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 920;
+        if (!wide) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: FilledButton(
-                  onPressed: addMoney,
-                  child: const Text('Add Money'),
-                ),
+              WalletSummaryCards(
+                totalBalance: totalBalanceLabel,
+                totalCredited: totalCreditedLabel,
+                totalDebited: totalDebitedLabel,
+                pendingWithdrawals: pendingWithdrawalsLabel,
+                pendingWithdrawalsCount: pendingWithdrawalsCount,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: deductMoney,
-                  child: const Text('Deduct'),
-                ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: exportBtn(compact: true),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Recent Activity',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          if (recent.isEmpty)
-            Text('No activity', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-          ...recent.map((r) {
-            final f = r['flow']?.toString() ?? 'credit';
-            final c = activityColor(f);
-            final amt = _parseDouble(r['amount']) ?? 0;
-            final desc = r['description']?.toString() ?? 'Transaction';
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    f == 'debit' ? Icons.arrow_upward : Icons.arrow_downward,
-                    size: 14,
-                    color: c,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${f == 'debit' ? '-' : '+'}₹${_moneyFmt.format(amt)}',
-                          style: TextStyle(
-                            color: c,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          desc,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: WalletSummaryCards(
+                totalBalance: totalBalanceLabel,
+                totalCredited: totalCreditedLabel,
+                totalDebited: totalDebitedLabel,
+                pendingWithdrawals: pendingWithdrawalsLabel,
+                pendingWithdrawalsCount: pendingWithdrawalsCount,
               ),
-            );
-          }),
-          const SizedBox(height: 6),
-          Text(
-            'Selected: ${flow.toUpperCase()} ₹${_moneyFmt.format(amount)}',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-          ),
-        ],
-      ),
+            ),
+            const SizedBox(width: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: exportBtn(),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -894,64 +1257,73 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
                     ),
                   ),
                 ),
-              WalletSummaryCards(
-                totalBalance: totalBalanceLabel,
-                totalCredited: totalCreditedLabel,
-                totalDebited: totalDebitedLabel,
-                pendingWithdrawals: pendingWithdrawalsLabel,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: _buildSummaryAndExport(),
               ),
               const SizedBox(height: 12),
-              WalletActionsRow(
-                onAddMoney: addMoney,
-                onDeductMoney: deductMoney,
-                onAdjustCommission: adjustCommission,
+              Container(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: WalletActionsRow(
+                  onAddMoney: addMoney,
+                  onDeductMoney: deductMoney,
+                  onAdjustCommission: adjustCommission,
+                  initialSearch: search,
+                  onSearchChanged: (value) => setState(() => search = value),
+                  onViewTap: _onTopBarViewTap,
+                ),
               ),
               const SizedBox(height: 12),
-              _buildTransactionToolbar(),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: WalletFiltersBar(
+                  onSearch: _onSearchChanged,
+                  initialSearch: search,
+                  initialType: typeFilter,
+                  initialDriverId: _selectedDriverId,
+                  initialDateRange: _selectedDateRange,
+                  drivers: _drivers,
+                  onTypeChange: (value) {
+                    setState(() => typeFilter = value);
+                    _fetchTransactionPage(1, showTableSpinner: true);
+                  },
+                  onDriverChange: (driverId) {
+                    setState(() => _selectedDriverId = driverId);
+                    _fetchTransactionPage(1, showTableSpinner: true);
+                  },
+                  onDateRangeChange: (range) {
+                    setState(() => _selectedDateRange = range);
+                    _fetchTransactionPage(1, showTableSpinner: true);
+                  },
+                ),
+              ),
               const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 1200;
-                  if (!wide) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WalletTransactionList(
-                          transactions: transactions,
-                          isLoading: isLoading || txLoading,
-                          page: _txPage,
-                          pageSize: _txPageSize,
-                          totalCount: _txTotal,
-                          onPageChanged: (p) =>
-                              _fetchTransactionPage(p, showTableSpinner: true),
-                          onViewRow: _showTransactionDetail,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRightDetailsPanel(),
-                      ],
-                    );
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: WalletTransactionList(
-                          transactions: transactions,
-                          isLoading: isLoading || txLoading,
-                          page: _txPage,
-                          pageSize: _txPageSize,
-                          totalCount: _txTotal,
-                          onPageChanged: (p) =>
-                              _fetchTransactionPage(p, showTableSpinner: true),
-                          onViewRow: _showTransactionDetail,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 320,
-                        child: _buildRightDetailsPanel(),
-                      ),
-                    ],
+                  return WalletTransactionList(
+                    transactions: transactions,
+                    isLoading: isLoading || txLoading,
+                    page: _txPage,
+                    pageSize: _txPageSize,
+                    totalCount: _txTotal,
+                    onPageChanged: (p) =>
+                        _fetchTransactionPage(p, showTableSpinner: true),
+                    onViewRow: _showTransactionDetail,
                   );
                 },
               ),

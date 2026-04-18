@@ -41,18 +41,59 @@ class RideRowData {
     return '${ApiConfig.baseUrl}/${raw.replaceFirst(RegExp(r'^/'), '')}';
   }
 
-  /// Rider / passenger user id for API lookup.
-  int? get riderUserId {
-    final v = m['rider_id'] ?? m['user_id'];
+  static int? _parseId(dynamic v) {
     if (v is int) return v;
     return int.tryParse(v?.toString() ?? '');
   }
 
-  int? get linkedDriverId {
-    final v = m['driver_id'];
-    if (v is int) return v;
-    return int.tryParse(v?.toString() ?? '');
+  /// User id for [GetUserByIdCall] / party enrichment (supports common API shapes).
+  static int? parseRiderUserId(Map<String, dynamic> m) {
+    for (final k in [
+      'rider_id',
+      'user_id',
+      'passenger_id',
+      'customer_id',
+      'rider_user_id',
+      'usr_id',
+      'userid',
+    ]) {
+      final id = _parseId(m[k]);
+      if (id != null) return id;
+    }
+    for (final nestedKey in ['user', 'rider', 'passenger', 'customer']) {
+      final u = m[nestedKey];
+      if (u is Map) {
+        final um = Map<String, dynamic>.from(u);
+        for (final k in ['id', 'user_id']) {
+          final id = _parseId(um[k]);
+          if (id != null) return id;
+        }
+      }
+    }
+    return null;
   }
+
+  /// Driver id for [GetDriverByIdCall] / party enrichment.
+  static int? parseDriverId(Map<String, dynamic> m) {
+    for (final k in ['driver_id', 'assigned_driver_id']) {
+      final id = _parseId(m[k]);
+      if (id != null) return id;
+    }
+    final d = m['driver'];
+    if (d is Map) {
+      final dm = Map<String, dynamic>.from(d);
+      for (final k in ['id', 'driver_id']) {
+        final id = _parseId(dm[k]);
+        if (id != null) return id;
+      }
+    }
+    return null;
+  }
+
+  /// Rider / passenger user id for API lookup.
+  int? get riderUserId => parseRiderUserId(m);
+
+  int? get linkedDriverId => parseDriverId(m);
 
   String? _riderImageRaw() {
     final u = _userDetail;
@@ -265,6 +306,43 @@ class RideRowData {
     return 'Ongoing';
   }
 
+  /// Who cancelled (for badges). Best-effort across common API field names.
+  String get cancelSourceLabel {
+    if (humanStatus != 'Cancelled') return 'Cancelled';
+    for (final k in [
+      'cancelled_by',
+      'cancellation_by',
+      'canceled_by',
+      'cancel_by',
+      'cancelled_by_type',
+      'cancelled_by_role',
+      'cancelled_by_user_type',
+    ]) {
+      final v = m[k]?.toString().toLowerCase() ?? '';
+      if (v.contains('driver')) return 'Driver Cancelled';
+      if (v.contains('user') ||
+          v.contains('rider') ||
+          v.contains('passenger') ||
+          v.contains('customer')) {
+        return 'User Cancelled';
+      }
+      if (v.contains('admin') || v.contains('system')) return 'System Cancelled';
+    }
+    final reason = (m['cancellation_reason'] ??
+            m['cancel_reason'] ??
+            m['cancellation_message'])
+        ?.toString()
+        .toLowerCase() ??
+        '';
+    if (reason.contains('driver')) return 'Driver Cancelled';
+    if (reason.contains('user') ||
+        reason.contains('rider') ||
+        reason.contains('passenger')) {
+      return 'User Cancelled';
+    }
+    return 'Cancelled';
+  }
+
   Color statusColor(FlutterFlowTheme theme) {
     switch (humanStatus) {
       case 'Completed':
@@ -293,6 +371,90 @@ class RideRowData {
       } catch (_) {}
     }
     return '—';
+  }
+
+  /// Parsed ride time for sorting (newest first).
+  DateTime? get requestedAt {
+    for (final key in [
+      'created_at',
+      'ride_date',
+      'updated_at',
+      'scheduled_at',
+    ]) {
+      final raw = m[key];
+      if (raw == null) continue;
+      try {
+        return DateTime.parse(raw.toString()).toLocal();
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  /// Second line under ride id (e.g. `10 Apr, 10:25 PM`).
+  String get rideSubtitle {
+    final dt = requestedAt;
+    if (dt == null) return '';
+    return DateFormat('d MMM, h:mm a').format(dt);
+  }
+
+  /// Cash / UPI / Card / — (cancelled or unknown).
+  String get paymentLabel {
+    if (humanStatus == 'Cancelled') return '—';
+    final p = m['payment_method'] ??
+        m['payment_type'] ??
+        m['payment_mode'] ??
+        m['mode'];
+    if (p == null) return '—';
+    final s = p.toString().trim();
+    if (s.isEmpty || s == 'null') return '—';
+    final lower = s.toLowerCase();
+    if (lower.contains('cash')) return 'Cash';
+    if (lower.contains('upi')) return 'UPI';
+    if (lower.contains('card') || lower.contains('online')) return 'Card';
+    return s;
+  }
+
+  /// e.g. `18.5 km, 30 min` when backend sends distance/duration fields.
+  String get distanceDurationLine {
+    final kmRaw = m['total_distance'] ??
+        m['trip_distance'] ??
+        m['distance_km'] ??
+        m['distance'];
+    final minRaw = m['trip_duration'] ??
+        m['duration_minutes'] ??
+        m['duration'] ??
+        m['time_taken'];
+
+    String kmPart = '';
+    if (kmRaw != null) {
+      final k = double.tryParse(kmRaw.toString());
+      if (k != null) {
+        kmPart = k == k.roundToDouble()
+            ? '${k.round()} km'
+            : '${k.toStringAsFixed(1)} km';
+      } else {
+        final t = kmRaw.toString().trim();
+        if (t.isNotEmpty) kmPart = t.contains('km') ? t : '$t km';
+      }
+    }
+
+    String minPart = '';
+    if (minRaw != null) {
+      final asInt = int.tryParse(minRaw.toString());
+      if (asInt != null) {
+        minPart = '$asInt min';
+      } else {
+        final d = double.tryParse(minRaw.toString());
+        if (d != null) {
+          minPart = '${d.round()} min';
+        }
+      }
+    }
+
+    if (kmPart.isEmpty && minPart.isEmpty) return '—';
+    if (kmPart.isEmpty) return minPart;
+    if (minPart.isEmpty) return kmPart;
+    return '$kmPart, $minPart';
   }
 
   String get pickup => m['pickup_location_address']?.toString() ?? '—';

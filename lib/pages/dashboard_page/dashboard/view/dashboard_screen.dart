@@ -1,3 +1,4 @@
+import '../../../ride_management/screens/ride_management_screen.dart';
 import '../widgets/graphs.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -172,7 +173,7 @@ class DashboardScreenView extends StatelessWidget {
                             accentColor: DashboardTokens.metricRidesAccent,
                             icon: Icons.directions_car_rounded,
                             onTap: () => context.pushNamedAuth(
-                              RideManagementWidget.routeName,
+                              RideManagementScreen.routeName,
                               context.mounted,
                             ),
                           ),

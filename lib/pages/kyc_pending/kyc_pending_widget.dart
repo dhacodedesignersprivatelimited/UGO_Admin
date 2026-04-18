@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/admin_pop_scope.dart';
 import '/components/responsive_body.dart';
 import '/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -123,11 +124,7 @@ class _KycPendingWidgetState extends State<KycPendingWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.goNamedAuth(DashboardScreen.routeName, context.mounted);
-      },
+    return AdminPopScope(
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,

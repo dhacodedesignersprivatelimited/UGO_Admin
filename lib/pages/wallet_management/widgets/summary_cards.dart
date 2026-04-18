@@ -5,6 +5,7 @@ class WalletSummaryCards extends StatelessWidget {
   final String totalCredited;
   final String totalDebited;
   final String pendingWithdrawals;
+  final int pendingWithdrawalsCount;
 
   const WalletSummaryCards({
     super.key,
@@ -12,56 +13,72 @@ class WalletSummaryCards extends StatelessWidget {
     required this.totalCredited,
     required this.totalDebited,
     required this.pendingWithdrawals,
+    this.pendingWithdrawalsCount = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _SummaryCard(
-                title: "Total Balance",
-                amount: totalBalance,
-                icon: Icons.account_balance_wallet,
-                color: Colors.green,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _SummaryCard(
-                title: "Credited",
-                amount: totalCredited,
-                icon: Icons.arrow_downward,
-                color: Colors.blue,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _SummaryCard(
-                title: "Debited",
-                amount: totalDebited,
-                icon: Icons.arrow_upward,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _SummaryCard(
-                title: "Pending",
-                amount: pendingWithdrawals,
-                icon: Icons.hourglass_bottom,
-                color: Colors.orange,
-              ),
-            ),
-          ],
-        ),
-      ],
+    final items = [
+      _SummaryData(
+        title: 'Total Wallet',
+        amount: totalBalance,
+        background: const Color(0xFFEAF7EE),
+        border: const Color(0xFFB9DFC4),
+        amountColor: const Color(0xFF2E7D32),
+      ),
+      _SummaryData(
+        title: 'Total Credited',
+        amount: totalCredited,
+        background: const Color(0xFFE9F0FD),
+        border: const Color(0xFFBED0F5),
+        amountColor: const Color(0xFF1565C0),
+      ),
+      _SummaryData(
+        title: 'Total Debited',
+        amount: totalDebited,
+        background: const Color(0xFFFDECEC),
+        border: const Color(0xFFF5C2C2),
+        amountColor: const Color(0xFFC62828),
+      ),
+      _SummaryData(
+        title: 'Pending (WD)',
+        amount: pendingWithdrawals,
+        background: const Color(0xFFEDEAFE),
+        border: const Color(0xFFCFC5F5),
+        amountColor: const Color(0xFF5E35B1),
+        badgeText: pendingWithdrawalsCount > 0 ? '$pendingWithdrawalsCount' : null,
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width >= 620
+                ? 3
+                : 2;
+        return GridView.builder(
+          itemCount: items.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 2.05,
+          ),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return _SummaryCard(
+              title: item.title,
+              amount: item.amount,
+              background: item.background,
+              border: item.border,
+              amountColor: item.amountColor,
+              badgeText: item.badgeText,
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -69,77 +86,99 @@ class WalletSummaryCards extends StatelessWidget {
 class _SummaryCard extends StatelessWidget {
   final String title;
   final String amount;
-  final IconData icon;
-  final Color color;
+  final Color background;
+  final Color border;
+  final Color amountColor;
+  final String? badgeText;
 
   const _SummaryCard({
     required this.title,
     required this.amount,
-    required this.icon,
-    required this.color,
+    required this.background,
+    required this.border,
+    required this.amountColor,
+    this.badgeText,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.all(14),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.15),
-            color.withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: color.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
+        borderRadius: BorderRadius.circular(8),
+        color: background,
+        border: Border.all(color: border),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          /// ICON
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: Colors.grey.shade800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (badgeText != null)
+                Positioned(
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: amountColor.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      badgeText!,
+                      style: TextStyle(
+                        color: amountColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-
-          const SizedBox(height: 10),
-
-          /// TITLE
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade700,
-            ),
-          ),
-
           const SizedBox(height: 4),
-
-          /// AMOUNT
           Text(
             "₹$amount",
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
+              fontSize: 15.5,
+              fontWeight: FontWeight.w700,
+              color: amountColor,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _SummaryData {
+  const _SummaryData({
+    required this.title,
+    required this.amount,
+    required this.background,
+    required this.border,
+    required this.amountColor,
+    this.badgeText,
+  });
+
+  final String title;
+  final String amount;
+  final Color background;
+  final Color border;
+  final Color amountColor;
+  final String? badgeText;
 }

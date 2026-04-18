@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'dashboard/view/dashboard_screen.dart';
 import 'dashboard/dashboard_tokens.dart';
-import 'dashboard_page_model.dart';
+import 'dashboard/view_models/dashboard_view_model.dart';
 
-export 'dashboard_page_model.dart';
+export 'dashboard/view_models/dashboard_view_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

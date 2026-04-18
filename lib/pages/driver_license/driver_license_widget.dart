@@ -1,6 +1,7 @@
 import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/admin_pop_scope.dart';
 import '/index.dart'; // Assumes DriversWidget is exported here
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -300,11 +301,8 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _handleBack();
-      },
+    return AdminPopScope(
+      onCannotPop: _handleBack,
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(

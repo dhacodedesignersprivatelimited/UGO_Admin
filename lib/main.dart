@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
+import 'admin_panel/admin_panel_dependencies.dart';
 import 'auth/custom_auth/auth_util.dart';
 import 'auth/custom_auth/custom_auth_user_provider.dart';
 
@@ -27,10 +28,15 @@ void main() async {
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
 
-  runApp(ChangeNotifierProvider(
-    create: (context) => appState,
-    child: MyApp(),
-  ));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => appState,
+      child: Provider<AdminPanelDependencies>(
+        create: (_) => AdminPanelDependencies.http(),
+        child: MyApp(),
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {

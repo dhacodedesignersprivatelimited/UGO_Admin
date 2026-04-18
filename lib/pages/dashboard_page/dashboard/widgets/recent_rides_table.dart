@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../../../ride_management/screens/ride_management_screen.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -36,7 +37,7 @@ class RecentRidesTable extends StatelessWidget {
 
   void _openAllRides(BuildContext context) {
     context.pushNamedAuth(
-      RideManagementWidget.routeName,
+      RideManagementScreen.routeName,
       context.mounted,
     );
   }

@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/admin_pop_scope.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -130,11 +131,8 @@ class _UserDetailsWidgetState extends State<UserDetailsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _handleBack();
-      },
+    return AdminPopScope(
+      onCannotPop: _handleBack,
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,

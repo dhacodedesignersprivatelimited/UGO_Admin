@@ -1,4 +1,7 @@
+import '/auth/custom_auth/auth_util.dart';
+import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/admin_pop_scope.dart';
 import '/index.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -8,6 +11,7 @@ import '/flutter_flow/form_field_controller.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'earnings_model.dart';
 export 'earnings_model.dart';
@@ -26,11 +30,120 @@ class _EarningsWidgetState extends State<EarningsWidget> {
   late EarningsModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  Map<String, dynamic>? _financeSummary;
+  String? _financeError;
+  bool _financeLoading = true;
+
+  static final _inr = NumberFormat('#,##0.00', 'en_IN');
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => EarningsModel());
+    _loadFinanceSummary();
+  }
+
+  Future<void> _loadFinanceSummary() async {
+    final token = currentAuthenticationToken;
+    if (token == null || token.isEmpty) {
+      safeSetState(() {
+        _financeLoading = false;
+        _financeError = 'Not signed in';
+      });
+      return;
+    }
+    safeSetState(() {
+      _financeLoading = true;
+      _financeError = null;
+    });
+    final r = await GetAdminFinanceSummaryCall.call(token: token);
+    if (!mounted) return;
+    if (!r.succeeded) {
+      safeSetState(() {
+        _financeLoading = false;
+        _financeError =
+            getJsonField(r.jsonBody, r'''$.message''')?.toString() ?? 'Failed to load';
+        _financeSummary = null;
+      });
+      return;
+    }
+    safeSetState(() {
+      _financeLoading = false;
+      _financeSummary = GetAdminFinanceSummaryCall.data(r.jsonBody);
+    });
+  }
+
+  double _num(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0;
+  }
+
+  Widget _liveFinanceHeader(FlutterFlowTheme theme) {
+    if (_financeLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 16),
+        child: LinearProgressIndicator(minHeight: 2),
+      );
+    }
+    if (_financeError != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Text(_financeError!, style: TextStyle(color: theme.error)),
+      );
+    }
+    final m = _financeSummary;
+    if (m == null) return const SizedBox.shrink();
+    final pending = m['pending_payouts'];
+    final pendAmt = pending is Map ? _num(pending['amount_inr']) : 0.0;
+    final pendCnt = pending is Map ? (pending['count'] ?? 0) : 0;
+    final ledger = m['platform_ledger_breakdown'];
+    final commission = ledger is Map ? _num(ledger['total_commission_ledger_inr']) : 0.0;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.secondaryBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.alternate),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Live finance (ledger)',
+              style: theme.titleMedium.override(font: GoogleFonts.inter()),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Company ledger: ₹${_inr.format(_num(m['company_ledger_balance_inr']))}',
+              style: theme.headlineSmall.override(
+                font: GoogleFonts.interTight(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Driver wallets (liability): ₹${_inr.format(_num(m['driver_wallet_liability_inr']))}',
+              style: theme.bodyMedium,
+            ),
+            Text(
+              'Rider wallets (liability): ₹${_inr.format(_num(m['rider_wallet_liability_inr']))}',
+              style: theme.bodyMedium,
+            ),
+            Text(
+              'Pending payouts ($pendCnt): ₹${_inr.format(pendAmt)}',
+              style: theme.bodyMedium,
+            ),
+            Text(
+              'Platform commission (ledger window): ₹${_inr.format(commission)}',
+              style: theme.bodySmall.override(color: theme.secondaryText),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -42,13 +155,7 @@ class _EarningsWidgetState extends State<EarningsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          context.goNamedAuth(DashboardScreen.routeName, context.mounted);
-        }
-      },
+    return AdminPopScope(
       child: GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -85,11 +192,17 @@ class _EarningsWidgetState extends State<EarningsWidget> {
         ),
         body: SafeArea(
           top: true,
-          child: Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
+          child: RefreshIndicator(
+            onRefresh: _loadFinanceSummary,
+            child: Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _liveFinanceHeader(FlutterFlowTheme.of(context)),
+                  ),
                 Container(
                   decoration: BoxDecoration(),
                   child: Column(
@@ -106,7 +219,7 @@ class _EarningsWidgetState extends State<EarningsWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Total Earnings',
+                                  'Charts (placeholder)',
                                   style: FlutterFlowTheme.of(context)
                                       .headlineSmall
                                       .override(
@@ -135,7 +248,7 @@ class _EarningsWidgetState extends State<EarningsWidget> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      '\$1,250.75',
+                                      'See live finance card above',
                                       style: FlutterFlowTheme.of(context)
                                           .displaySmall
                                           .override(
@@ -966,6 +1079,7 @@ class _EarningsWidgetState extends State<EarningsWidget> {
           ),
         ),
       ),
+    ),
     ),
     );
   }

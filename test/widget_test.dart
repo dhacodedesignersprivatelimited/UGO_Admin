@@ -6,12 +6,19 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:provider/provider.dart';
+import 'package:ugo_admin/admin_panel/admin_panel_dependencies.dart';
 import 'package:ugo_admin/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp());
+    await tester.pumpWidget(
+      Provider<AdminPanelDependencies>(
+        create: (_) => AdminPanelDependencies.mock(),
+        child: MyApp(),
+      ),
+    );
+    // Flush splash/auth fallback timer in [MyApp.initState].
+    await tester.pump(const Duration(milliseconds: 600));
   });
 }

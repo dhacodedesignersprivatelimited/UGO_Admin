@@ -1898,6 +1898,50 @@ class GetRidesCall {
       getJsonField(response, r'''$.data''', true) as List?;
 }
 
+/// GET /api/rides/ride-status/stats — aggregate counts by ride status.
+class GetRideStatusStatsCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getRideStatusStats',
+      apiUrl: '${ApiConfig.apiBase}/rides/ride-status/stats',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static int? total(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.data.total''',
+      ));
+
+  static Map<String, dynamic>? rideStatus(dynamic response) {
+    final v = getJsonField(response, r'''$.data.ride_status''');
+    if (v is Map) return Map<String, dynamic>.from(v);
+    return null;
+  }
+
+  static int? statusCount(Map<String, dynamic>? rideStatus, String key) {
+    if (rideStatus == null) return null;
+    final seg = rideStatus[key];
+    if (seg is! Map) return null;
+    return castToType<int>(seg['count']);
+  }
+
+  static double? statusPercentage(Map<String, dynamic>? rideStatus, String key) {
+    if (rideStatus == null) return null;
+    final seg = rideStatus[key];
+    if (seg is! Map) return null;
+    return castToType<double>(seg['percentage']);
+  }
+}
+
 class GetRideByIdCall {
   static Future<ApiCallResponse> call({
     String? token = '',
@@ -2147,6 +2191,72 @@ class GetWalletsCall {
   }
 }
 
+/// GET `/api/admin/wallet/summary` — admin wallet dashboard summary cards.
+class GetAdminWalletSummaryCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminWalletSummary',
+      apiUrl: '${ApiConfig.apiBase}/admin/wallet/summary',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static Map<String, dynamic>? data(dynamic response) {
+    final d = getJsonField(response, r'''$.data''');
+    if (d is Map<String, dynamic>) return d;
+    if (d is Map) return d.map((k, v) => MapEntry(k.toString(), v));
+    return null;
+  }
+}
+
+/// GET `/api/drivers/wallet/:id/transactions` — single driver wallet ledger.
+class GetDriverWalletTransactionsCall {
+  static Future<ApiCallResponse> call({
+    required int driverId,
+    String? token = '',
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getDriverWalletTransactions',
+      apiUrl: '${ApiConfig.apiBase}/drivers/wallet/$driverId/transactions',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {
+        'page': page.toString(),
+        'pageSize': pageSize.toString(),
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> transactionsList(dynamic response) {
+    final list =
+        getJsonField(response, r'''$.data.transactions''', true) as List?;
+    if (list != null && list.isNotEmpty) {
+      return List<dynamic>.from(list);
+    }
+    final data = getJsonField(response, r'''$.data''');
+    if (data is List && data.isNotEmpty) {
+      return List<dynamic>.from(data);
+    }
+    return [];
+  }
+}
+
 /// GET `/api/wallets/admin/transactions` — paginated wallet ledger (admin).
 class GetAdminWalletTransactionsCall {
   static Future<ApiCallResponse> call({
@@ -2184,7 +2294,7 @@ class GetAdminWalletTransactionsCall {
     }
     return ApiManager.instance.makeApiCall(
       callName: 'getAdminWalletTransactions',
-      apiUrl: '${ApiConfig.apiBase}/wallets/admin/transactions',
+      apiUrl: '${ApiConfig.apiBase}/admins/wallet/transactions',
       callType: ApiCallType.GET,
       headers: {'Authorization': 'Bearer $token'},
       params: params,
@@ -2201,6 +2311,10 @@ class GetAdminWalletTransactionsCall {
     final v = getJsonField(response, r'''$.data.total''');
     if (v is int) return v;
     if (v is double) return v.round();
+    if (v == null) {
+      final list = transactionsList(response);
+      return list.length;
+    }
     return int.tryParse(v?.toString() ?? '') ?? 0;
   }
 
@@ -2276,6 +2390,1041 @@ class GetFinanceSettingsCall {
       isStreamingApi: false,
       alwaysAllowBody: false,
     );
+  }
+}
+
+/// GET `/api/admins/finance/summary` — ledger-aware finance headline metrics.
+class GetAdminFinanceSummaryCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? from,
+    String? to,
+  }) async {
+    final params = <String, dynamic>{};
+    if (from != null && from.trim().isNotEmpty) params['from'] = from.trim();
+    if (to != null && to.trim().isNotEmpty) params['to'] = to.trim();
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceSummary',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/summary',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static Map<String, dynamic>? data(dynamic response) =>
+      getJsonField(response, r'''$.data''') as Map<String, dynamic>?;
+}
+
+/// GET `/api/admins/ledger` — paginated `wallet_entries` explorer.
+class GetAdminLedgerCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int page = 1,
+    int limit = 25,
+    int? rideId,
+    int? userId,
+    int? driverId,
+    String? txnType,
+    String? from,
+    String? to,
+    String? amountMin,
+    String? amountMax,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (rideId != null && rideId > 0) params['ride_id'] = rideId.toString();
+    if (userId != null && userId > 0) params['user_id'] = userId.toString();
+    if (driverId != null && driverId > 0) params['driver_id'] = driverId.toString();
+    if (txnType != null && txnType.trim().isNotEmpty) params['txn_type'] = txnType.trim();
+    if (from != null && from.trim().isNotEmpty) params['from'] = from.trim();
+    if (to != null && to.trim().isNotEmpty) params['to'] = to.trim();
+    if (amountMin != null && amountMin.trim().isNotEmpty) params['amount_min'] = amountMin.trim();
+    if (amountMax != null && amountMax.trim().isNotEmpty) params['amount_max'] = amountMax.trim();
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminLedger',
+      apiUrl: '${ApiConfig.apiBase}/admins/ledger',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> entriesList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.entries''', true) as List?;
+    if (list != null && list.isNotEmpty) return List<dynamic>.from(list);
+    return const [];
+  }
+
+  static int total(dynamic response) {
+    final v = getJsonField(response, r'''$.data.total''');
+    if (v is int) return v;
+    if (v is double) return v.round();
+    return int.tryParse(v?.toString() ?? '') ?? 0;
+  }
+
+  static int totalPages(dynamic response) {
+    final v = getJsonField(response, r'''$.data.totalPages''');
+    if (v is int) return v;
+    if (v is double) return v.round();
+    return int.tryParse(v?.toString() ?? '') ?? 1;
+  }
+}
+
+/// POST `/api/admins/wallet/adjust` — admin ledger + legacy wallet_txn adjustment.
+class PostAdminWalletAdjustCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int? userId,
+    int? driverId,
+    required double amount,
+    required String reason,
+    required String idempotencyKey,
+  }) async {
+    final body = json.encode({
+      if (userId != null) 'user_id': userId,
+      if (driverId != null) 'driver_id': driverId,
+      'amount': amount,
+      'reason': reason,
+      'idempotency_key': idempotencyKey,
+    });
+    return ApiManager.instance.makeApiCall(
+      callName: 'postAdminWalletAdjust',
+      apiUrl: '${ApiConfig.apiBase}/admins/wallet/adjust',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// POST `/api/payments/admin/payout/reject` — reject before execute.
+class PostAdminPayoutRejectCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int payoutId,
+    required String reason,
+  }) async {
+    final body = json.encode({
+      'payout_id': payoutId,
+      'reason': reason,
+    });
+    return ApiManager.instance.makeApiCall(
+      callName: 'postAdminPayoutReject',
+      apiUrl: '${ApiConfig.apiBase}/payments/admin/payout/reject',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/reports/:kind` — kind = revenue | payouts | referrals
+class GetAdminFinanceReportCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required String kind,
+    String? from,
+    String? to,
+    /// revenue only: `daily` | `weekly` | `monthly`
+    String? group,
+  }) async {
+    final k = kind.trim().toLowerCase();
+    final params = <String, dynamic>{};
+    if (from != null && from.trim().isNotEmpty) params['from'] = from.trim();
+    if (to != null && to.trim().isNotEmpty) params['to'] = to.trim();
+    if (group != null && group.trim().isNotEmpty) params['group'] = group.trim();
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceReport',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/reports/$k',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/metrics` — outbox + payout counters.
+class GetAdminFinanceMetricsCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceMetrics',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/metrics',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/flags` — open finance_account_flags.
+class GetAdminFinanceFlagsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int limit = 50,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceFlags',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/flags',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {'limit': limit.toString()},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> flagsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.flags''', true) as List?;
+    if (list != null && list.isNotEmpty) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// GET `/api/admins/finance/risk-profiles`
+class GetAdminFinanceRiskProfilesCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int limit = 50,
+    double? minScore,
+  }) async {
+    final params = <String, dynamic>{'limit': limit.toString()};
+    if (minScore != null) params['min_score'] = minScore.toString();
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceRiskProfiles',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/risk-profiles',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> profilesList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.profiles''', true) as List?;
+    if (list != null && list.isNotEmpty) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// POST `/api/admins/finance/flag`
+class PostAdminFinanceFlagCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int? userId,
+    int? driverId,
+    required String flagType,
+    String severity = 'medium',
+    String? reason,
+    int? payoutId,
+    bool applyPayoutHold = false,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'postAdminFinanceFlag',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/flag',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: _financeFlagBody(
+        userId: userId,
+        driverId: driverId,
+        flagType: flagType,
+        severity: severity,
+        reason: reason,
+        payoutId: payoutId,
+        applyPayoutHold: applyPayoutHold,
+      ),
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static String _financeFlagBody({
+    int? userId,
+    int? driverId,
+    required String flagType,
+    String severity = 'medium',
+    String? reason,
+    int? payoutId,
+    bool applyPayoutHold = false,
+  }) {
+    final parts = <String>[];
+    if (userId != null) parts.add('"user_id": $userId');
+    if (driverId != null) parts.add('"driver_id": $driverId');
+    parts.add('"flag_type": "${escapeStringForJson(flagType)}"');
+    parts.add('"severity": "${escapeStringForJson(severity)}"');
+    parts.add('"reason": "${escapeStringForJson(reason ?? '')}"');
+    if (payoutId != null) parts.add('"payout_id": $payoutId');
+    if (applyPayoutHold) parts.add('"apply_payout_hold": true');
+    return '{${parts.join(',')}}';
+  }
+}
+
+/// POST `/api/admins/finance/unflag`
+class PostAdminFinanceResolveFlagCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int? flagId,
+    int? userId,
+    int? driverId,
+  }) async {
+    final parts = <String>[];
+    if (flagId != null) parts.add('"flag_id": $flagId');
+    if (userId != null) parts.add('"user_id": $userId');
+    if (driverId != null) parts.add('"driver_id": $driverId');
+    final body = '{${parts.join(',')}}';
+    return ApiManager.instance.makeApiCall(
+      callName: 'postAdminFinanceResolveFlag',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/unflag',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/outbox`
+class GetAdminFinanceOutboxCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int limit = 40,
+    String? status,
+  }) async {
+    final params = <String, dynamic>{'limit': limit.toString()};
+    if (status != null && status.trim().isNotEmpty) {
+      params['status'] = status.trim();
+    }
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceOutbox',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/outbox',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> itemsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.items''', true) as List?;
+    if (list != null && list.isNotEmpty) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// GET `/api/admins/payments/reconciliation`
+class GetAdminPaymentsReconciliationCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int sampleLimit = 25,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminPaymentsReconciliation',
+      apiUrl: '${ApiConfig.apiBase}/admins/payments/reconciliation',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {'sample_limit': sampleLimit.toString()},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/alerts`
+class GetAdminFinanceAlertsCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceAlerts',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/alerts',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> alertsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.alerts''', true) as List?;
+    if (list != null && list.isNotEmpty) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// GET `/api/admins/finance/insights`
+class GetAdminFinanceInsightsCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceInsights',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/insights',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/audit-timeline`
+class GetAdminFinanceAuditTimelineCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int? userId,
+    int? driverId,
+    int limit = 100,
+  }) async {
+    final params = <String, dynamic>{'limit': limit.toString()};
+    if (userId != null && userId > 0) params['user_id'] = userId.toString();
+    if (driverId != null && driverId > 0) params['driver_id'] = driverId.toString();
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceAuditTimeline',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/audit-timeline',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> itemsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.items''', true) as List?;
+    if (list != null && list.isNotEmpty) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// GET `/api/admins/finance/workflows`
+class GetAdminFinanceWorkflowsCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceWorkflows',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/workflows',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// POST `/api/admins/finance/workflows/payout-hold`
+class PostAdminFinanceWorkflowPayoutHoldCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int payoutId,
+    String? reason,
+  }) async {
+    final body = json.encode({
+      'payout_id': payoutId,
+      'reason': reason ?? 'manual_hold',
+    });
+    return ApiManager.instance.makeApiCall(
+      callName: 'postAdminFinanceWorkflowPayoutHold',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/workflows/payout-hold',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/policies`
+class GetAdminFinancePoliciesCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinancePolicies',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/policies',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> policiesList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.policies''', true) as List?;
+    if (list != null) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// PATCH `/api/admins/finance/policies/:id`
+class PatchAdminFinancePolicyCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int id,
+    bool? enabled,
+    int? priority,
+  }) async {
+    final bodyMap = <String, dynamic>{};
+    if (enabled != null) bodyMap['enabled'] = enabled;
+    if (priority != null) bodyMap['priority'] = priority;
+    return ApiManager.instance.makeApiCall(
+      callName: 'patchAdminFinancePolicy',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/policies/$id',
+      callType: ApiCallType.PATCH,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: json.encode(bodyMap),
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/cases`
+class GetAdminFinanceCasesCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? status,
+    int limit = 40,
+  }) async {
+    final params = <String, dynamic>{'limit': limit.toString()};
+    if (status != null && status.isNotEmpty) params['status'] = status;
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceCases',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/cases',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> casesList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.cases''', true) as List?;
+    if (list != null) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// POST `/api/admins/finance/cases`
+class PostAdminFinanceCaseCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required String entityType,
+    required int entityId,
+    String status = 'open',
+    String? notes,
+    String? sourceAlertCode,
+    int? assignedAdminId,
+    String? priority,
+    String? riskBucket,
+    num? driverRiskScore,
+    num? anomalyScore,
+    String? slaDueAtIso,
+    bool skipSla = false,
+  }) async {
+    final body = json.encode({
+      'entity_type': entityType,
+      'entity_id': entityId,
+      'status': status,
+      if (notes != null) 'notes': notes,
+      if (sourceAlertCode != null) 'source_alert_code': sourceAlertCode,
+      if (assignedAdminId != null) 'assigned_admin_id': assignedAdminId,
+      if (priority != null && priority.isNotEmpty) 'priority': priority,
+      if (riskBucket != null && riskBucket.isNotEmpty) 'risk_bucket': riskBucket,
+      if (driverRiskScore != null) 'driver_risk_score': driverRiskScore,
+      if (anomalyScore != null) 'anomaly_score': anomalyScore,
+      if (slaDueAtIso != null) 'sla_due_at': slaDueAtIso,
+      if (skipSla) 'skip_sla': true,
+    });
+    return ApiManager.instance.makeApiCall(
+      callName: 'postAdminFinanceCase',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/cases',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/cases/:id`
+class GetAdminFinanceCaseDetailCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int caseId,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceCaseDetail',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/cases/$caseId',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static Map<String, dynamic>? caseMap(dynamic response) {
+    final m = getJsonField(response, r'''$.data.case''', true);
+    if (m is Map<String, dynamic>) return m;
+    if (m is Map) return Map<String, dynamic>.from(m);
+    return null;
+  }
+
+  static List<dynamic> commentsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.comments''', true) as List?;
+    if (list != null) return List<dynamic>.from(list);
+    return const [];
+  }
+
+  static List<dynamic> pauseSegmentsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.pause_segments''', true) as List?;
+    if (list != null) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// POST `/api/admins/finance/cases/:id/comments`
+class PostAdminFinanceCaseCommentCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int caseId,
+    required String body,
+    String action = 'note',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'postAdminFinanceCaseComment',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/cases/$caseId/comments',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: json.encode({'body': body, 'action': action}),
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// PATCH `/api/admins/finance/cases/:id`
+class PatchAdminFinanceCaseCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int caseId,
+    String? status,
+    String? notes,
+    int? assignedAdminId,
+    String? timelineNote,
+    String? priority,
+    String? slaDueAtIso,
+    bool? clearSlaDueAt,
+  }) async {
+    final bodyMap = <String, dynamic>{};
+    if (status != null) bodyMap['status'] = status;
+    if (notes != null) bodyMap['notes'] = notes;
+    if (assignedAdminId != null) bodyMap['assigned_admin_id'] = assignedAdminId;
+    if (timelineNote != null && timelineNote.isNotEmpty) bodyMap['timeline_note'] = timelineNote;
+    if (priority != null && priority.isNotEmpty) bodyMap['priority'] = priority;
+    if (clearSlaDueAt == true) {
+      bodyMap['sla_due_at'] = null;
+    } else if (slaDueAtIso != null) {
+      bodyMap['sla_due_at'] = slaDueAtIso;
+    }
+    return ApiManager.instance.makeApiCall(
+      callName: 'patchAdminFinanceCase',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/cases/$caseId',
+      callType: ApiCallType.PATCH,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: json.encode(bodyMap),
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/case-metrics`
+class GetAdminFinanceCaseMetricsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? fromIso,
+    String? toIso,
+  }) async {
+    final params = <String, dynamic>{};
+    if (fromIso != null && fromIso.isNotEmpty) params['from'] = fromIso;
+    if (toIso != null && toIso.isNotEmpty) params['to'] = toIso;
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceCaseMetrics',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/case-metrics',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static Map<String, dynamic>? dataMap(dynamic response) {
+    final m = getJsonField(response, r'''$.data''', true);
+    if (m is Map<String, dynamic>) return m;
+    if (m is Map) return Map<String, dynamic>.from(m);
+    return null;
+  }
+}
+
+/// GET `/api/admins/finance/sla-calendar`
+class GetAdminFinanceSlaCalendarCall {
+  static Future<ApiCallResponse> call({String? token = ''}) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceSlaCalendar',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/sla-calendar',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static Map<String, dynamic>? calendarMap(dynamic response) {
+    final m = getJsonField(response, r'''$.data.calendar''', true);
+    if (m is Map<String, dynamic>) return m;
+    if (m is Map) return Map<String, dynamic>.from(m);
+    return null;
+  }
+}
+
+/// PATCH `/api/admins/finance/sla-calendar`
+class PatchAdminFinanceSlaCalendarCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? timezone,
+    String? businessStart,
+    String? businessEnd,
+    List<dynamic>? holidays,
+    List<dynamic>? businessWeekdays,
+    bool? enabled,
+    bool? deferEscalationOutsideBh,
+  }) async {
+    final body = <String, dynamic>{};
+    if (timezone != null) body['timezone'] = timezone;
+    if (businessStart != null) body['business_start'] = businessStart;
+    if (businessEnd != null) body['business_end'] = businessEnd;
+    if (holidays != null) body['holidays'] = holidays;
+    if (businessWeekdays != null) body['business_weekdays'] = businessWeekdays;
+    if (enabled != null) body['enabled'] = enabled;
+    if (deferEscalationOutsideBh != null) {
+      body['defer_escalation_outside_bh'] = deferEscalationOutsideBh;
+    }
+    return ApiManager.instance.makeApiCall(
+      callName: 'patchAdminFinanceSlaCalendar',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/sla-calendar',
+      callType: ApiCallType.PATCH,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: json.encode(body),
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+/// GET `/api/admins/finance/events/recent`
+class GetAdminFinanceEventsRecentCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int sinceId = 0,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceEventsRecent',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/events/recent',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {'since_id': sinceId.toString()},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> eventsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.events''', true) as List?;
+    if (list != null) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// GET `/api/admins/finance/intelligence/driver/:driverId`
+class GetAdminFinanceDriverIntelCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int driverId,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceDriverIntel',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/intelligence/driver/$driverId',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static Map<String, dynamic>? snapshotMap(dynamic response) {
+    final m = getJsonField(response, r'''$.data.snapshot''', true);
+    if (m is Map<String, dynamic>) return m;
+    if (m is Map) return Map<String, dynamic>.from(m);
+    return null;
+  }
+}
+
+/// GET `/api/admins/finance/audit-view`
+class GetAdminFinanceAuditViewCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int page = 1,
+    int limit = 40,
+    String? action,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (action != null && action.trim().isNotEmpty) params['action'] = action.trim();
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminFinanceAuditView',
+      apiUrl: '${ApiConfig.apiBase}/admins/finance/audit-view',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> entriesList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.entries''', true) as List?;
+    if (list != null) return List<dynamic>.from(list);
+    return const [];
+  }
+}
+
+/// GET `/api/admins/payouts` — unified payout queue (same `payouts` table).
+class GetAdminUnifiedPayoutsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    int page = 1,
+    int limit = 50,
+    String? status,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (status != null && status.trim().isNotEmpty && status != 'all') {
+      params['status'] = status.trim();
+    }
+    return ApiManager.instance.makeApiCall(
+      callName: 'getAdminUnifiedPayouts',
+      apiUrl: '${ApiConfig.apiBase}/admins/payouts',
+      callType: ApiCallType.GET,
+      headers: {'Authorization': 'Bearer $token'},
+      params: params,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List<dynamic> payoutsList(dynamic response) {
+    final list = getJsonField(response, r'''$.data.payouts''', true) as List?;
+    if (list != null && list.isNotEmpty) return List<dynamic>.from(list);
+    return const [];
   }
 }
 

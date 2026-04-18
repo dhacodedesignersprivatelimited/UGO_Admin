@@ -31,10 +31,10 @@ export '/pages/driver_kyc_list/driver_kyc_list_widget.dart'
     show DriverKycListWidget;
 export '/pages/add_user/add_user_widget.dart' show AddUserWidget;
 export '/pages/add_driver/add_driver_widget.dart' show AddDriverWidget;
-export '/pages/ride_management/ride_management_widget.dart'
-    show RideManagementWidget;
 export '/pages/ride_details/ride_details_widget.dart'
     show RideDetailsWidget;
+export '/pages/ride_management/screens/ride_management_screen.dart'
+    show RideManagementScreen;
 export '/pages/live_driver_map/live_driver_map_widget.dart'
     show LiveDriverMapWidget;
 export 'pages/wallet_management/screens/wallet_management_widget.dart'
@@ -47,3 +47,14 @@ export '/pages/zone_management/zone_management_widget.dart'
     show ZoneManagementWidget;
 export '/pages/sub_admins/sub_admins_widget.dart' show SubAdminsWidget;
 export '/pages/app_settings/app_settings_widget.dart' show AppSettingsWidget;
+export '/pages/finance_reports/finance_reports_widget.dart' show FinanceReportsWidget;
+export '/pages/finance_control/finance_control_hub_widget.dart' show FinanceControlHubWidget;
+export '/pages/finance_audit/finance_audit_timeline_widget.dart' show FinanceAuditTimelineWidget;
+export '/pages/finance_automation/finance_automation_widget.dart' show FinanceAutomationWidget;
+export '/pages/finance_sla_dashboard/finance_sla_dashboard_widget.dart' show FinanceSlaDashboardWidget;
+export '/admin_panel/presentation/screens/driver_module_hub_screen.dart'
+    show DriverModuleHubScreen;
+export '/admin_panel/presentation/screens/user_module_hub_screen.dart'
+    show UserModuleHubScreen;
+export '/admin_panel/presentation/screens/operations_module_hub_screen.dart'
+    show OperationsModuleHubScreen;

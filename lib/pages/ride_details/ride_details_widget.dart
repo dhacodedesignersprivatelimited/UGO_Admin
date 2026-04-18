@@ -2,6 +2,8 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/backend/api_requests/api_config.dart';
 import '/components/admin_drawer.dart';
+import '/pages/finance_control/finance_control_hub_widget.dart';
+import '/components/admin_pop_scope.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -461,7 +463,8 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
 
-    return Scaffold(
+    return AdminPopScope(
+      child: Scaffold(
       key: scaffoldKey,
       backgroundColor: theme.primaryBackground,
       drawer: buildAdminDrawer(context),
@@ -473,6 +476,20 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
           style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
         actions: [
+          if (widget.rideId != null)
+            IconButton(
+              tooltip: 'Ledger (this ride)',
+              icon: const Icon(Icons.receipt_long_outlined),
+              onPressed: () {
+                context.pushNamed(
+                  FinanceControlHubWidget.routeName,
+                  queryParameters: {
+                    'tab': '1',
+                    'rideId': '${widget.rideId}',
+                  },
+                );
+              },
+            ),
           if (_ride != null)
             IconButton(
               tooltip: 'Refresh',
@@ -518,6 +535,7 @@ class _RideDetailsWidgetState extends State<RideDetailsWidget> {
               icon: const Icon(Icons.phone),
               label: const Text('Contact'),
             ),
+      ),
     );
   }
 

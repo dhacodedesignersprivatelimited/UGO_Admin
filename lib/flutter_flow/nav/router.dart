@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../pages/ride_management/screens/ride_management_screen.dart';
 import '/flutter_flow/nav/nav.dart';
 import '/flutter_flow/nav/serialization_util.dart';
 import '/index.dart';
@@ -60,6 +61,24 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const DashboardScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
+        name: DriverModuleHubScreen.routeName,
+        path: DriverModuleHubScreen.routePath,
+        requireAuth: true,
+        builder: (context, params) => const DriverModuleHubScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: UserModuleHubScreen.routeName,
+        path: UserModuleHubScreen.routePath,
+        requireAuth: true,
+        builder: (context, params) => const UserModuleHubScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: OperationsModuleHubScreen.routeName,
+        path: OperationsModuleHubScreen.routePath,
+        requireAuth: true,
+        builder: (context, params) => const OperationsModuleHubScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
         name: AllusersWidget.routeName,
         path: AllusersWidget.routePath,
         requireAuth: true,
@@ -86,7 +105,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         requireAuth: true,
         builder: (context, params) {
           final driverId = params.getParam('driverId', ParamType.int) as int?;
-          return DriverDetailsWidget(driverId: driverId);
+          final openDocumentsOnLoad =
+              params.getParam('openDocuments', ParamType.bool) as bool? ?? false;
+          return DriverDetailsWidget(
+            driverId: driverId,
+            openDocumentsOnLoad: openDocumentsOnLoad,
+          );
         },
       ).toRoute(appStateNotifier),
       FFRoute(
@@ -195,10 +219,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const IncentiveDetailsWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: RideManagementWidget.routeName,
-        path: RideManagementWidget.routePath,
+        name: RideManagementScreen.routeName,
+        path: RideManagementScreen.routePath,
         requireAuth: true,
-        builder: (context, params) => const RideManagementWidget(),
+        builder: (context, params) => const RideManagementScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: RideDetailsWidget.routeName,
@@ -232,6 +256,51 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         path: DriverPayoutsWidget.routePath,
         requireAuth: true,
         builder: (context, params) => const DriverPayoutsWidget(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: FinanceReportsWidget.routeName,
+        path: FinanceReportsWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const FinanceReportsWidget(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: FinanceControlHubWidget.routeName,
+        path: FinanceControlHubWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) {
+          final tab = params.getParam('tab', ParamType.int) as int? ?? 0;
+          final rideId = params.getParam('rideId', ParamType.int) as int?;
+          final userId = params.getParam('userId', ParamType.int) as int?;
+          final driverId = params.getParam('driverId', ParamType.int) as int?;
+          return FinanceControlHubWidget(
+            initialTabIndex: tab,
+            initialRideId: rideId,
+            initialUserId: userId,
+            initialDriverId: driverId,
+          );
+        },
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: FinanceAuditTimelineWidget.routeName,
+        path: FinanceAuditTimelineWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) {
+          final userId = params.getParam('userId', ParamType.int) as int?;
+          final driverId = params.getParam('driverId', ParamType.int) as int?;
+          return FinanceAuditTimelineWidget(userId: userId, driverId: driverId);
+        },
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: FinanceAutomationWidget.routeName,
+        path: FinanceAutomationWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const FinanceAutomationWidget(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: FinanceSlaDashboardWidget.routeName,
+        path: FinanceSlaDashboardWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const FinanceSlaDashboardWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: ZoneManagementWidget.routeName,

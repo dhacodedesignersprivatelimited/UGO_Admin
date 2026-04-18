@@ -33,12 +33,48 @@ String? _currentRouteName(BuildContext context) {
   }
 }
 
+/// Detail screens pushed on the stack should highlight their parent section in the drawer.
+String? _drawerHighlightForRoute(String? currentName) {
+  if (currentName == null || currentName.isEmpty) return null;
+  if (currentName == DriverDetailsWidget.routeName ||
+      currentName == DriverLicenseWidget.routeName) {
+    return DriversWidget.routeName;
+  }
+  if (currentName == UserDetailsWidget.routeName) {
+    return AllusersWidget.routeName;
+  }
+  if (currentName == RideDetailsWidget.routeName) {
+    return RideManagementScreen.routeName;
+  }
+  if (currentName == IncentiveDetailsWidget.routeName) {
+    return IncentivesWidget.routeName;
+  }
+  return currentName;
+}
+
 Widget buildAdminDrawer(BuildContext context) {
   final theme = FlutterFlowTheme.of(context);
-  final selectedName = _currentRouteName(context);
+  final selectedName = _drawerHighlightForRoute(_currentRouteName(context));
   final uid = currentUser?.uid;
 
   final sections = <_NavSection>[
+    const _NavSection('Modular hubs (MVVM)', [
+      _NavItem(
+        icon: Icons.local_taxi_rounded,
+        label: 'Driver module hub',
+        routeName: DriverModuleHubScreen.routeName,
+      ),
+      _NavItem(
+        icon: Icons.groups_2_rounded,
+        label: 'Rider module hub',
+        routeName: UserModuleHubScreen.routeName,
+      ),
+      _NavItem(
+        icon: Icons.hub_rounded,
+        label: 'Operations hub',
+        routeName: OperationsModuleHubScreen.routeName,
+      ),
+    ]),
     _NavSection('Operations', [
       _NavItem(
         icon: Icons.dashboard_rounded,
@@ -48,7 +84,12 @@ Widget buildAdminDrawer(BuildContext context) {
       _NavItem(
         icon: Icons.local_taxi_rounded,
         label: 'Ride management',
-        routeName: RideManagementWidget.routeName,
+        routeName: RideManagementScreen.routeName,
+      ),
+      _NavItem(
+        icon: Icons.drive_eta_rounded,
+        label: 'Drivers management',
+        routeName: DriversWidget.routeName,
       ),
       _NavItem(
         icon: Icons.map_rounded,
@@ -61,11 +102,6 @@ Widget buildAdminDrawer(BuildContext context) {
         icon: Icons.groups_rounded,
         label: 'All users & drivers',
         routeName: AllusersWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.drive_eta_rounded,
-        label: 'Drivers',
-        routeName: DriversWidget.routeName,
       ),
       _NavItem(
         icon: Icons.person_add_rounded,
@@ -95,6 +131,21 @@ Widget buildAdminDrawer(BuildContext context) {
     ]),
     _NavSection('Finance', [
       _NavItem(
+        icon: Icons.hub_rounded,
+        label: 'Finance control center',
+        routeName: FinanceControlHubWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.rule_folder_rounded,
+        label: 'Finance automation',
+        routeName: FinanceAutomationWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.schedule_rounded,
+        label: 'SLA & team metrics',
+        routeName: FinanceSlaDashboardWidget.routeName,
+      ),
+      _NavItem(
         icon: Icons.account_balance_wallet_rounded,
         label: 'Wallet management',
         routeName: WalletManagementWidget.routeName,
@@ -108,6 +159,11 @@ Widget buildAdminDrawer(BuildContext context) {
         icon: Icons.payments_rounded,
         label: 'Driver payouts',
         routeName: DriverPayoutsWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.table_chart_rounded,
+        label: 'Finance reports',
+        routeName: FinanceReportsWidget.routeName,
       ),
     ]),
     _NavSection('Settings & pricing', [

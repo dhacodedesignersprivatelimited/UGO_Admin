@@ -1,5 +1,7 @@
 import '/backend/api_requests/api_calls.dart';
 
+import 'ride_row_data.dart';
+
 /// Loads rider ([GetUserByIdCall]) and driver ([GetDriverByIdCall]) maps by id.
 class RidePartyFetch {
   static Map<String, dynamic>? _asMap(dynamic d) {
@@ -43,7 +45,7 @@ class RidePartyFetch {
     return out;
   }
 
-  /// Collects unique rider (`rider_id` / `user_id`) and `driver_id` values from ride maps.
+  /// Collects unique rider and driver ids from ride maps (same rules as [RideRowData]).
   static void collectIdsFromRides(
     List<dynamic> rides,
     Set<int> userIds,
@@ -52,10 +54,8 @@ class RidePartyFetch {
     for (final r in rides) {
       if (r is! Map) continue;
       final m = Map<String, dynamic>.from(r);
-      final u = m['rider_id'] ?? m['user_id'];
-      final d = m['driver_id'];
-      final ui = u is int ? u : int.tryParse(u?.toString() ?? '');
-      final di = d is int ? d : int.tryParse(d?.toString() ?? '');
+      final ui = RideRowData.parseRiderUserId(m);
+      final di = RideRowData.parseDriverId(m);
       if (ui != null) userIds.add(ui);
       if (di != null) driverIds.add(di);
     }

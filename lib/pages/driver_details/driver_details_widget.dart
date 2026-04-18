@@ -2,6 +2,7 @@ import '/auth/custom_auth/auth_util.dart';
 import '/backend/api_requests/api_config.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/admin_drawer.dart';
+import '/components/admin_pop_scope.dart';
 import '/components/safe_network_avatar.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -190,9 +191,14 @@ String _kycStatusPhrase(String kycLower) {
 }
 
 class DriverDetailsWidget extends StatefulWidget {
-  const DriverDetailsWidget({super.key, required this.driverId});
+  const DriverDetailsWidget({
+    super.key,
+    required this.driverId,
+    this.openDocumentsOnLoad = false,
+  });
 
   final int? driverId;
+  final bool openDocumentsOnLoad;
 
   static String routeName = 'DriverDetails';
   static String routePath = '/driver-details';
@@ -204,9 +210,11 @@ class DriverDetailsWidget extends StatefulWidget {
 class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
   late DriverDetailsModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _documentsSectionKey = GlobalKey();
 
   bool _isLoading = true;
   bool _isUpdatingStatus = false;
+  bool _didAutoScrollToDocuments = false;
   Map<String, dynamic>? _driverData;
   String? _errorMessage;
 
@@ -247,6 +255,7 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
           _driverData = data != null ? Map<String, dynamic>.from(data) : null;
           _isLoading = false;
         });
+        _scheduleDocumentsScrollIfRequested();
       } else {
         setState(() {
           _errorMessage = getJsonField(response.jsonBody, r'''$.message''')
@@ -263,6 +272,22 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
         });
       }
     }
+  }
+
+  void _scheduleDocumentsScrollIfRequested() {
+    if (!widget.openDocumentsOnLoad || _didAutoScrollToDocuments) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _didAutoScrollToDocuments) return;
+      final targetContext = _documentsSectionKey.currentContext;
+      if (targetContext == null) return;
+      _didAutoScrollToDocuments = true;
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+        alignment: 0.08,
+      );
+    });
   }
 
   String _string(String path) =>
@@ -1155,11 +1180,8 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
       ridesDisplay = NumberFormat.decimalPattern('en_IN').format(ridesInt);
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.goNamedAuth(AllusersWidget.routeName, context.mounted);
-      },
+    return AdminPopScope(
+      fallbackRouteName: AllusersWidget.routeName,
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: const Color(0xFFF4F6FA),
@@ -1551,6 +1573,7 @@ class _DriverDetailsWidgetState extends State<DriverDetailsWidget> {
 
                       if (_driverData != null) ...[
                         Container(
+                          key: _documentsSectionKey,
                           width: double.infinity,
                           margin: const EdgeInsets.only(bottom: 24),
                           padding: const EdgeInsets.all(22),
