@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:ugo_admin/admin_panel/admin_panel_dependencies.dart';
+import 'package:ugo_admin/shared/admin_panel_dependencies.dart';
 import 'package:ugo_admin/main.dart';
 
 void main() {

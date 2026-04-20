@@ -1,0 +1,38 @@
+/// Modular MVVM layer for UGO Admin. Legacy pages remain under `lib/pages`;
+/// this package introduces repositories, contracts, and module hubs.
+library admin_panel;
+
+export 'admin_panel_dependencies.dart';
+export 'admin_panel_session.dart';
+export 'admin_staff_role.dart';
+export 'loadable.dart';
+export 'rbac_policy.dart';
+export '/core/network/admin_api_contract.dart';
+export '/core/network/admin_api_exception.dart';
+export '/core/network/http_admin_api_client.dart';
+export '/core/network/mock_admin_api_client.dart';
+export '/modules/dashboard/model/dashboard_model.dart';
+export '/shared/models/domain_enums.dart';
+export '/modules/driver_management/model/drivers_model.dart';
+export '/modules/finance_management/model/finance_model.dart';
+export '/modules/notifications/model/notifications_model.dart';
+export '/modules/promo_codes/model/promo_codes_model.dart';
+export '/modules/user_management/model/users_model.dart';
+export '/modules/ride_management/model/rides_model.dart';
+export '/modules/settings/model/settings_model.dart';
+export '/modules/vehicle_management/model/vehicles_model.dart';
+export '/modules/dashboard/repository/analytics_admin_repository.dart';
+export '/modules/driver_management/repository/driver_admin_repository.dart';
+export '/modules/finance_management/repository/finance_admin_repository.dart';
+export '/modules/ride_management/repository/rides_admin_repository.dart';
+export '/modules/settings/repository/settings_admin_repository.dart';
+export '/modules/user_management/repository/user_admin_repository.dart';
+export '/modules/dashboard/view_model/dashboard_analytics_view_model.dart';
+export '/modules/dashboard/view_model/finance_hub_view_model.dart';
+export '/modules/dashboard/view_model/operations_hub_view_model.dart';
+export '/modules/driver_management/view_model/driver_module_view_model.dart';
+export '/modules/user_management/view_model/user_module_view_model.dart';
+export '/modules/driver_management/view/driver_module_hub/driver_module_hub_screen.dart';
+export '/modules/ride_management/view/operations_module_hub/operations_module_hub_screen.dart';
+export '/modules/user_management/view/user_module_hub/user_module_hub_screen.dart';
+export 'admin_route_catalog.dart';

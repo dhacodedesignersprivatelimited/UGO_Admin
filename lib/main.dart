@@ -1,18 +1,17 @@
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:flutter/material.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
-import 'admin_panel/admin_panel_dependencies.dart';
-import 'auth/custom_auth/auth_util.dart';
-import 'auth/custom_auth/custom_auth_user_provider.dart';
-
-import 'backend/firebase/firebase_config.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import 'flutter_flow/flutter_flow_util.dart';
-import 'flutter_flow/nav/nav.dart';
-import 'flutter_flow/nav/router.dart';
+import '/core/auth/auth_util.dart';
+import '/core/auth/custom_auth_user_provider.dart';
+import '/core/firebase/firebase_config.dart';
+import '/config/theme/flutter_flow_theme.dart';
+import '/config/theme/flutter_flow_util.dart';
+import '/config/routes/nav.dart';
+import '/config/routes/router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,14 +24,16 @@ void main() async {
 
   await authManager.initialize();
 
-  final appState = FFAppState(); // Initialize FFAppState
+  final appState = FFAppState();
   await appState.initializePersistedState();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => appState,
-      child: Provider<AdminPanelDependencies>(
-        create: (_) => AdminPanelDependencies.http(),
+    // ProviderScope is the Riverpod equivalent of MultiBlocProvider.
+    // All StateNotifierProvider / Provider instances are resolved lazily
+    // within this scope — no manual registration needed.
+    ProviderScope(
+      child: provider.ChangeNotifierProvider(
+        create: (context) => appState,
         child: MyApp(),
       ),
     ),
