@@ -270,7 +270,17 @@ class ActiveDriversCall {
 class AllUsersCall {
   static Future<ApiCallResponse> call({
     String? token = '',
+    int page = 1,
+    int limit = 20,
+    String? status,
   }) async {
+    final params = {
+      'page': page,
+      'limit': limit,
+    };
+    if (status != null && status.isNotEmpty) {
+      params['status'] = status as int;
+    }
     return ApiManager.instance.makeApiCall(
       callName: 'AllUsers',
       apiUrl: '${ApiConfig.apiBase}/admins/all-users',
@@ -278,7 +288,7 @@ class AllUsersCall {
       headers: {
         'Authorization': 'Bearer ${token}',
       },
-      params: {},
+      params: params,
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
@@ -295,6 +305,14 @@ class AllUsersCall {
   static int? userall(dynamic response) => castToType<int>(getJsonField(
         response,
         r'''$.data.total''',
+      ));
+  static int? currentPage(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.data.page''',
+      ));
+  static int? pageLimit(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.data.limit''',
       ));
   static List? usersdata(dynamic response) => getJsonField(
         response,

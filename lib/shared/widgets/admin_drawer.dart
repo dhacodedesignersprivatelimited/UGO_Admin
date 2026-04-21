@@ -5,9 +5,12 @@ import '/core/auth/auth_util.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/config/theme/flutter_flow_util.dart';
 import '/index.dart';
+import '/modules/finance/finance_module.dart';
 
-class _NavItem {
-  const _NavItem({
+abstract class _DrawerNode {}
+
+class _NavItem extends _DrawerNode {
+  _NavItem({
     required this.icon,
     required this.label,
     required this.routeName,
@@ -18,10 +21,11 @@ class _NavItem {
   final String routeName;
 }
 
-class _NavSection {
-  const _NavSection(this.title, this.items);
+class _NavSection extends _DrawerNode {
+  _NavSection(this.title, this.icon, this.items);
 
   final String title;
+  final IconData icon;
   final List<_NavItem> items;
 }
 
@@ -57,145 +61,126 @@ Widget buildAdminDrawer(BuildContext context) {
   final selectedName = _drawerHighlightForRoute(_currentRouteName(context));
   final uid = currentUser?.uid;
 
-  final sections = <_NavSection>[
-    const _NavSection('Modular hubs (MVVM)', [
+  final nodes = <_DrawerNode>[
+    _NavItem(
+      icon: Icons.dashboard_rounded,
+      label: 'Dashboard',
+      routeName: DashboardScreen.routeName,
+    ),
+    _NavSection('User Management', Icons.manage_accounts_rounded, [
       _NavItem(
-        icon: Icons.local_taxi_rounded,
-        label: 'Driver module hub',
-        routeName: DriverModuleHubScreen.routeName,
-      ),
-      _NavItem(
-        icon: Icons.groups_2_rounded,
-        label: 'Rider module hub',
-        routeName: UserModuleHubScreen.routeName,
-      ),
-      _NavItem(
-        icon: Icons.hub_rounded,
-        label: 'Operations hub',
-        routeName: OperationsModuleHubScreen.routeName,
-      ),
-    ]),
-    _NavSection('Operations', [
-      _NavItem(
-        icon: Icons.dashboard_rounded,
-        label: 'Dashboard',
-        routeName: DashboardScreen.routeName,
-      ),
-      _NavItem(
-        icon: Icons.local_taxi_rounded,
-        label: 'Ride management',
-        routeName: RideManagementScreen.routeName,
-      ),
-      _NavItem(
-        icon: Icons.drive_eta_rounded,
-        label: 'Drivers management',
-        routeName: DriversWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.map_rounded,
-        label: 'Live driver map',
-        routeName: LiveDriverMapWidget.routeName,
-      ),
-    ]),
-    _NavSection('Users & drivers', [
-      _NavItem(
-        icon: Icons.groups_rounded,
-        label: 'All users & drivers',
-        routeName: AllusersWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.person_add_rounded,
-        label: 'Add user',
-        routeName: AddUserWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.badge_rounded,
-        label: 'Add driver',
-        routeName: AddDriverWidget.routeName,
+        icon: Icons.manage_accounts_rounded,
+        label: 'User Dashboard',
+        routeName: UserManagementWidget.routeName,
       ),
       _NavItem(
         icon: Icons.block_rounded,
-        label: 'Blocked users',
+        label: 'Blocked Users',
         routeName: BlockedUsersWidget.routeName,
       ),
       _NavItem(
+        icon: Icons.person_add_rounded,
+        label: 'Add User',
+        routeName: AddUserWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.support_agent_rounded,
+        label: 'User Complaints',
+        routeName: UserComplaintsWidget.routeName,
+      ),
+    ]),
+    _NavSection('Driver Management', Icons.drive_eta_rounded, [
+      _NavItem(
+        icon: Icons.recent_actors_rounded,
+        label: 'Drivers Dashboard',
+        routeName: DriversWidget.routeName,
+      ),
+      _NavItem(
         icon: Icons.verified_user_rounded,
-        label: 'KYC pending',
+        label: 'Pending Approvals',
         routeName: KycPendingWidget.routeName,
       ),
       _NavItem(
         icon: Icons.fact_check_rounded,
-        label: 'Driver KYC list',
+        label: 'Driver KYC List',
         routeName: DriverKycListWidget.routeName,
       ),
+      _NavItem(
+        icon: Icons.map_rounded,
+        label: 'Online Drivers',
+        routeName: LiveDriverMapWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.badge_rounded,
+        label: 'Add Driver',
+        routeName: AddDriverWidget.routeName,
+      ),
     ]),
-    _NavSection('Finance', [
+    _NavSection('Ride Management', Icons.local_taxi_rounded, [
       _NavItem(
-        icon: Icons.hub_rounded,
-        label: 'Finance control center',
-        routeName: FinanceControlHubWidget.routeName,
+        icon: Icons.route_rounded,
+        label: 'Ride Dashboard',
+        routeName: RideManagementScreen.routeName,
       ),
+    ]),
+    _NavSection('Finance Management', Icons.account_balance_wallet_rounded, [
       _NavItem(
-        icon: Icons.rule_folder_rounded,
-        label: 'Finance automation',
-        routeName: FinanceAutomationWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.schedule_rounded,
-        label: 'SLA & team metrics',
-        routeName: FinanceSlaDashboardWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.account_balance_wallet_rounded,
-        label: 'Wallet management',
+        icon: Icons.account_balance_rounded,
+        label: 'Wallet Dashboard',
         routeName: WalletManagementWidget.routeName,
       ),
       _NavItem(
+        icon: Icons.hub_rounded,
+        label: 'Control Center',
+        routeName: FinanceControlHubScreen.routeName,
+      ),
+      _NavItem(
         icon: Icons.currency_exchange_rounded,
-        label: 'Earnings',
-        routeName: EarningsWidget.routeName,
+        label: 'Total Earnings',
+        routeName: EarningsScreen.routeName,
       ),
       _NavItem(
         icon: Icons.payments_rounded,
-        label: 'Driver payouts',
-        routeName: DriverPayoutsWidget.routeName,
+        label: 'Driver Payouts',
+        routeName: DriverPayoutsScreen.routeName,
       ),
+
       _NavItem(
         icon: Icons.table_chart_rounded,
-        label: 'Finance reports',
-        routeName: FinanceReportsWidget.routeName,
+        label: 'Finance Reports',
+        routeName: FinanceReportsScreen.routeName,
       ),
     ]),
-    _NavSection('Settings & pricing', [
+    _NavSection('Vehicle Management', Icons.directions_car_rounded, [
       _NavItem(
-        icon: Icons.tune_rounded,
-        label: 'Fare & surge',
-        routeName: FareSurgeSettingsWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.map_outlined,
-        label: 'Zone management',
-        routeName: ZoneManagementWidget.routeName,
-      ),
-    ]),
-    _NavSection('Vehicles', [
-      _NavItem(
-        icon: Icons.directions_car_rounded,
-        label: 'Vehicle list',
+        icon: Icons.category_rounded,
+        label: 'Vehicles List',
         routeName: VehiclesListWidget.routeName,
       ),
       _NavItem(
         icon: Icons.add_circle_outline_rounded,
-        label: 'Add vehicle',
+        label: 'Add Vehicle',
         routeName: AddVehicleWidget.routeName,
       ),
       _NavItem(
-        icon: Icons.category_rounded,
-        label: 'Add vehicle type',
+        icon: Icons.library_add_rounded,
+        label: 'Add Vehicle Type',
         routeName: AddVehicleTypeWidget.routeName,
       ),
     ]),
-    _NavSection('Marketing', [
+    _NavSection('Area & Zone Management', Icons.map_outlined, [
+      _NavItem(
+        icon: Icons.share_location_rounded,
+        label: 'Zones List',
+        routeName: ZoneManagementWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.tune_rounded,
+        label: 'Fare & Surge',
+        routeName: FareSurgeSettingsWidget.routeName,
+      ),
+    ]),
+    _NavSection('Marketing & Feedback', Icons.campaign_rounded, [
       _NavItem(
         icon: Icons.card_giftcard_rounded,
         label: 'Incentives',
@@ -203,12 +188,12 @@ Widget buildAdminDrawer(BuildContext context) {
       ),
       _NavItem(
         icon: Icons.add_circle_rounded,
-        label: 'Add incentive',
+        label: 'Add Incentive',
         routeName: AddIncentiveWidget.routeName,
       ),
       _NavItem(
         icon: Icons.local_offer_rounded,
-        label: 'Promo codes',
+        label: 'Promo Codes',
         routeName: PromoCodesWidget.routeName,
       ),
       _NavItem(
@@ -216,28 +201,21 @@ Widget buildAdminDrawer(BuildContext context) {
         label: 'Notifications',
         routeName: NotificationsWidget.routeName,
       ),
-    ]),
-    _NavSection('Feedback', [
       _NavItem(
         icon: Icons.star_rounded,
         label: 'Reviews',
         routeName: ReviewsWidget.routeName,
       ),
-      _NavItem(
-        icon: Icons.support_agent_rounded,
-        label: 'User complaints',
-        routeName: UserComplaintsWidget.routeName,
-      ),
     ]),
-    _NavSection('Admin', [
+    _NavSection('System Admin', Icons.admin_panel_settings_rounded, [
       _NavItem(
-        icon: Icons.admin_panel_settings_rounded,
+        icon: Icons.manage_accounts_outlined,
         label: 'Sub-admins',
         routeName: SubAdminsWidget.routeName,
       ),
       _NavItem(
         icon: Icons.settings_rounded,
-        label: 'App settings',
+        label: 'App Settings',
         routeName: AppSettingsWidget.routeName,
       ),
       _NavItem(
@@ -259,23 +237,28 @@ Widget buildAdminDrawer(BuildContext context) {
             child: ListView(
               padding: const EdgeInsets.only(bottom: 8),
               children: [
-                for (var s = 0; s < sections.length; s++) ...[
-                  if (s > 0) _DrawerDivider(theme: theme),
-                  _DrawerSectionTitle(theme: theme, title: sections[s].title),
-                  for (final item in sections[s].items)
+                for (final node in nodes) ...[
+                  if (node is _NavItem)
                     _DrawerNavTile(
                       theme: theme,
-                      icon: item.icon,
-                      label: item.label,
-                      routeName: item.routeName,
-                      selected: selectedName == item.routeName,
+                      icon: node.icon,
+                      label: node.label,
+                      routeName: node.routeName,
+                      selected: selectedName == node.routeName,
+                      isSubItem: false,
                       onTap: () {
                         Navigator.pop(context);
                         context.goNamedAuth(
-                          item.routeName,
+                          node.routeName,
                           context.mounted,
                         );
                       },
+                    )
+                  else if (node is _NavSection)
+                    _DrawerExpandableSection(
+                      theme: theme,
+                      section: node,
+                      selectedName: selectedName,
                     ),
                 ],
               ],
@@ -287,6 +270,63 @@ Widget buildAdminDrawer(BuildContext context) {
       ),
     ),
   );
+}
+
+class _DrawerExpandableSection extends StatelessWidget {
+  const _DrawerExpandableSection({
+    required this.theme,
+    required this.section,
+    required this.selectedName,
+  });
+
+  final FlutterFlowTheme theme;
+  final _NavSection section;
+  final String? selectedName;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasSelectedItem = section.items.any((item) => item.routeName == selectedName);
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dividerColor: Colors.transparent,
+      ),
+      child: ExpansionTile(
+        initiallyExpanded: hasSelectedItem,
+        leading: Icon(
+          section.icon,
+          color: hasSelectedItem ? theme.primary : theme.primaryText,
+          size: 24,
+        ),
+        title: Text(
+          section.title,
+          style: GoogleFonts.inter(
+            fontWeight: hasSelectedItem ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 15,
+            color: hasSelectedItem ? theme.primary : theme.primaryText,
+          ),
+        ),
+        childrenPadding: const EdgeInsets.only(left: 16, bottom: 8),
+        children: section.items.map((item) {
+          return _DrawerNavTile(
+            theme: theme,
+            icon: item.icon,
+            label: item.label,
+            routeName: item.routeName,
+            selected: selectedName == item.routeName,
+            isSubItem: true,
+            onTap: () {
+              Navigator.pop(context);
+              context.goNamedAuth(
+                item.routeName,
+                context.mounted,
+              );
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
 }
 
 class _DrawerBranding extends StatelessWidget {
@@ -337,17 +377,17 @@ class _DrawerBranding extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'UGO Admin',
+                  'UGO TAXI',
                   style: GoogleFonts.interTight(
                     color: Colors.white,
                     fontSize: 22,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Control center',
+                  'Admin Control Center',
                   style: GoogleFonts.inter(
                     color: Colors.white.withValues(alpha: 0.88),
                     fontSize: 13,
@@ -376,51 +416,6 @@ class _DrawerBranding extends StatelessWidget {
   }
 }
 
-class _DrawerSectionTitle extends StatelessWidget {
-  const _DrawerSectionTitle({
-    required this.theme,
-    required this.title,
-  });
-
-  final FlutterFlowTheme theme;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
-      child: Text(
-        title.toUpperCase(),
-        style: GoogleFonts.inter(
-          fontWeight: FontWeight.w600,
-          fontSize: 10.5,
-          letterSpacing: 0.9,
-          color: theme.secondaryText,
-        ),
-      ),
-    );
-  }
-}
-
-class _DrawerDivider extends StatelessWidget {
-  const _DrawerDivider({required this.theme});
-
-  final FlutterFlowTheme theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Divider(
-        height: 1,
-        indent: 16,
-        endIndent: 16,
-        color: theme.alternate.withValues(alpha: 0.65),
-      ),
-    );
-  }
-}
-
 class _DrawerNavTile extends StatelessWidget {
   const _DrawerNavTile({
     required this.theme,
@@ -429,6 +424,7 @@ class _DrawerNavTile extends StatelessWidget {
     required this.routeName,
     required this.selected,
     required this.onTap,
+    this.isSubItem = false,
   });
 
   final FlutterFlowTheme theme;
@@ -437,6 +433,7 @@ class _DrawerNavTile extends StatelessWidget {
   final String routeName;
   final bool selected;
   final VoidCallback onTap;
+  final bool isSubItem;
 
   @override
   Widget build(BuildContext context) {
@@ -444,29 +441,29 @@ class _DrawerNavTile extends StatelessWidget {
         ? theme.primary.withValues(alpha: 0.1)
         : Colors.transparent;
     final fg = selected ? theme.primary : theme.primaryText;
-    final iconColor = selected ? theme.primary : theme.primary;
+    final iconColor = selected ? theme.primary : theme.secondaryText;
+    
+    final double iconSize = isSubItem ? 20 : 24;
+    final double fontSize = isSubItem ? 13 : 15;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
         color: bg,
         borderRadius: BorderRadius.circular(10),
         child: ListTile(
           dense: true,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          leading: Icon(icon, color: iconColor, size: 22),
+          contentPadding: EdgeInsets.symmetric(horizontal: isSubItem ? 16 : 12, vertical: 0),
+          leading: Icon(icon, color: iconColor, size: iconSize),
           title: Text(
             label,
             style: GoogleFonts.inter(
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              fontSize: 14,
+              fontSize: fontSize,
               color: fg,
             ),
           ),
-          trailing: selected
-              ? Icon(Icons.chevron_right_rounded, color: theme.primary, size: 20)
-              : null,
           onTap: onTap,
         ),
       ),
@@ -486,12 +483,12 @@ class _DrawerSignOutButton extends StatelessWidget {
       child: ListTile(
         dense: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        leading: Icon(Icons.logout_rounded, color: theme.error, size: 22),
+        leading: Icon(Icons.logout_rounded, color: theme.error, size: 24),
         title: Text(
           'Sign out',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontSize: 15,
             color: theme.error,
           ),
         ),

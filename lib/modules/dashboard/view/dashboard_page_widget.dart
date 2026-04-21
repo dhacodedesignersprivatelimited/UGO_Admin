@@ -32,7 +32,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   void dispose() {
-    ref.read(dashboardViewModelProvider.notifier).stopPolling();
     super.dispose();
   }
 

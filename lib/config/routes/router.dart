@@ -4,6 +4,7 @@ import '/modules/ride_management/view/ride_management_screen.dart';
 import '/config/routes/nav.dart';
 import '/config/routes/serialization_util.dart';
 import '/index.dart';
+import '/modules/finance/finance_module.dart';
 
 GoRouter createRouter(AppStateNotifier appStateNotifier) {
   return GoRouter(
@@ -61,16 +62,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const DashboardScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: DriverModuleHubScreen.routeName,
-        path: DriverModuleHubScreen.routePath,
-        requireAuth: true,
-        builder: (context, params) => const DriverModuleHubScreen(),
-      ).toRoute(appStateNotifier),
-      FFRoute(
         name: UserModuleHubScreen.routeName,
         path: UserModuleHubScreen.routePath,
         requireAuth: true,
         builder: (context, params) => const UserModuleHubScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: UserManagementWidget.routeName,
+        path: UserManagementWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const UserManagementWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: OperationsModuleHubScreen.routeName,
@@ -153,10 +154,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const DriverKycListWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: EarningsWidget.routeName,
-        path: EarningsWidget.routePath,
+        name: EarningsScreen.routeName,
+        path: EarningsScreen.routePath,
         requireAuth: true,
-        builder: (context, params) => const EarningsWidget(),
+        builder: (context, params) => const EarningsScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: PromoCodesWidget.routeName,
@@ -252,27 +253,27 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const FareSurgeSettingsWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: DriverPayoutsWidget.routeName,
-        path: DriverPayoutsWidget.routePath,
+        name: DriverPayoutsScreen.routeName,
+        path: DriverPayoutsScreen.routePath,
         requireAuth: true,
-        builder: (context, params) => const DriverPayoutsWidget(),
+        builder: (context, params) => const DriverPayoutsScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: FinanceReportsWidget.routeName,
-        path: FinanceReportsWidget.routePath,
+        name: FinanceReportsScreen.routeName,
+        path: FinanceReportsScreen.routePath,
         requireAuth: true,
-        builder: (context, params) => const FinanceReportsWidget(),
+        builder: (context, params) => const FinanceReportsScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: FinanceControlHubWidget.routeName,
-        path: FinanceControlHubWidget.routePath,
+        name: FinanceControlHubScreen.routeName,
+        path: FinanceControlHubScreen.routePath,
         requireAuth: true,
         builder: (context, params) {
           final tab = params.getParam('tab', ParamType.int) as int? ?? 0;
           final rideId = params.getParam('rideId', ParamType.int) as int?;
           final userId = params.getParam('userId', ParamType.int) as int?;
           final driverId = params.getParam('driverId', ParamType.int) as int?;
-          return FinanceControlHubWidget(
+          return FinanceControlHubScreen(
             initialTabIndex: tab,
             initialRideId: rideId,
             initialUserId: userId,

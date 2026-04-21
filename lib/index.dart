@@ -56,5 +56,6 @@ export '/modules/driver_management/view/driver_module_hub/driver_module_hub_scre
     show DriverModuleHubScreen;
 export '/modules/user_management/view/user_module_hub/user_module_hub_screen.dart'
     show UserModuleHubScreen;
+export '/modules/user_management/view/user_management_widget.dart' show UserManagementWidget;
 export '/modules/ride_management/view/operations_module_hub/operations_module_hub_screen.dart'
     show OperationsModuleHubScreen;
