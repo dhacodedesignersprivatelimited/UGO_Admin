@@ -30,6 +30,7 @@ export '/modules/driver_management/view/kyc_pending/kyc_pending_widget.dart' sho
 export '/modules/driver_management/view/driver_kyc_list/driver_kyc_list_widget.dart'
     show DriverKycListWidget;
 export '/modules/user_management/view/add_user/add_user_widget.dart' show AddUserWidget;
+export '/modules/user_management/view/user_management_widget.dart' show UserManagementWidget;
 export '/modules/driver_management/view/add_driver/add_driver_widget.dart' show AddDriverWidget;
 export '/modules/ride_management/view/ride_details/ride_details_widget.dart'
     show RideDetailsWidget;
@@ -56,6 +57,5 @@ export '/modules/driver_management/view/driver_module_hub/driver_module_hub_scre
     show DriverModuleHubScreen;
 export '/modules/user_management/view/user_module_hub/user_module_hub_screen.dart'
     show UserModuleHubScreen;
-export '/modules/user_management/view/user_management_widget.dart' show UserManagementWidget;
 export '/modules/ride_management/view/operations_module_hub/operations_module_hub_screen.dart'
     show OperationsModuleHubScreen;

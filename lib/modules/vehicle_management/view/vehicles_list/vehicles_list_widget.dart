@@ -250,44 +250,40 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
           ],
         ),
         const SizedBox(height: 12),
-        DashboardMetricGrid(
-          maxWidthForThreeCols: 640,
+        Row(
           children: [
-            DashboardMetricCard(
+            _buildStatCard(
               title: 'Vehicle types',
               value: '${_vehicleTypes.length}',
-              backgroundColor: DashboardTokens.metricUsersBg,
-              accentColor: DashboardTokens.metricUsersAccent,
               icon: Icons.category_outlined,
+              accentColor: DashboardTokens.metricUsersAccent,
               onTap: () => context.pushNamedAuth(
                 AddVehicleTypeWidget.routeName,
                 context.mounted,
               ),
             ),
-            DashboardMetricCard(
+            const SizedBox(width: 12),
+            _buildStatCard(
               title: 'Fleet size',
               value: '${_adminVehicles.length}',
-              backgroundColor: DashboardTokens.metricDriversBg,
-              accentColor: DashboardTokens.metricDriversAccent,
               icon: Icons.directions_car_rounded,
+              accentColor: DashboardTokens.metricDriversAccent,
               onTap: () => context.pushNamedAuth(
                 AddVehicleWidget.routeName,
                 context.mounted,
               ),
             ),
-            DashboardMetricCard(
+            const SizedBox(width: 12),
+            _buildStatCard(
               title: orphans > 0 ? 'Needs review' : 'Unassigned',
               value: orphans > 0 ? '$orphans' : '—',
-              subtitle: orphans > 0 ? 'Untyped vehicles' : 'All grouped',
-              backgroundColor: orphans > 0
-                  ? DashboardTokens.metricEarningsBg
-                  : DashboardTokens.metricWalletBg,
-              accentColor: orphans > 0
-                  ? DashboardTokens.metricEarningsAccent
-                  : DashboardTokens.metricWalletAccent,
+              subtitle: orphans > 0 ? 'Untyped' : 'All grouped',
               icon: orphans > 0
                   ? Icons.warning_amber_rounded
                   : Icons.check_circle_outline_rounded,
+              accentColor: orphans > 0
+                  ? DashboardTokens.metricEarningsAccent
+                  : DashboardTokens.metricWalletAccent,
             ),
           ],
         ),
@@ -306,14 +302,96 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
   }
 
   /// White rounded surface matching dashboard cards.
-  BoxDecoration _fleetCardDecoration() {
+  /// White rounded surface with a colored left border accent.
+  BoxDecoration _fleetCardDecoration({Color? accentColor}) {
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(DashboardTokens.cardRadius),
-      boxShadow: DashboardTokens.cardShadow,
+      border: Border(
+        left: BorderSide(
+          color: accentColor ?? DashboardTokens.primaryOrange,
+          width: 4,
+        ),
+      ),
+      boxShadow: DashboardTokens.softShadow,
     );
   }
 
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color accentColor,
+    String? subtitle,
+    VoidCallback? onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(DashboardTokens.cardRadius),
+            border: Border(left: BorderSide(color: accentColor, width: 4)),
+            boxShadow: DashboardTokens.softShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: accentColor, size: 20),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1A1A2E),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFF888888),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: const Color(0xFFAAAAAA),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
   List<Map<String, dynamic>> _getVehiclesFromNested(Map<String, dynamic> type) {
     final nested = getJsonField(type, r'''$.vehicles''') ??
         getJsonField(type, r'''$.admin_vehicles''') ??
@@ -545,7 +623,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: _fleetCardDecoration(),
+      decoration: _fleetCardDecoration(accentColor: DashboardTokens.primaryOrange),
       clipBehavior: Clip.antiAlias,
       child: Material(
         color: Colors.white,
@@ -588,6 +666,8 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
             color: FlutterFlowTheme.of(context).secondaryText,
           ),
         ),
+        iconColor: DashboardTokens.primaryOrange,
+        collapsedIconColor: DashboardTokens.primaryOrange,
         children: [
           if (subVehicles.isEmpty)
             Padding(
@@ -602,17 +682,33 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
           else
             ...subVehicles.map((v) => _buildSubVehicleTile(v)),
           if (subVehicles.isNotEmpty) ...[
-            const Divider(height: 24),
+            const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text(
-                'Pricing',
-                style: FlutterFlowTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: DashboardTokens.metricOnlineAccent,
+                      borderRadius: BorderRadius.circular(2),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Pricing',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: const Color(0xFF1A1A2E),
+                    ),
+                  ),
+                ],
               ),
             ),
             ...subVehicles.map((v) => _buildPricingTile(v)),
+            const SizedBox(height: 8),
           ],
         ],
         ),
@@ -649,38 +745,77 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
             : '${ApiConfig.baseUrl}/${imgPath.toString().replaceFirst(RegExp(r'^/'), '')}')
         : null;
 
-    return ListTile(
-      leading: imgUrl != null && imgUrl.isNotEmpty
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imgUrl,
-                width: 48,
-                height: 48,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.directions_car_outlined,
-                  color: FlutterFlowTheme.of(context).primary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: DashboardTokens.metricDriversBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: imgUrl != null && imgUrl.isNotEmpty
+                ? Image.network(
+                    imgUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.directions_car_outlined,
+                      color: DashboardTokens.metricDriversAccent,
+                      size: 22,
+                    ),
+                  )
+                : Icon(
+                    Icons.directions_car_outlined,
+                    color: DashboardTokens.metricDriversAccent,
+                    size: 22,
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name.toString(),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: const Color(0xFF1A1A2E),
+                  ),
                 ),
-              ),
-            )
-          : Icon(
-              Icons.directions_car_outlined,
-              color: FlutterFlowTheme.of(context).primary,
+                if (rideCategory != null ||
+                    seating != null ||
+                    luggage != null) ...[
+                  const SizedBox(height: 5),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (rideCategory != null)
+                        _buildChip(
+                          _rideCategoryDisplay(rideCategory),
+                          DashboardTokens.metricUsersAccent,
+                        ),
+                      if (seating != null)
+                        _buildChip(
+                          '$seating seats',
+                          DashboardTokens.metricDriversAccent,
+                        ),
+                      if (luggage != null)
+                        _buildChip(
+                          '$luggage luggage',
+                          DashboardTokens.metricRidesAccent,
+                        ),
+                    ],
+                  ),
+                ],
+              ],
             ),
-      title: Text(
-        name.toString(),
-        style: FlutterFlowTheme.of(context).titleMedium,
-      ),
-      subtitle: Text(
-        [
-          if (rideCategory != null) _rideCategoryDisplay(rideCategory),
-          if (seating != null) 'Seats: $seating',
-          if (luggage != null) 'Luggage: $luggage',
-        ].where((x) => x.isNotEmpty).join(' • '),
-        style: FlutterFlowTheme.of(context).bodySmall.override(
-              color: FlutterFlowTheme.of(context).secondaryText,
-            ),
+          ),
+        ],
       ),
     );
   }
@@ -690,28 +825,58 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
         getJsonField(vehicle, r'''$.name''') ??
         getJsonField(vehicle, r'''$.vehicleName''') ??
         'Vehicle';
-    return ListTile(
-      leading: Icon(
-        Icons.payments_outlined,
-        color: FlutterFlowTheme.of(context).primary,
-      ),
-      title: Text(
-        name.toString(),
-        style: FlutterFlowTheme.of(context).titleSmall,
-      ),
-      trailing: FFButtonWidget(
-        onPressed: () => _openPricingDialog(vehicle),
-        text: 'Set Pricing',
-        options: FFButtonOptions(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          color: FlutterFlowTheme.of(context).primary,
-          textStyle: FlutterFlowTheme.of(context).labelMedium.override(
-                color: Colors.white,
-                font: GoogleFonts.inter(),
-                fontWeight: FontWeight.w600,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: DashboardTokens.metricOnlineBg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border(
+            left: BorderSide(
+              color: DashboardTokens.metricOnlineAccent,
+              width: 3,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.payments_outlined,
+              color: DashboardTokens.metricOnlineAccent,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                name.toString(),
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: const Color(0xFF1A1A2E),
+                ),
               ),
-          borderRadius: BorderRadius.circular(18),
+            ),
+            GestureDetector(
+              onTap: () => _openPricingDialog(vehicle),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: DashboardTokens.primaryOrange,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Set Pricing',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -770,62 +935,80 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
   Widget _buildOrphanVehiclesSection() {
     final orphans = _getOrphanVehicles();
     if (orphans.isEmpty) return const SizedBox.shrink();
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ExpansionTile(
+      decoration: _fleetCardDecoration(accentColor: DashboardTokens.metricEarningsAccent),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.white,
+        child: ExpansionTile(
         initiallyExpanded: true,
         tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         leading: Icon(
           Icons.directions_car_outlined,
-          color: FlutterFlowTheme.of(context).primary,
+          color: DashboardTokens.metricEarningsAccent,
           size: 40,
         ),
         title: Text(
           'Other Vehicles',
-          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-              ),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            color: const Color(0xFF1A1A2E),
+          ),
         ),
         subtitle: Text(
           '${orphans.length} vehicle${orphans.length == 1 ? '' : 's'} (type unknown)',
-          style: FlutterFlowTheme.of(context).bodySmall.override(
-                color: FlutterFlowTheme.of(context).secondaryText,
-              ),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: FlutterFlowTheme.of(context).secondaryText,
+          ),
         ),
+        iconColor: DashboardTokens.metricEarningsAccent,
+        collapsedIconColor: DashboardTokens.metricEarningsAccent,
         children: orphans.map((v) => _buildSubVehicleTile(v)).toList(),
+        ),
       ),
     );
   }
 
   Widget _buildUnassignedVehiclesSection() {
     if (_adminVehicles.isEmpty) return const SizedBox.shrink();
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ExpansionTile(
+      decoration: _fleetCardDecoration(accentColor: DashboardTokens.metricUsersAccent),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.white,
+        child: ExpansionTile(
         initiallyExpanded: true,
         tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         leading: Icon(
           Icons.directions_car,
-          color: FlutterFlowTheme.of(context).primary,
+          color: DashboardTokens.metricUsersAccent,
           size: 40,
         ),
         title: Text(
           'All Vehicles',
-          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-              ),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            color: const Color(0xFF1A1A2E),
+          ),
         ),
         subtitle: Text(
           '${_adminVehicles.length} vehicle${_adminVehicles.length == 1 ? '' : 's'}',
-          style: FlutterFlowTheme.of(context).bodySmall.override(
-                color: FlutterFlowTheme.of(context).secondaryText,
-              ),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: FlutterFlowTheme.of(context).secondaryText,
+          ),
         ),
+        iconColor: DashboardTokens.metricUsersAccent,
+        collapsedIconColor: DashboardTokens.metricUsersAccent,
         children: _adminVehicles.map((v) => _buildSubVehicleTile(v)).toList(),
+        ),
       ),
     );
   }

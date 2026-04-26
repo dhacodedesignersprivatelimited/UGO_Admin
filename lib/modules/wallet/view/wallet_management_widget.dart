@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 
 import '/core/auth/auth_util.dart';
 import '/core/network/api_calls.dart';
-import '/shared/widgets/admin_scaffold.dart';
+import '/modules/dashboard/view/dashboard_tokens.dart';
+import '/shared/widgets/admin_drawer.dart';
+import '/shared/widgets/admin_pop_scope.dart';
 import '/shared/widgets/skeleton_block.dart';
 import '/config/theme/flutter_flow_util.dart';
 import '/core/services/cache_service.dart';
@@ -1199,158 +1201,195 @@ class _WalletManagementWidgetState extends State<WalletManagementWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminScaffold(
-      title: 'Wallet Management',
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: (isLoading || txLoading || isBackgroundRefreshing)
-              ? null
-              : () => fetchData(backgroundRefresh: true),
+    return AdminPopScope(
+      child: Scaffold(
+        drawer: buildAdminDrawer(context),
+        backgroundColor: DashboardTokens.pageBackground,
+        appBar: AppBar(
+          backgroundColor: DashboardTokens.primaryOrange,
+          foregroundColor: Colors.white,
+          centerTitle: true,
+          title: const Text(
+            'WALLET MANAGEMENT',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: (isLoading || txLoading || isBackgroundRefreshing)
+                  ? null
+                  : () => fetchData(backgroundRefresh: true),
+            ),
+          ],
         ),
-      ],
-      child: RefreshIndicator(
-        onRefresh: () => fetchData(backgroundRefresh: true),
-        child: isLoading && !_hasPreviewData()
-            ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(12),
-                children: const [
-                  SkeletonBlock(width: double.infinity, height: 110, radius: 14),
-                  SizedBox(height: 12),
-                  SkeletonBlock(width: double.infinity, height: 64, radius: 12),
-                  SizedBox(height: 12),
-                  SkeletonBlock(width: double.infinity, height: 320, radius: 12),
-                ],
-              )
-            : SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (isBackgroundRefreshing)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: LinearProgressIndicator(minHeight: 2),
-                ),
-              if (_lastUpdatedAt != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    'Updated ${dateTimeFormat("relative", _lastUpdatedAt)}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ),
-              if (loadError != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Material(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        loadError!,
-                        style: TextStyle(color: Colors.orange.shade900),
+        body: RefreshIndicator(
+          color: DashboardTokens.primaryOrange,
+          onRefresh: () => fetchData(backgroundRefresh: true),
+          child: isLoading && !_hasPreviewData()
+              ? CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.all(16),
+                      sliver: const SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            SkeletonBlock(width: double.infinity, height: 160, radius: 14),
+                            SizedBox(height: 12),
+                            SkeletonBlock(width: double.infinity, height: 64, radius: 12),
+                            SizedBox(height: 12),
+                            SkeletonBlock(width: double.infinity, height: 320, radius: 12),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
+                )
+              : CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                      sliver: SliverToBoxAdapter(
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1180),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (isBackgroundRefreshing)
+                                  const LinearProgressIndicator(minHeight: 2),
+                                // ── Top bar: updated time + export ──
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _lastUpdatedAt != null
+                                          ? Text(
+                                              'Updated ${dateTimeFormat("relative", _lastUpdatedAt)}',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey.shade600),
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                    SizedBox(
+                                      height: 36,
+                                      child: ElevatedButton.icon(
+                                        onPressed: _exportWalletSnapshot,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFF3C132),
+                                          foregroundColor: Colors.black87,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                        icon: const Icon(Icons.download_rounded, size: 16),
+                                        label: const Text('Export',
+                                            style: TextStyle(fontWeight: FontWeight.w600)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (loadError != null) ...[
+                                  const SizedBox(height: 10),
+                                  Material(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Text(
+                                        loadError!,
+                                        style: TextStyle(color: Colors.orange.shade900),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                // ── Summary cards ──
+                                WalletSummaryCards(
+                                  totalBalance: totalBalanceLabel,
+                                  totalCredited: totalCreditedLabel,
+                                  totalDebited: totalDebitedLabel,
+                                  pendingWithdrawals: pendingWithdrawalsLabel,
+                                  pendingWithdrawalsCount: pendingWithdrawalsCount,
+                                ),
+                                const SizedBox(height: 16),
+                                // ── Action buttons ──
+                                WalletActionsRow(
+                                  onAddMoney: addMoney,
+                                  onDeductMoney: deductMoney,
+                                  onAdjustCommission: adjustCommission,
+                                  initialSearch: search,
+                                  onSearchChanged: (value) => setState(() => search = value),
+                                  onViewTap: _onTopBarViewTap,
+                                ),
+                                const SizedBox(height: 16),
+                                // ── Filters ──
+                                WalletFiltersBar(
+                                  onSearch: _onSearchChanged,
+                                  initialSearch: search,
+                                  initialType: typeFilter,
+                                  initialDriverId: _selectedDriverId,
+                                  initialDateRange: _selectedDateRange,
+                                  drivers: _drivers,
+                                  onTypeChange: (value) {
+                                    setState(() => typeFilter = value);
+                                    _fetchTransactionPage(1, showTableSpinner: true);
+                                  },
+                                  onDriverChange: (driverId) {
+                                    setState(() => _selectedDriverId = driverId);
+                                    _fetchTransactionPage(1, showTableSpinner: true);
+                                  },
+                                  onDateRangeChange: (range) {
+                                    setState(() => _selectedDateRange = range);
+                                    _fetchTransactionPage(1, showTableSpinner: true);
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                // ── Transactions ──
+                                WalletTransactionList(
+                                  transactions: transactions,
+                                  isLoading: isLoading || txLoading,
+                                  page: _txPage,
+                                  pageSize: _txPageSize,
+                                  totalCount: _txTotal,
+                                  onPageChanged: (p) =>
+                                      _fetchTransactionPage(p, showTableSpinner: true),
+                                  onViewRow: _showTransactionDetail,
+                                ),
+                                const SizedBox(height: 16),
+                                // ── Withdraw requests ──
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Withdraw Requests',
+                                      style: TextStyle(
+                                          fontSize: 18, fontWeight: FontWeight.w700),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '(${withdraws.length} pending)',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey.shade600),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                WithdrawRequestList(
+                                  withdraws: withdraws,
+                                  isLoading: isLoading,
+                                  onRefresh: fetchData,
+                                  onApprove: (w) => approveWithdraw(_parseInt(w['id'])),
+                                  onReject: (w) => rejectWithdraw(_parseInt(w['id'])),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: _buildSummaryAndExport(),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                ),
-                child: WalletActionsRow(
-                  onAddMoney: addMoney,
-                  onDeductMoney: deductMoney,
-                  onAdjustCommission: adjustCommission,
-                  initialSearch: search,
-                  onSearchChanged: (value) => setState(() => search = value),
-                  onViewTap: _onTopBarViewTap,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: WalletFiltersBar(
-                  onSearch: _onSearchChanged,
-                  initialSearch: search,
-                  initialType: typeFilter,
-                  initialDriverId: _selectedDriverId,
-                  initialDateRange: _selectedDateRange,
-                  drivers: _drivers,
-                  onTypeChange: (value) {
-                    setState(() => typeFilter = value);
-                    _fetchTransactionPage(1, showTableSpinner: true);
-                  },
-                  onDriverChange: (driverId) {
-                    setState(() => _selectedDriverId = driverId);
-                    _fetchTransactionPage(1, showTableSpinner: true);
-                  },
-                  onDateRangeChange: (range) {
-                    setState(() => _selectedDateRange = range);
-                    _fetchTransactionPage(1, showTableSpinner: true);
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return WalletTransactionList(
-                    transactions: transactions,
-                    isLoading: isLoading || txLoading,
-                    page: _txPage,
-                    pageSize: _txPageSize,
-                    totalCount: _txTotal,
-                    onPageChanged: (p) =>
-                        _fetchTransactionPage(p, showTableSpinner: true),
-                    onViewRow: _showTransactionDetail,
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Text(
-                    'Withdraw Requests',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '(${withdraws.length} pending)',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              WithdrawRequestList(
-                withdraws: withdraws,
-                isLoading: isLoading,
-                onRefresh: fetchData,
-                onApprove: (w) => approveWithdraw(_parseInt(w['id'])),
-                onReject: (w) => rejectWithdraw(_parseInt(w['id'])),
-              ),
-            ],
-          ),
         ),
       ),
     );

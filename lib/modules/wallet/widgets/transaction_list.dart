@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 class WalletTransactionList extends StatelessWidget {
   const WalletTransactionList({
@@ -31,30 +32,44 @@ class WalletTransactionList extends StatelessWidget {
     final start = totalCount == 0 ? 0 : ((page - 1) * pageSize) + 1;
     final end = totalCount == 0 ? 0 : (page * pageSize).clamp(1, totalCount);
 
+    final screenW = MediaQuery.sizeOf(context).width;
+    const horizontalPad = 0.0;
+    final viewport = math.max(screenW - horizontalPad, 320.0);
+    const tableMinW = 1024.0;
+    final contentW = viewport < tableMinW ? tableMinW : viewport;
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Text(
-                'Wallet Transactions',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              const Spacer(),
-              Text(
-                'Showing $start to $end of $totalCount transactions',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Row(
+              children: [
+                const Text(
+                  'Wallet Transactions',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const Spacer(),
+                Text(
+                  'Showing $start to $end of $totalCount transactions',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           if (isLoading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 36),
@@ -66,21 +81,31 @@ class WalletTransactionList extends StatelessWidget {
               child: Center(
                 child: Text(
                   'No transactions found',
-                  style: TextStyle(color: Colors.grey.shade700),
+                  style: TextStyle(color: Colors.grey),
                 ),
               ),
             )
           else
-            _TransactionDataTable(
-              rows: transactions,
-              onViewRow: onViewRow,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: contentW,
+                child: _TransactionDataTable(
+                  rows: transactions,
+                  onViewRow: onViewRow,
+                ),
+              ),
             ),
           const SizedBox(height: 10),
-          _PaginationBar(
-            page: page,
-            totalPages: totalPages,
-            onPageChanged: onPageChanged,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _PaginationBar(
+              page: page,
+              totalPages: totalPages,
+              onPageChanged: onPageChanged,
+            ),
           ),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -98,55 +123,69 @@ class _TransactionDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowHeight: 42,
-          dataRowMinHeight: 44,
-          dataRowMaxHeight: 52,
-          horizontalMargin: 10,
-          columnSpacing: 18,
-          headingRowColor: WidgetStatePropertyAll(Colors.grey.shade100),
-          columns: const [
-            DataColumn(label: Text('ID')),
-            DataColumn(label: Text('Driver')),
-            DataColumn(label: Text('Type')),
-            DataColumn(label: Text('Amount')),
-            DataColumn(label: Text('Balance')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Action')),
-          ],
-          rows: rows.map((r) {
-            final flow = (r['flow']?.toString() ?? '').toLowerCase();
-            final credit = flow == 'credit';
-            final amount = _num(r['amount']);
-            final balance = _num(r['balance_after']);
-            final status = _statusLabel(r);
-            final statusColor = _statusColor(status);
-            final id = r['transaction_id_display']?.toString() ??
-                r['transaction_id']?.toString() ??
-                r['id']?.toString() ??
-                '-';
-            final user = r['party_name']?.toString() ?? '-';
-            final created = _dateLabel(r['created_at']);
-
-            return DataRow(
-              cells: [
-                DataCell(Text(id)),
-                DataCell(
-                  SizedBox(
-                    width: 130,
-                    child: Text(
-                      user,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+    final headerStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: Colors.grey.shade700,
+      letterSpacing: 0.2,
+    );
+    // Adjusted column widths for better fit
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Container(
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+            ),
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                SizedBox(width: 80, child: Text('Txn ID', style: headerStyle)),
+                SizedBox(width: 120, child: Text('Driver', style: headerStyle)),
+                SizedBox(width: 70, child: Text('Type', style: headerStyle)),
+                SizedBox(width: 90, child: Text('Amount', style: headerStyle)),
+                SizedBox(width: 90, child: Text('Balance', style: headerStyle)),
+                SizedBox(width: 80, child: Text('Status', style: headerStyle)),
+                SizedBox(width: 100, child: Text('Date', style: headerStyle)),
+                SizedBox(width: 80, child: Text('Action', style: headerStyle)),
+              ],
+            ),
+          ),
+        ),
+        ...rows.map((r) {
+          final flow = (r['flow']?.toString() ?? '').toLowerCase();
+          final credit = flow == 'credit';
+          final amount = _num(r['amount']);
+          final balance = _num(r['balance_after']);
+          final status = _statusLabel(r);
+          final statusColor = _statusColor(status);
+          final id = r['transaction_id_display']?.toString() ??
+              r['transaction_id']?.toString() ??
+              r['id']?.toString() ??
+              '-';
+          final user = r['party_name']?.toString() ?? '-';
+          final created = _dateLabel(r['created_at']);
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: 80, child: Text(id, style: const TextStyle(fontWeight: FontWeight.w600))),
+                SizedBox(
+                  width: 120,
+                  child: Text(
+                    user,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                DataCell(
-                  Text(
+                SizedBox(
+                  width: 70,
+                  child: Text(
                     credit ? 'Credit' : 'Debit',
                     style: TextStyle(
                       color: credit ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
@@ -154,8 +193,9 @@ class _TransactionDataTable extends StatelessWidget {
                     ),
                   ),
                 ),
-                DataCell(
-                  Text(
+                SizedBox(
+                  width: 90,
+                  child: Text(
                     '${credit ? '+' : '-'}₹${amount.toStringAsFixed(2)}',
                     style: TextStyle(
                       color: credit ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
@@ -163,12 +203,16 @@ class _TransactionDataTable extends StatelessWidget {
                     ),
                   ),
                 ),
-                DataCell(Text('₹${balance.toStringAsFixed(2)}')),
-                DataCell(
-                  Container(
+                SizedBox(
+                  width: 90,
+                  child: Text('₹${balance.toStringAsFixed(2)}'),
+                ),
+                SizedBox(
+                  width: 80,
+                  child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
+                      color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -181,30 +225,30 @@ class _TransactionDataTable extends StatelessWidget {
                     ),
                   ),
                 ),
-                DataCell(
-                  SizedBox(
-                    width: 112,
-                    child: Text(
-                      created,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                    ),
+                SizedBox(
+                  width: 100,
+                  child: Text(
+                    created,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   ),
                 ),
-                DataCell(
-                  OutlinedButton(
-                    onPressed: onViewRow == null ? null : () => onViewRow!(r),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(36, 32),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    ),
-                    child: const Text('View'),
+                SizedBox(
+                  width: 80,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_red_eye_outlined, size: 18, color: Color(0xFF4A87C2)),
+                        tooltip: 'View',
+                        onPressed: onViewRow == null ? null : () => onViewRow!(r),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            );
-          }).toList(),
-        ),
-      ),
+            ),
+          );
+        }),
+      ],
     );
   }
 

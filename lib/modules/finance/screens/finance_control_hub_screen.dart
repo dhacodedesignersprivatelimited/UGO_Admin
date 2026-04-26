@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../config/routes/nav.dart';
 import '/shared/widgets/admin_pop_scope.dart';
-import '/shared/widgets/admin_scaffold.dart';
+import '/shared/widgets/admin_drawer.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/index.dart';
 
@@ -36,54 +36,308 @@ class FinanceControlHubScreen extends ConsumerStatefulWidget {
 }
 
 class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabs;
-
-  @override
-  void initState() {
-    super.initState();
-    final idx = widget.initialTabIndex.clamp(0, 3);
-    _tabs = TabController(length: 4, vsync: this, initialIndex: idx);
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
+  final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
+    final dashboardAsync = ref.watch(financeDashboardProvider);
+
     return AdminPopScope(
-      child: AdminScaffold(
-        title: 'Finance control center',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Material(
-              color: theme.secondaryBackground,
-              child: TabBar(
-                controller: _tabs,
-                isScrollable: true,
-                tabs: const [
-                  Tab(text: 'Dashboard', icon: Icon(Icons.dashboard_rounded, size: 18)),
-                  // Stubs for legacy tabs - or we could directly embed them if migrated
-                  Tab(text: 'Ledger', icon: Icon(Icons.receipt_long_rounded, size: 18)),
-                  Tab(text: 'Risk', icon: Icon(Icons.shield_rounded, size: 18)),
-                  Tab(text: 'Payments', icon: Icon(Icons.account_balance_rounded, size: 18)),
-                ],
-              ),
+      child: Scaffold(
+        key: scaffoldKey,
+        drawer: buildAdminDrawer(context),
+        backgroundColor: theme.primaryBackground,
+        appBar: AppBar(
+          backgroundColor: theme.primary,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => scaffoldKey.currentState?.openDrawer(),
+          ),
+          centerTitle: true,
+          title: Text(
+            'Finance control center',
+            style: FlutterFlowTheme.of(context).headlineMedium.override(
+                  font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontSize: 22,
+                ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () => ref.refresh(financeDashboardProvider),
+              tooltip: 'Refresh',
             ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabs,
-                children: [
-                  _buildDashboardTab(context),
-                  const Center(child: Text('Ledger Explorer (Refer to LedgerExplorerTab)')),
-                  const Center(child: Text('Risk Tab')),
-                  const Center(child: Text('Payments Recon Tab')),
-                ],
-              ),
+          ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async => ref.refresh(financeDashboardProvider),
+          color: theme.primary,
+          child: dashboardAsync.when(
+            loading: () => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 180),
+                Center(child: CircularProgressIndicator()),
+              ],
+            ),
+            error: (err, stack) => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(24),
+              children: [
+                Icon(Icons.error_outline, size: 48, color: theme.error),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load finance dashboard',
+                  textAlign: TextAlign.center,
+                  style: FlutterFlowTheme.of(context).bodyLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$err',
+                  textAlign: TextAlign.center,
+                  style: FlutterFlowTheme.of(context).bodySmall,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => ref.refresh(financeDashboardProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+            data: (state) {
+              final inr = NumberFormat('#,##0.00', 'en_IN');
+              final txCount = state.recentTransactions.length;
+
+              return ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                itemCount: txCount + 3,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Text(
+                        '$txCount recent transaction${txCount == 1 ? '' : 's'}',
+                        style: FlutterFlowTheme.of(context).titleSmall.override(
+                              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                              color: FlutterFlowTheme.of(context).secondaryText,
+                            ),
+                      ),
+                    );
+                  }
+
+                  if (index == 1) {
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Financial Overview',
+                              style: FlutterFlowTheme.of(context).titleMedium.override(
+                                    font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
+                                  ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                _metricTile(
+                                  theme,
+                                  'Total Earnings',
+                                  '₹${inr.format(state.totalEarnings)}',
+                                  'Computed from rides',
+                                  Icons.show_chart_rounded,
+                                ),
+                                _metricTile(
+                                  theme,
+                                  'Pending Payouts',
+                                  '${state.pendingPayoutsCount}',
+                                  '₹${inr.format(state.pendingPayoutsAmount)}',
+                                  Icons.account_balance_wallet_rounded,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (index == txCount + 2) {
+                    return Card(
+                      margin: const EdgeInsets.only(top: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Quick Links',
+                              style: FlutterFlowTheme.of(context).labelLarge.override(
+                                    font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            _linkTile(
+                              context,
+                              icon: Icons.money_rounded,
+                              text: 'Earnings module',
+                              onTap: () => context.pushNamedAuth(EarningsScreen.routeName, context.mounted),
+                            ),
+                            _linkTile(
+                              context,
+                              icon: Icons.payments_rounded,
+                              text: 'Driver payouts queue',
+                              onTap: () => context.pushNamedAuth(DriverPayoutsScreen.routeName, context.mounted),
+                            ),
+                            _linkTile(
+                              context,
+                              icon: Icons.table_chart_rounded,
+                              text: 'Finance reports & CSV',
+                              onTap: () => context.pushNamedAuth(FinanceReportsScreen.routeName, context.mounted),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  final tx = state.recentTransactions[index - 2];
+                  final type = (tx['transaction_type'] ?? tx['type'] ?? 'Transaction').toString();
+                  final date = (tx['date'] ?? tx['created_at'] ?? '').toString();
+                  final desc = (tx['description'] ?? '').toString();
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 22,
+                                backgroundColor: theme.primary.withValues(alpha: 0.12),
+                                child: Icon(Icons.receipt_long_rounded, color: theme.primary),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      type,
+                                      style: FlutterFlowTheme.of(context).titleSmall.override(
+                                            font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      date,
+                                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                                            color: FlutterFlowTheme.of(context).secondaryText,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: theme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'TX',
+                                  style: FlutterFlowTheme.of(context).labelSmall.override(
+                                        font: GoogleFonts.inter(),
+                                        color: theme.primary,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (desc.isNotEmpty) ...[
+                            const Divider(height: 22),
+                            Text(
+                              desc,
+                              style: FlutterFlowTheme.of(context).bodySmall,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _metricTile(
+    FlutterFlowTheme theme,
+    String title,
+    String value,
+    String sub,
+    IconData icon,
+  ) {
+    return Container(
+      width: 190,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.alternate.withValues(alpha: 0.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: theme.primary),
+          const SizedBox(height: 6),
+          Text(title, style: theme.bodySmall),
+          const SizedBox(height: 2),
+          Text(value, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(sub, style: theme.bodySmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _linkTile(
+    BuildContext context, {
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: FlutterFlowTheme.of(context).primary),
+            const SizedBox(width: 10),
+            Expanded(child: Text(text)),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: FlutterFlowTheme.of(context).secondaryText,
             ),
           ],
         ),
@@ -91,107 +345,4 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
     );
   }
 
-  Widget _buildDashboardTab(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    final dashboardAsync = ref.watch(financeDashboardProvider);
-
-    return RefreshIndicator(
-      onRefresh: () async => ref.refresh(financeDashboardProvider),
-      child: dashboardAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Error: $err', style: TextStyle(color: theme.error)),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => ref.refresh(financeDashboardProvider),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-        data: (state) {
-          final inr = NumberFormat('#,##0.00', 'en_IN');
-          
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text('Financial Overview', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
-                  ),
-                  IconButton(onPressed: () => ref.refresh(financeDashboardProvider), icon: const Icon(Icons.refresh_rounded)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _metricCard(theme, 'Total Earnings', '₹${inr.format(state.totalEarnings)}', 'Computed from rides'),
-                  _metricCard(theme, 'Pending Payouts', '${state.pendingPayoutsCount}', '₹${inr.format(state.pendingPayoutsAmount)}'),
-                ],
-              ),
-              const SizedBox(height: 20),
-              
-              Text('Recent Transactions', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              Text('From Payments API', style: theme.bodySmall),
-              if (state.recentTransactions.isEmpty)
-                Text('No transactions.', style: theme.bodySmall)
-              else
-                ...state.recentTransactions.map((tx) {
-                  return ListTile(
-                    dense: true,
-                    title: Text('${tx['transaction_type'] ?? tx['type'] ?? 'tx'} · User/Driver', style: GoogleFonts.jetBrainsMono(fontSize: 11)),
-                    subtitle: Text('${tx['date'] ?? tx['created_at'] ?? ''} · ${tx['description'] ?? ''}'),
-                  );
-                }),
-                
-              const SizedBox(height: 16),
-              
-              Text('Quick links', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              ListTile(
-                leading: const Icon(Icons.money_rounded),
-                title: const Text('Earnings module'),
-                onTap: () => context.pushNamedAuth(EarningsScreen.routeName, context.mounted),
-              ),
-              ListTile(
-                leading: const Icon(Icons.payments_rounded),
-                title: const Text('Driver payouts queue'),
-                onTap: () => context.pushNamedAuth(DriverPayoutsScreen.routeName, context.mounted),
-              ),
-              ListTile(
-                leading: const Icon(Icons.table_chart_rounded),
-                title: const Text('Finance reports & CSV'),
-                onTap: () => context.pushNamedAuth(FinanceReportsScreen.routeName, context.mounted),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _metricCard(FlutterFlowTheme theme, String title, String value, String sub) {
-    return SizedBox(
-      width: 160,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: theme.bodySmall),
-              const SizedBox(height: 4),
-              Text(value, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
-              Text(sub, style: theme.bodySmall),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
