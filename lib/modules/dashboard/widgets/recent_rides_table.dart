@@ -45,11 +45,7 @@ class RecentRidesTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final screenW = MediaQuery.sizeOf(context).width;
-    const horizontalPad = 32.0;
-    final viewport = math.max(screenW - horizontalPad, 280.0);
     const tableMinW = 720.0;
-    final contentW = viewport < tableMinW ? tableMinW : viewport;
 
     return Container(
       decoration: BoxDecoration(
@@ -85,56 +81,61 @@ class RecentRidesTable extends StatelessWidget {
           else if (rides.isEmpty)
             _emptyState(context, theme)
           else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: contentW,
-                child: Column(
-                  children: [
-                    _tableHeader(theme: theme),
-                    ...List.generate(rides.length, (index) {
-                      final raw = rides[index];
-                      final base = RideRowData.tryParse(raw);
-                      if (base == null) return const SizedBox.shrink();
-                      final uid = base.riderUserId;
-                      final did = base.linkedDriverId;
-                      final row = RideRowData.tryParse(
-                        raw,
-                        userDetail: uid != null ? userById[uid] : null,
-                        driverDetail: did != null ? driverById[did] : null,
-                      )!;
-                      final statusColor = row.statusColor(theme);
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final contentW = math.max(tableMinW, constraints.maxWidth);
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: contentW,
+                    child: Column(
+                      children: [
+                        _tableHeader(theme: theme),
+                        ...List.generate(rides.length, (index) {
+                          final raw = rides[index];
+                          final base = RideRowData.tryParse(raw);
+                          if (base == null) return const SizedBox.shrink();
+                          final uid = base.riderUserId;
+                          final did = base.linkedDriverId;
+                          final row = RideRowData.tryParse(
+                            raw,
+                            userDetail: uid != null ? userById[uid] : null,
+                            driverDetail: did != null ? driverById[did] : null,
+                          )!;
+                          final statusColor = row.statusColor(theme);
 
-                      return RideItem(
-                        theme: theme,
-                        rideIdLabel: row.rideIdLabel,
-                        riderName: row.riderName,
-                        riderPhone: row.riderPhone,
-                        riderImg: row.riderImageUrl,
-                        driverName: row.driverName,
-                        driverPhone: row.driverPhone,
-                        driverImg: row.driverImageUrl,
-                        pickup: row.pickup,
-                        drop: row.drop,
-                        fare: row.fare,
-                        humanStatus: row.humanStatus,
-                        statusColor: statusColor,
-                        time: row.time24,
-                        onTap: row.rideId != null
-                            ? () => _openRideDetails(context, row.rideId!)
-                            : null,
-                      )
-                          .animate()
-                          .fadeIn(
-                            duration: 350.ms,
-                            delay: (40 * index).ms,
-                            curve: Curves.easeOutCubic,
+                          return RideItem(
+                            theme: theme,
+                            rideIdLabel: row.rideIdLabel,
+                            riderName: row.riderName,
+                            riderPhone: row.riderPhone,
+                            riderImg: row.riderImageUrl,
+                            driverName: row.driverName,
+                            driverPhone: row.driverPhone,
+                            driverImg: row.driverImageUrl,
+                            pickup: row.pickup,
+                            drop: row.drop,
+                            fare: row.fare,
+                            humanStatus: row.humanStatus,
+                            statusColor: statusColor,
+                            time: row.time24,
+                            onTap: row.rideId != null
+                                ? () => _openRideDetails(context, row.rideId!)
+                                : null,
                           )
-                          .slideY(begin: 0.04, end: 0);
-                    }),
-                  ],
-                ),
-              ),
+                              .animate()
+                              .fadeIn(
+                                duration: 350.ms,
+                                delay: (40 * index).ms,
+                                curve: Curves.easeOutCubic,
+                              )
+                              .slideY(begin: 0.04, end: 0);
+                        }),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 14),

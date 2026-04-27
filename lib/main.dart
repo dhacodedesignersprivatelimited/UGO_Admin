@@ -99,40 +99,39 @@ class _MyAppState extends State<MyApp> {
     return Container(
       color: const Color(0xFFF5F5F5),
       child: MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'ugoAdmin',
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('en', '')],
-      theme: ThemeData(
-        brightness: Brightness.light,
-        useMaterial3: false,
-        primaryColor: const Color(0xFFFF6B35),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFF6B35),
+        debugShowCheckedModeBanner: false,
+        title: 'ugoAdmin',
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en', '')],
+        theme: ThemeData(
           brightness: Brightness.light,
-          primary: const Color(0xFFFF6B35),
-          secondary: const Color(0xFFFF8F65),
+          useMaterial3: false,
+          primaryColor: const Color(0xFFFF6B35),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFFFF6B35),
+            brightness: Brightness.light,
+            primary: const Color(0xFFFF6B35),
+            secondary: const Color(0xFFFF8F65),
+          ),
         ),
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        useMaterial3: false,
-        primaryColor: const Color(0xFFFF6B35),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFF6B35),
+        darkTheme: ThemeData(
           brightness: Brightness.dark,
-          primary: const Color(0xFFFF6B35),
-          secondary: const Color(0xFFFF8F65),
+          useMaterial3: false,
+          primaryColor: const Color(0xFFFF6B35),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFFFF6B35),
+            brightness: Brightness.dark,
+            primary: const Color(0xFFFF6B35),
+            secondary: const Color(0xFFFF8F65),
+          ),
         ),
-      ),
-      themeMode: _themeMode,
-      routerConfig: _router,
+        themeMode: _themeMode,
+        routerConfig: _router,
       ),
     );
   }
 }
-

@@ -189,6 +189,186 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
     }
   }
 
+  int? _vehicleTypeIdFromMap(Map<String, dynamic> type) {
+    final rawId =
+        getJsonField(type, r'''$.id''') ?? getJsonField(type, r'''$._id''');
+    if (rawId is int) return rawId;
+    return int.tryParse(rawId.toString());
+  }
+
+  String _vehicleTypeNameFromMap(Map<String, dynamic> type) {
+    return getJsonField(type, r'''$.name''')?.toString() ?? 'Unknown';
+  }
+
+  String? _vehicleTypeImageUrlFromMap(Map<String, dynamic> type) {
+    final imgPath = getJsonField(type, r'''$.image''')?.toString();
+    if (imgPath == null || imgPath.isEmpty) return null;
+    return imgPath.startsWith('http') ? imgPath : '${ApiConfig.baseUrl}$imgPath';
+  }
+
+  Future<void> _openEditVehicleTypeDialog(Map<String, dynamic> type) async {
+    final vehicleTypeId = _vehicleTypeIdFromMap(type);
+    if (vehicleTypeId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Vehicle type ID is missing.'),
+          backgroundColor: FlutterFlowTheme.of(context).error,
+        ),
+      );
+      return;
+    }
+
+    final nameController =
+        TextEditingController(text: _vehicleTypeNameFromMap(type));
+    FFUploadedFile? selectedImage;
+    Uint8List? selectedImageBytes;
+    bool isSaving = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Edit Vehicle Type'),
+              content: SizedBox(
+                width: 360,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Vehicle Type Name',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final selectedMedia =
+                            await selectMediaWithSourceBottomSheet(
+                          context: dialogContext,
+                          allowPhoto: true,
+                        );
+                        if (selectedMedia == null ||
+                            !selectedMedia.every(
+                              (m) =>
+                                  validateFileFormat(m.storagePath, dialogContext),
+                            )) {
+                          return;
+                        }
+                        final files = selectedMedia
+                            .map(
+                              (m) => FFUploadedFile(
+                                name: m.storagePath.split('/').last,
+                                bytes: m.bytes,
+                                height: m.dimensions?.height,
+                                width: m.dimensions?.width,
+                                blurHash: m.blurHash,
+                                originalFilename: m.originalFilename,
+                              ),
+                            )
+                            .toList();
+                        if (files.isEmpty) return;
+                        setDialogState(() {
+                          selectedImage = files.first;
+                          selectedImageBytes = files.first.bytes;
+                        });
+                      },
+                      icon: const Icon(Icons.image_outlined),
+                      label: Text(
+                        selectedImageBytes == null
+                            ? 'Change Image (optional)'
+                            : 'Image selected',
+                      ),
+                    ),
+                    if (selectedImageBytes != null) ...[
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.memory(
+                          selectedImageBytes!,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final name = nameController.text.trim();
+                          if (name.isEmpty) {
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Name is required.'),
+                                backgroundColor: FlutterFlowTheme.of(this.context)
+                                    .error,
+                              ),
+                            );
+                            return;
+                          }
+                          setDialogState(() => isSaving = true);
+                          final response = await UpdateVehicleTypeCall.call(
+                            token: currentAuthenticationToken,
+                            vehicleTypeId: vehicleTypeId,
+                            name: name,
+                            image: selectedImage,
+                          );
+                          if (!mounted) return;
+                          Navigator.of(dialogContext).pop();
+                          if (response.succeeded) {
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Vehicle type updated successfully.'),
+                              ),
+                            );
+                            _loadVehicleTypes();
+                          } else {
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Update failed: ${response.jsonBody ?? response.statusCode}',
+                                ),
+                                backgroundColor:
+                                    FlutterFlowTheme.of(this.context).error,
+                              ),
+                            );
+                          }
+                        },
+                  child: Text(isSaving ? 'Saving...' : 'Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    nameController.dispose();
+  }
+
+  void _showDeleteVehicleTypeApiMissing() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Delete Vehicle Type API is not available yet.',
+        ),
+        backgroundColor: FlutterFlowTheme.of(context).warning,
+      ),
+    );
+  }
+
   Future<void> _submitVehicleSubType() async {
     final vehicleName = _model.vehicleNameTextController?.text.trim() ?? '';
     final seating = _model.seatingCapacityTextController?.text.trim() ?? '';
@@ -336,12 +516,10 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
           drawer: buildAdminDrawer(context),
           appBar: AppBar(
             backgroundColor: FlutterFlowTheme.of(context).primary,
-            automaticallyImplyLeading: true,
+            automaticallyImplyLeading: false,
             leading: IconButton(
-              icon: const Icon(
-                  Icons.arrow_back_rounded, color: Colors.white, size: 28),
-              onPressed: () =>
-                  context.goNamedAuth(VehiclesListWidget.routeName, context.mounted),
+              icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+              onPressed: () => scaffoldKey.currentState?.openDrawer(),
             ),
             title: Text(
               'Add Vehicle',
@@ -534,6 +712,150 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                  const SizedBox(height: 28),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'View Vehicle Types',
+                          style: FlutterFlowTheme.of(context).titleMedium.override(
+                                font: GoogleFonts.interTight(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Refresh types',
+                        onPressed: _model.isLoadingVehicleTypes
+                            ? null
+                            : _loadVehicleTypes,
+                        icon: const Icon(Icons.refresh_rounded),
+                      ),
+                    ],
+                  ),
+                  if (_model.isLoadingVehicleTypes)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  if (!_model.isLoadingVehicleTypes &&
+                      _model.vehicleTypesList.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color:
+                            FlutterFlowTheme.of(context).primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'No vehicle types found.',
+                        style: FlutterFlowTheme.of(context).bodyMedium,
+                      ),
+                    ),
+                  if (!_model.isLoadingVehicleTypes &&
+                      _model.vehicleTypesList.isNotEmpty)
+                    ..._model.vehicleTypesList.map((type) {
+                      final id = _vehicleTypeIdFromMap(type);
+                      final name = _vehicleTypeNameFromMap(type);
+                      final imageUrl = _vehicleTypeImageUrlFromMap(type);
+                      return Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primaryBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: FlutterFlowTheme.of(context).alternate,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            if (imageUrl != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  imageUrl,
+                                  width: 44,
+                                  height: 44,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    width: 44,
+                                    height: 44,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: FlutterFlowTheme.of(context)
+                                          .primary
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.directions_car,
+                                      color: FlutterFlowTheme.of(context).primary,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 44,
+                                height: 44,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context)
+                                      .primary
+                                      .withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.directions_car,
+                                  color: FlutterFlowTheme.of(context).primary,
+                                ),
+                              ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: FlutterFlowTheme.of(context)
+                                        .titleSmall
+                                        .override(
+                                          font: GoogleFonts.inter(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                  ),
+                                  if (id != null)
+                                    Text(
+                                      'ID: $id',
+                                      style:
+                                          FlutterFlowTheme.of(context).bodySmall,
+                                    ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Edit',
+                              onPressed: () => _openEditVehicleTypeDialog(type),
+                              icon: Icon(
+                                Icons.edit_outlined,
+                                color: FlutterFlowTheme.of(context).primary,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Delete',
+                              onPressed: _showDeleteVehicleTypeApiMissing,
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: FlutterFlowTheme.of(context).error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),

@@ -167,11 +167,7 @@ class WithdrawRequests extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final screenW = MediaQuery.sizeOf(context).width;
-    const horizontalPad = 32.0;
-    final viewport = math.max(screenW - horizontalPad, 280.0);
     const tableMinW = 620.0;
-    final contentW = viewport < tableMinW ? tableMinW : viewport;
     final totalCount = payouts.whereType<Map>().length;
     final rows = payouts
         .whereType<Map>()
@@ -252,22 +248,28 @@ class WithdrawRequests extends StatelessWidget {
               ),
             )
           else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: contentW,
-                child: Column(
-                  children: [
-                    _tableHeader(theme: theme),
-                    for (var i = 0; i < rows.length; i++) ...[
-                      _WithdrawRow(
-                        map: rows[i],
-                        theme: theme,
-                      ).animate().fadeIn(duration: 300.ms, delay: (50 * i).ms),
-                    ],
-                  ],
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final contentW = math.max(tableMinW, constraints.maxWidth);
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: contentW,
+                    child: Column(
+                      children: [
+                        _tableHeader(theme: theme),
+                        for (var i = 0; i < rows.length; i++) ...[
+                          _WithdrawRow(
+                            map: rows[i],
+                            theme: theme,
+                          ).animate().fadeIn(
+                              duration: 300.ms, delay: (50 * i).ms),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 14),

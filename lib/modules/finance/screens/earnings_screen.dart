@@ -29,7 +29,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
     return double.tryParse(v.toString()) ?? 0;
   }
 
-  Widget _liveFinanceHeader(FlutterFlowTheme theme, AsyncValue<Map<String, dynamic>> earningsAsync) {
+  Widget _liveFinanceHeader(
+      FlutterFlowTheme theme, AsyncValue<Map<String, dynamic>> earningsAsync) {
     return earningsAsync.when(
       loading: () => Container(
         margin: const EdgeInsets.only(bottom: 18),
@@ -65,7 +66,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
         final pendAmt = pending is Map ? _num(pending['amount_inr']) : 0.0;
         final pendCnt = pending is Map ? (pending['count'] ?? 0) : 0;
         final ledger = m['platform_ledger_breakdown'];
-        final commission = ledger is Map ? _num(ledger['total_commission_ledger_inr']) : 0.0;
+        final commission =
+            ledger is Map ? _num(ledger['total_commission_ledger_inr']) : 0.0;
 
         final ledgerBalance = _num(m['company_ledger_balance_inr']);
         final driverLiability = _num(m['driver_wallet_liability_inr']);
@@ -105,13 +107,16 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white),
+                          child: const Icon(
+                              Icons.account_balance_wallet_rounded,
+                              color: Colors.white),
                         ),
                         const SizedBox(width: 10),
                         Text(
                           'Live Finance Ledger',
                           style: theme.titleMedium.override(
-                            font: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                            font:
+                                GoogleFonts.inter(fontWeight: FontWeight.w700),
                             color: Colors.white,
                           ),
                         ),
@@ -121,7 +126,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                     Text(
                       '₹${_inr.format(ledgerBalance)}',
                       style: theme.displaySmall.override(
-                        font: GoogleFonts.interTight(fontWeight: FontWeight.w800),
+                        font:
+                            GoogleFonts.interTight(fontWeight: FontWeight.w800),
                         color: Colors.white,
                         fontSize: 34,
                       ),
@@ -138,7 +144,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _badge('Pending: $pendCnt', Icons.hourglass_bottom_rounded),
+                        _badge('Pending: $pendCnt',
+                            Icons.hourglass_bottom_rounded),
                         _badge('Commission tracked', Icons.assessment_rounded),
                         _badge('Live snapshot', Icons.bolt_rounded),
                       ],
@@ -216,7 +223,9 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
               'Earnings',
               style: FlutterFlowTheme.of(context).headlineMedium.override(
                     font: GoogleFonts.interTight(
-                      fontWeight: FlutterFlowTheme.of(context).headlineMedium.fontWeight,
+                      fontWeight: FlutterFlowTheme.of(context)
+                          .headlineMedium
+                          .fontWeight,
                       color: Colors.white,
                       fontSize: 22.0,
                     ),
@@ -240,7 +249,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  _liveFinanceHeader(FlutterFlowTheme.of(context), earningsAsync),
+                  _liveFinanceHeader(
+                      FlutterFlowTheme.of(context), earningsAsync),
                   _buildEarningsCharts(context, earningsAsync),
                 ],
               ),
@@ -251,7 +261,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
     );
   }
 
-  Widget _buildEarningsCharts(BuildContext context, AsyncValue<Map<String, dynamic>> earningsAsync) {
+  Widget _buildEarningsCharts(
+      BuildContext context, AsyncValue<Map<String, dynamic>> earningsAsync) {
     final theme = FlutterFlowTheme.of(context);
     return earningsAsync.when(
       loading: () => _chartLoading(theme),
@@ -315,8 +326,10 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                           ),
                         ),
                         titlesData: FlTitlesData(
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
                           leftTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
@@ -324,7 +337,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                               interval: top / 4,
                               getTitlesWidget: (v, _) => Text(
                                 _compactMoney(v),
-                                style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade600),
+                                style: GoogleFonts.inter(
+                                    fontSize: 10, color: Colors.grey.shade600),
                               ),
                             ),
                           ),
@@ -334,14 +348,18 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                               interval: 1,
                               getTitlesWidget: (v, _) {
                                 final i = v.toInt();
-                                if (i < 0 || i >= chart.labels.length) return const SizedBox.shrink();
+                                if (i < 0 || i >= chart.labels.length)
+                                  return const SizedBox.shrink();
                                 final isDense = chart.labels.length > 8;
-                                if (isDense && i.isOdd) return const SizedBox.shrink();
+                                if (isDense && i.isOdd)
+                                  return const SizedBox.shrink();
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Text(
                                     chart.labels[i],
-                                    style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade700),
+                                    style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        color: Colors.grey.shade700),
                                   ),
                                 );
                               },
@@ -355,10 +373,13 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                             getTooltipColor: (_) => Colors.grey.shade900,
                             getTooltipItems: (spots) {
                               return spots.map((s) {
-                                final i = s.x.toInt().clamp(0, chart.labels.length - 1);
+                                final i = s.x
+                                    .toInt()
+                                    .clamp(0, chart.labels.length - 1);
                                 return LineTooltipItem(
                                   '${chart.labels[i]}\n₹${_inr.format(s.y)}',
-                                  GoogleFonts.inter(color: Colors.white, fontSize: 12),
+                                  GoogleFonts.inter(
+                                      color: Colors.white, fontSize: 12),
                                 );
                               }).toList();
                             },
@@ -404,12 +425,14 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.tips_and_updates_rounded, color: Color(0xFFE37400)),
+                  const Icon(Icons.tips_and_updates_rounded,
+                      color: Color(0xFFE37400)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Tip: Pull down to refresh live balances and trend points.',
-                      style: theme.bodySmall.override(color: const Color(0xFF8A4B00)),
+                      style: theme.bodySmall
+                          .override(color: const Color(0xFF8A4B00)),
                     ),
                   ),
                 ],
@@ -428,7 +451,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
         Text(
           'Earnings by Period',
           style: theme.headlineSmall.override(
-            font: GoogleFonts.interTight(fontWeight: theme.headlineSmall.fontWeight),
+            font: GoogleFonts.interTight(
+                fontWeight: theme.headlineSmall.fontWeight),
           ),
         ),
         const SizedBox(height: 10),
@@ -452,7 +476,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
         Text(
           'Earnings by Period',
           style: theme.headlineSmall.override(
-            font: GoogleFonts.interTight(fontWeight: theme.headlineSmall.fontWeight),
+            font: GoogleFonts.interTight(
+                fontWeight: theme.headlineSmall.fontWeight),
           ),
         ),
         const SizedBox(height: 10),
@@ -492,7 +517,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
     final labels = <String>[];
     final values = <double>[];
     for (final row in series.whereType<Map>()) {
-      final label = (row['period_key'] ?? row['date'] ?? row['label'] ?? '').toString();
+      final label =
+          (row['period_key'] ?? row['date'] ?? row['label'] ?? '').toString();
       final value = _firstNum(
         row,
         const [
@@ -523,16 +549,29 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
       final labels = <String>[];
       final values = <double>[];
       for (final row in c.whereType<Map>()) {
-        final label = (row['label'] ?? row['period'] ?? row['period_key'] ?? row['date'] ?? '').toString();
+        final label = (row['label'] ??
+                row['period'] ??
+                row['period_key'] ??
+                row['date'] ??
+                '')
+            .toString();
         final value = _firstNum(
           row,
-          const ['value', 'amount', 'earnings', 'earnings_inr', 'net_platform_movement_inr', 'y'],
+          const [
+            'value',
+            'amount',
+            'earnings',
+            'earnings_inr',
+            'net_platform_movement_inr',
+            'y'
+          ],
         );
         if (label.isEmpty || value == null) continue;
         labels.add(_compactDateLabel(label));
         values.add(value);
       }
-      if (values.isNotEmpty) return _tailSeries(labels, values, 'Summary series');
+      if (values.isNotEmpty)
+        return _tailSeries(labels, values, 'Summary series');
     }
     return const _EarningsChartData([], [], 'No source');
   }
@@ -574,10 +613,12 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
     return _tailSeries(labels, values, 'Recent transactions');
   }
 
-  _EarningsChartData _tailSeries(List<String> labels, List<double> values, String source) {
+  _EarningsChartData _tailSeries(
+      List<String> labels, List<double> values, String source) {
     if (values.length <= 8) return _EarningsChartData(labels, values, source);
     final start = values.length - 8;
-    return _EarningsChartData(labels.sublist(start), values.sublist(start), source);
+    return _EarningsChartData(
+        labels.sublist(start), values.sublist(start), source);
   }
 
   double? _firstNum(Map row, List<String> keys) {
@@ -658,7 +699,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.inter(
+                      fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -675,7 +717,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
           if (subtitle != null)
             Text(
               subtitle,
-              style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF757575)),
+              style: GoogleFonts.inter(
+                  fontSize: 11, color: const Color(0xFF757575)),
             ),
         ],
       ),

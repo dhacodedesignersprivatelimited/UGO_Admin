@@ -136,8 +136,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         period: state.chartEarningsPeriod,
         vehicleId: state.chartVehicleId,
       );
-      final (series, labels, lastWeek) =
-          _extractEarningsSeries(resp.jsonBody);
+      final (series, labels, lastWeek) = _extractEarningsSeries(resp.jsonBody);
       var ew = series.isNotEmpty ? series : state.earningsWeekly;
       var ewl = series.isNotEmpty
           ? (labels.isEmpty ? _labelsForLength(series.length) : labels)
@@ -156,8 +155,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         _safeSet(state.copyWith(
           chartRefreshing: false,
           earningsWeekly: ew,
-          earningsLastWeek:
-              lastWeek.isNotEmpty ? lastWeek : null,
+          earningsLastWeek: lastWeek.isNotEmpty ? lastWeek : null,
           earningsWeeklyLabels: ewl,
           chartRevision: state.chartRevision + 1,
         ));
@@ -305,8 +303,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         if (rs.isNotEmpty) {
           s = s.copyWith(
             earningsWeekly: rs,
-            earningsWeeklyLabels:
-                rl.isEmpty ? _labelsForLength(rs.length) : rl,
+            earningsWeeklyLabels: rl.isEmpty ? _labelsForLength(rs.length) : rl,
             earningsLastWeek: rlw,
           );
         }
@@ -316,7 +313,13 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         s = s.copyWith(
           earningsWeekly: List<double>.filled(7, s.totalEarnings / 7),
           earningsWeeklyLabels: const [
-            'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+            'Sun',
+            'Mon',
+            'Tue',
+            'Wed',
+            'Thu',
+            'Fri',
+            'Sat'
           ],
         );
       }
@@ -329,26 +332,25 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
       await _persistCache(_toCacheMap(s));
 
       _safeSet(s.copyWith(
-          status: LoadStatus.success,
-          isBackgroundRefreshing: false,
-          chartRefreshing: false,
-          errorMessage: errorMsg,
-          chartRevision: s.chartRevision + 1,
-          lastUpdatedAt: now,
-        ));
+        status: LoadStatus.success,
+        isBackgroundRefreshing: false,
+        chartRefreshing: false,
+        errorMessage: errorMsg,
+        chartRevision: s.chartRevision + 1,
+        lastUpdatedAt: now,
+      ));
     } catch (e) {
       _safeSet(state.copyWith(
-          status: LoadStatus.failure,
-          isBackgroundRefreshing: false,
-          errorMessage: e.toString(),
-        ));
+        status: LoadStatus.failure,
+        isBackgroundRefreshing: false,
+        errorMessage: e.toString(),
+      ));
     }
   }
 
   // ── State patch helpers ───────────────────────────────────
 
-  static DashboardState _patchDashboard(
-      ApiCallResponse r, DashboardState s) {
+  static DashboardState _patchDashboard(ApiCallResponse r, DashboardState s) {
     if (!r.succeeded || r.jsonBody is! Map) return s;
     final root = Map<String, dynamic>.from(r.jsonBody as Map);
     final data = root['data'];
@@ -357,20 +359,56 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         : Map<String, dynamic>.from(root);
 
     return s.copyWith(
-      totalRides: _firstInt(m, const ['total_rides', 'rides_total', 'totalRides']) ?? s.totalRides,
-      totalUsers: _firstInt(m, const ['total_users', 'users_total', 'totalUsers']) ?? s.totalUsers,
-      totalDrivers: _firstInt(m, const ['total_drivers', 'drivers_total', 'totalDrivers']) ?? s.totalDrivers,
-      onlineDrivers: _firstInt(m, const ['active_drivers', 'online_drivers', 'drivers_online']) ?? s.onlineDrivers,
-      ridesCompletedToday: _firstInt(m, const ['rides_completed_today', 'today_completed_rides']) ?? s.ridesCompletedToday,
-      newUsersToday: _firstInt(m, const ['new_users_today', 'today_new_users']) ?? s.newUsersToday,
-      totalEarnings: _firstDouble(m, const ['total_earnings', 'earnings_total', 'totalEarnings']) ?? s.totalEarnings,
-      usersActive: _firstInt(m, const ['active_users', 'user_active', 'users_active']) ?? s.usersActive,
-      usersInactive: _firstInt(m, const ['inactive_users', 'user_inactive', 'users_inactive']) ?? s.usersInactive,
-      usersBlocked: _firstInt(m, const ['blocked_users', 'blockedUsers', 'users_blocked']) ?? s.usersBlocked,
-      driversActiveAccounts: _firstInt(m, const ['active_driver_accounts', 'drivers_active', 'active_drivers_count']) ?? s.driversActiveAccounts,
-      driversPendingKyc: _firstInt(m, const ['pending_drivers', 'drivers_pending']) ?? s.driversPendingKyc,
-      driversBlockedAccounts: _firstInt(m, const ['blocked_drivers', 'drivers_blocked']) ?? s.driversBlockedAccounts,
-      adminWallet: _firstDouble(m, const ['admin_wallet', 'admin_wallet_balance', 'company_wallet', 'platform_balance', 'wallet_balance']) ?? s.adminWallet,
+      totalRides:
+          _firstInt(m, const ['total_rides', 'rides_total', 'totalRides']) ??
+              s.totalRides,
+      totalUsers:
+          _firstInt(m, const ['total_users', 'users_total', 'totalUsers']) ??
+              s.totalUsers,
+      totalDrivers: _firstInt(
+              m, const ['total_drivers', 'drivers_total', 'totalDrivers']) ??
+          s.totalDrivers,
+      onlineDrivers: _firstInt(m,
+              const ['active_drivers', 'online_drivers', 'drivers_online']) ??
+          s.onlineDrivers,
+      ridesCompletedToday: _firstInt(
+              m, const ['rides_completed_today', 'today_completed_rides']) ??
+          s.ridesCompletedToday,
+      newUsersToday:
+          _firstInt(m, const ['new_users_today', 'today_new_users']) ??
+              s.newUsersToday,
+      totalEarnings: _firstDouble(
+              m, const ['total_earnings', 'earnings_total', 'totalEarnings']) ??
+          s.totalEarnings,
+      usersActive:
+          _firstInt(m, const ['active_users', 'user_active', 'users_active']) ??
+              s.usersActive,
+      usersInactive: _firstInt(
+              m, const ['inactive_users', 'user_inactive', 'users_inactive']) ??
+          s.usersInactive,
+      usersBlocked: _firstInt(
+              m, const ['blocked_users', 'blockedUsers', 'users_blocked']) ??
+          s.usersBlocked,
+      driversActiveAccounts: _firstInt(m, const [
+            'active_driver_accounts',
+            'drivers_active',
+            'active_drivers_count'
+          ]) ??
+          s.driversActiveAccounts,
+      driversPendingKyc:
+          _firstInt(m, const ['pending_drivers', 'drivers_pending']) ??
+              s.driversPendingKyc,
+      driversBlockedAccounts:
+          _firstInt(m, const ['blocked_drivers', 'drivers_blocked']) ??
+              s.driversBlockedAccounts,
+      adminWallet: _firstDouble(m, const [
+            'admin_wallet',
+            'admin_wallet_balance',
+            'company_wallet',
+            'platform_balance',
+            'wallet_balance'
+          ]) ??
+          s.adminWallet,
     );
   }
 
@@ -410,8 +448,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     return s;
   }
 
-  DashboardState _patchRidesDerived(
-      List<dynamic> allRides, DashboardState s) {
+  DashboardState _patchRidesDerived(List<dynamic> allRides, DashboardState s) {
     final sorted = List<dynamic>.from(allRides)
       ..sort((a, b) {
         final da = _parseRideDate(a);
@@ -485,8 +522,13 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
 
     double driverScore(Map<String, dynamic> d) {
       for (final k in [
-        'total_earnings', 'lifetime_earnings', 'wallet_balance',
-        'balance', 'total_trips', 'completed_rides', 'ride_count',
+        'total_earnings',
+        'lifetime_earnings',
+        'wallet_balance',
+        'balance',
+        'total_trips',
+        'completed_rides',
+        'ride_count',
       ]) {
         final v = _parseDouble(d[k]);
         if (v != null && v > 0) return v;
@@ -622,9 +664,9 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
               final lwDaily = lw['daily_earnings'];
               if (lwDaily is List && lwDaily.isNotEmpty) {
                 for (final item in lwDaily.whereType<Map>()) {
-                  final val =
-                      _parseDouble(Map<String, dynamic>.from(item)['earnings']) ??
-                          0;
+                  final val = _parseDouble(
+                          Map<String, dynamic>.from(item)['earnings']) ??
+                      0;
                   lastWeek.add(val);
                 }
               }
@@ -634,9 +676,17 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         }
       }
       for (final key in [
-        'weekly_earnings', 'monthly_earnings', 'yearly_earnings',
-        'series', 'breakdown', 'chart_data', 'data_points', 'values',
-        'daily_rides', 'rides_per_day', 'labels_data',
+        'weekly_earnings',
+        'monthly_earnings',
+        'yearly_earnings',
+        'series',
+        'breakdown',
+        'chart_data',
+        'data_points',
+        'values',
+        'daily_rides',
+        'rides_per_day',
+        'labels_data',
       ]) {
         final v = data[key];
         if (v is List && v.isNotEmpty) {
@@ -715,18 +765,17 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
       if (dt == null) continue;
       final day = DateTime(dt.year, dt.month, dt.day);
       if (day.isBefore(start) || day.isAfter(today)) continue;
-      final idx =
-          (day.difference(start).inDays / span).floor().clamp(0, numBuckets - 1);
+      final idx = (day.difference(start).inDays / span)
+          .floor()
+          .clamp(0, numBuckets - 1);
       counts[idx] += 1;
     }
     return counts;
   }
 
   static Future<
-      (
-        Map<int, Map<String, dynamic>>,
-        Map<int, Map<String, dynamic>>
-      )> _enrichRideParties(List<dynamic> recentRides, String token) async {
+          (Map<int, Map<String, dynamic>>, Map<int, Map<String, dynamic>>)>
+      _enrichRideParties(List<dynamic> recentRides, String token) async {
     if (recentRides.isEmpty || token.isEmpty) {
       return (<int, Map<String, dynamic>>{}, <int, Map<String, dynamic>>{});
     }
@@ -748,36 +797,61 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     if (_disposed) return;
 
     _safeSet(state.copyWith(
-        lastUpdatedAt: lastUpdatedAt,
-        totalRides: _parseInt(cached['totalRides']) ?? state.totalRides,
-        totalUsers: _parseInt(cached['totalUsers']) ?? state.totalUsers,
-        totalDrivers: _parseInt(cached['totalDrivers']) ?? state.totalDrivers,
-        onlineDrivers: _parseInt(cached['onlineDrivers']) ?? state.onlineDrivers,
-        usersActive: _parseInt(cached['usersActive']) ?? state.usersActive,
-        usersInactive: _parseInt(cached['usersInactive']) ?? state.usersInactive,
-        usersBlocked: _parseInt(cached['usersBlocked']) ?? state.usersBlocked,
-        driversActiveAccounts: _parseInt(cached['driversActiveAccounts']) ?? state.driversActiveAccounts,
-        driversPendingKyc: _parseInt(cached['driversPendingKyc']) ?? state.driversPendingKyc,
-        driversBlockedAccounts: _parseInt(cached['driversBlockedAccounts']) ?? state.driversBlockedAccounts,
-        ridesCompletedToday: _parseInt(cached['ridesCompletedToday']) ?? state.ridesCompletedToday,
-        newUsersToday: _parseInt(cached['newUsersToday']) ?? state.newUsersToday,
-        totalEarnings: _parseDouble(cached['totalEarnings']) ?? state.totalEarnings,
-        adminWallet: _parseDouble(cached['adminWallet']) ?? state.adminWallet,
-        earningsWeekly: _toDoubleList(cached['earningsWeekly']).isNotEmpty ? _toDoubleList(cached['earningsWeekly']) : null,
-        earningsLastWeek: _toDoubleList(cached['earningsLastWeek']).isNotEmpty ? _toDoubleList(cached['earningsLastWeek']) : null,
-        ridesWeekly: _toDoubleList(cached['ridesWeekly']).isNotEmpty ? _toDoubleList(cached['ridesWeekly']) : null,
-        earningsWeeklyLabels: _toStringList(cached['earningsWeeklyLabels']).isNotEmpty ? _toStringList(cached['earningsWeeklyLabels']) : null,
-        ridesWeeklyLabels: _toStringList(cached['ridesWeeklyLabels']).isNotEmpty ? _toStringList(cached['ridesWeeklyLabels']) : null,
-        completedPct: _parseDouble(cached['completedPct']) ?? state.completedPct,
-        ongoingPct: _parseDouble(cached['ongoingPct']) ?? state.ongoingPct,
-        cancelledPct: _parseDouble(cached['cancelledPct']) ?? state.cancelledPct,
-        statusCompletedCount: _parseInt(cached['statusCompletedCount']) ?? state.statusCompletedCount,
-        statusOngoingCount: _parseInt(cached['statusOngoingCount']) ?? state.statusOngoingCount,
-        statusCancelledCount: _parseInt(cached['statusCancelledCount']) ?? state.statusCancelledCount,
-        recentRides: _toMapList(cached['recentRides']).isNotEmpty ? _toMapList(cached['recentRides']) : null,
-        topDrivers: _toMapList(cached['topDrivers']).isNotEmpty ? _toMapList(cached['topDrivers']) : null,
-        pendingPayouts: _toMapList(cached['pendingPayouts']).isNotEmpty ? _toMapList(cached['pendingPayouts']) : null,
-      ));
+      lastUpdatedAt: lastUpdatedAt,
+      totalRides: _parseInt(cached['totalRides']) ?? state.totalRides,
+      totalUsers: _parseInt(cached['totalUsers']) ?? state.totalUsers,
+      totalDrivers: _parseInt(cached['totalDrivers']) ?? state.totalDrivers,
+      onlineDrivers: _parseInt(cached['onlineDrivers']) ?? state.onlineDrivers,
+      usersActive: _parseInt(cached['usersActive']) ?? state.usersActive,
+      usersInactive: _parseInt(cached['usersInactive']) ?? state.usersInactive,
+      usersBlocked: _parseInt(cached['usersBlocked']) ?? state.usersBlocked,
+      driversActiveAccounts: _parseInt(cached['driversActiveAccounts']) ??
+          state.driversActiveAccounts,
+      driversPendingKyc:
+          _parseInt(cached['driversPendingKyc']) ?? state.driversPendingKyc,
+      driversBlockedAccounts: _parseInt(cached['driversBlockedAccounts']) ??
+          state.driversBlockedAccounts,
+      ridesCompletedToday:
+          _parseInt(cached['ridesCompletedToday']) ?? state.ridesCompletedToday,
+      newUsersToday: _parseInt(cached['newUsersToday']) ?? state.newUsersToday,
+      totalEarnings:
+          _parseDouble(cached['totalEarnings']) ?? state.totalEarnings,
+      adminWallet: _parseDouble(cached['adminWallet']) ?? state.adminWallet,
+      earningsWeekly: _toDoubleList(cached['earningsWeekly']).isNotEmpty
+          ? _toDoubleList(cached['earningsWeekly'])
+          : null,
+      earningsLastWeek: _toDoubleList(cached['earningsLastWeek']).isNotEmpty
+          ? _toDoubleList(cached['earningsLastWeek'])
+          : null,
+      ridesWeekly: _toDoubleList(cached['ridesWeekly']).isNotEmpty
+          ? _toDoubleList(cached['ridesWeekly'])
+          : null,
+      earningsWeeklyLabels:
+          _toStringList(cached['earningsWeeklyLabels']).isNotEmpty
+              ? _toStringList(cached['earningsWeeklyLabels'])
+              : null,
+      ridesWeeklyLabels: _toStringList(cached['ridesWeeklyLabels']).isNotEmpty
+          ? _toStringList(cached['ridesWeeklyLabels'])
+          : null,
+      completedPct: _parseDouble(cached['completedPct']) ?? state.completedPct,
+      ongoingPct: _parseDouble(cached['ongoingPct']) ?? state.ongoingPct,
+      cancelledPct: _parseDouble(cached['cancelledPct']) ?? state.cancelledPct,
+      statusCompletedCount: _parseInt(cached['statusCompletedCount']) ??
+          state.statusCompletedCount,
+      statusOngoingCount:
+          _parseInt(cached['statusOngoingCount']) ?? state.statusOngoingCount,
+      statusCancelledCount: _parseInt(cached['statusCancelledCount']) ??
+          state.statusCancelledCount,
+      recentRides: _toMapList(cached['recentRides']).isNotEmpty
+          ? _toMapList(cached['recentRides'])
+          : null,
+      topDrivers: _toMapList(cached['topDrivers']).isNotEmpty
+          ? _toMapList(cached['topDrivers'])
+          : null,
+      pendingPayouts: _toMapList(cached['pendingPayouts']).isNotEmpty
+          ? _toMapList(cached['pendingPayouts'])
+          : null,
+    ));
   }
 
   static Future<void> _persistCache(Map<String, dynamic> data) async {
@@ -818,16 +892,14 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
   // ── Utility statics ───────────────────────────────────────
 
   static double? _adminWalletFromCompanyBody(dynamic body) {
-    final data =
-        body is Map ? getJsonField(body, r'''$.data''') : null;
+    final data = body is Map ? getJsonField(body, r'''$.data''') : null;
     final rider =
         _parseDouble(getJsonField(data ?? body, r'''$.rider_total'''));
     final driver =
         _parseDouble(getJsonField(data ?? body, r'''$.driver_total'''));
     final total = _parseDouble(getJsonField(data ?? body, r'''$.total''')) ??
         _parseDouble(getJsonField(data ?? body, r'''$.balance''')) ??
-        _parseDouble(
-            getJsonField(data ?? body, r'''$.company_balance'''));
+        _parseDouble(getJsonField(data ?? body, r'''$.company_balance'''));
     if (total != null) return total;
     if (rider != null || driver != null) return (rider ?? 0) + (driver ?? 0);
     return null;
@@ -876,7 +948,10 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
   static DateTime? _parseRideDate(dynamic r) {
     if (r is! Map) return null;
     for (final key in [
-      'created_at', 'ride_date', 'updated_at', 'scheduled_at'
+      'created_at',
+      'ride_date',
+      'updated_at',
+      'scheduled_at'
     ]) {
       final raw = r[key];
       if (raw == null) continue;

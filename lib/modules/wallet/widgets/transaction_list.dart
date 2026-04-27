@@ -32,11 +32,7 @@ class WalletTransactionList extends StatelessWidget {
     final start = totalCount == 0 ? 0 : ((page - 1) * pageSize) + 1;
     final end = totalCount == 0 ? 0 : (page * pageSize).clamp(1, totalCount);
 
-    final screenW = MediaQuery.sizeOf(context).width;
-    const horizontalPad = 0.0;
-    final viewport = math.max(screenW - horizontalPad, 320.0);
     const tableMinW = 1024.0;
-    final contentW = viewport < tableMinW ? tableMinW : viewport;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -86,15 +82,20 @@ class WalletTransactionList extends StatelessWidget {
               ),
             )
           else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: contentW,
-                child: _TransactionDataTable(
-                  rows: transactions,
-                  onViewRow: onViewRow,
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final contentW = math.max(tableMinW, constraints.maxWidth);
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: contentW,
+                    child: _TransactionDataTable(
+                      rows: transactions,
+                      onViewRow: onViewRow,
+                    ),
+                  ),
+                );
+              },
             ),
           const SizedBox(height: 10),
           Padding(
@@ -175,7 +176,10 @@ class _TransactionDataTable extends StatelessWidget {
             ),
             child: Row(
               children: [
-                SizedBox(width: 80, child: Text(id, style: const TextStyle(fontWeight: FontWeight.w600))),
+                SizedBox(
+                    width: 80,
+                    child: Text(id,
+                        style: const TextStyle(fontWeight: FontWeight.w600))),
                 SizedBox(
                   width: 120,
                   child: Text(
@@ -188,7 +192,9 @@ class _TransactionDataTable extends StatelessWidget {
                   child: Text(
                     credit ? 'Credit' : 'Debit',
                     style: TextStyle(
-                      color: credit ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                      color: credit
+                          ? const Color(0xFF2E7D32)
+                          : const Color(0xFFC62828),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -198,7 +204,9 @@ class _TransactionDataTable extends StatelessWidget {
                   child: Text(
                     '${credit ? '+' : '-'}₹${amount.toStringAsFixed(2)}',
                     style: TextStyle(
-                      color: credit ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                      color: credit
+                          ? const Color(0xFF2E7D32)
+                          : const Color(0xFFC62828),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -210,7 +218,8 @@ class _TransactionDataTable extends StatelessWidget {
                 SizedBox(
                   width: 80,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(999),
@@ -237,9 +246,11 @@ class _TransactionDataTable extends StatelessWidget {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.remove_red_eye_outlined, size: 18, color: Color(0xFF4A87C2)),
+                        icon: const Icon(Icons.remove_red_eye_outlined,
+                            size: 18, color: Color(0xFF4A87C2)),
                         tooltip: 'View',
-                        onPressed: onViewRow == null ? null : () => onViewRow!(r),
+                        onPressed:
+                            onViewRow == null ? null : () => onViewRow!(r),
                       ),
                     ],
                   ),
@@ -264,17 +275,21 @@ class _TransactionDataTable extends StatelessWidget {
     if (flow == 'credit') return 'Success';
     if (flow == 'debit') return 'Completed';
     return 'Pending';
-    }
+  }
 
   static Color _statusColor(String value) {
     final status = value.toLowerCase();
-    if (status.contains('success') || status.contains('complete') || status.contains('paid')) {
+    if (status.contains('success') ||
+        status.contains('complete') ||
+        status.contains('paid')) {
       return const Color(0xFF2E7D32);
     }
     if (status.contains('pending') || status.contains('process')) {
       return const Color(0xFFEF6C00);
     }
-    if (status.contains('fail') || status.contains('reject') || status.contains('error')) {
+    if (status.contains('fail') ||
+        status.contains('reject') ||
+        status.contains('error')) {
       return const Color(0xFFC62828);
     }
     return const Color(0xFF455A64);

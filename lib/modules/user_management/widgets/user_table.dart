@@ -58,12 +58,6 @@ class UserTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final screenW = MediaQuery.sizeOf(context).width;
-    const horizontalPad = 32.0;
-    final viewport = math.max(screenW - horizontalPad, 320.0);
-    // Column widths (1136) + horizontal row padding (24) to avoid overflow.
-    const tableMinW = 1160.0;
-    final contentW = viewport < tableMinW ? tableMinW : viewport;
 
     Widget tabChip(UserManagementTab tab, String label, Color color) {
       final selected = tab == activeTab;
@@ -146,17 +140,21 @@ class UserTable extends StatelessWidget {
           if (rows.isEmpty)
             _emptyState(theme)
           else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: contentW,
-                child: Column(
-                  children: [
-                    _tableHeader(theme),
-                    ...rows.map((r) => _tableRow(r, theme)),
-                  ],
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: Column(
+                      children: [
+                        _tableHeader(theme),
+                        ...rows.map((r) => _tableRow(r, theme)),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           Padding(
             padding: const EdgeInsets.all(10),
@@ -294,13 +292,13 @@ class UserTable extends StatelessWidget {
               width: 40,
               child: Icon(Icons.check_box_outline_blank, size: 18, color: Colors.black38),
             ),
-            SizedBox(width: 110, child: Text('User ID', style: style)),
-            SizedBox(width: 250, child: Text('User Name', style: style)),
-            SizedBox(width: 170, child: Text('Email', style: style)),
-            SizedBox(width: 125, child: Text('Status', style: style)),
-            SizedBox(width: 130, child: Text('Wallet Balance', style: style)),
-            SizedBox(width: 100, child: Text('Total Rides', style: style)),
-            SizedBox(width: 126, child: Text('Action', style: style)),
+            Expanded(flex: 12, child: Text('User ID', style: style)),
+            Expanded(flex: 26, child: Text('User Name', style: style)),
+            Expanded(flex: 22, child: Text('Email', style: style)),
+            Expanded(flex: 14, child: Text('Status', style: style)),
+            Expanded(flex: 14, child: Text('Wallet Balance', style: style)),
+            Expanded(flex: 10, child: Text('Total Rides', style: style)),
+            const SizedBox(width: 88, child: Text('Action')),
           ],
         ),
       ),
@@ -342,9 +340,12 @@ class UserTable extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 40, child: Icon(Icons.check_box_outline_blank, size: 18, color: Colors.black38)),
-          SizedBox(width: 110, child: Text('USR${r.id}', style: const TextStyle(fontWeight: FontWeight.w600))),
-          SizedBox(
-            width: 250,
+          Expanded(
+            flex: 12,
+            child: Text('USR${r.id}', style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            flex: 26,
             child: Row(
               children: [
                 SafeNetworkAvatar(imageUrl: r.avatarUrl, radius: 14),
@@ -366,12 +367,12 @@ class UserTable extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(
-            width: 170,
+          Expanded(
+            flex: 22,
             child: Text(r.email, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
-          SizedBox(
-            width: 125,
+          Expanded(
+            flex: 14,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -386,10 +387,16 @@ class UserTable extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: 130, child: Text(r.walletBalance, style: const TextStyle(fontWeight: FontWeight.w600))),
-          SizedBox(width: 100, child: Text(rideFmt.format(r.totalRides))),
+          Expanded(
+            flex: 14,
+            child: Text(r.walletBalance, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            flex: 10,
+            child: Text(rideFmt.format(r.totalRides)),
+          ),
           SizedBox(
-            width: 126,
+            width: 88,
             child: Row(
               children: [
                 _actionIconButton(

@@ -142,11 +142,10 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
           drawer: buildAdminDrawer(context),
           appBar: AppBar(
             backgroundColor: FlutterFlowTheme.of(context).primary,
-            automaticallyImplyLeading: true,
+            automaticallyImplyLeading: false,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-              onPressed: () =>
-                  context.goNamedAuth(VehiclesListWidget.routeName, context.mounted),
+              icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+              onPressed: () => scaffoldKey.currentState?.openDrawer(),
             ),
             title: Text(
               'Add Vehicle Type',

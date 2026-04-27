@@ -18,7 +18,8 @@ class ZonesViewModel extends StateNotifier<ZonesState> {
       final res = await GetZonesCall.call(token: token);
       final raw = (res.jsonBody as List? ??
           (res.jsonBody is Map ? (res.jsonBody['data'] as List? ?? []) : []));
-      state = state.copyWith(status: LoadStatus.success, zones: List<dynamic>.from(raw));
+      state = state.copyWith(
+          status: LoadStatus.success, zones: List<dynamic>.from(raw));
     } catch (e) {
       state = state.copyWith(
           status: LoadStatus.failure, errorMessage: e.toString());
@@ -40,7 +41,50 @@ class ZonesViewModel extends StateNotifier<ZonesState> {
   }
 
   Future<void> deleteZone(String id) async {
-    // No delete zone API — just refresh.
+    final token = currentAuthenticationToken ?? '';
+    final zoneId = int.tryParse(id);
+    if (zoneId == null) return;
+    await DeleteZoneCall.call(token: token, zoneId: zoneId);
+    await refresh();
+  }
+
+  Future<void> updateZone(String id, Map<String, dynamic> data) async {
+    final token = currentAuthenticationToken ?? '';
+    final zoneId = int.tryParse(id);
+    if (zoneId == null) return;
+    await UpdateZoneCall.call(
+      token: token,
+      zoneId: zoneId,
+      cityId: (data['city_id'] as num?)?.toInt(),
+      name: data['name']?.toString(),
+      type: data['type']?.toString(),
+      centerLat: (data['center_lat'] as num?)?.toDouble(),
+      centerLng: (data['center_lng'] as num?)?.toDouble(),
+      radiusKm: (data['radius_km'] as num?)?.toDouble(),
+      polygonJson: data['polygon_json'],
+      isActive: data['is_active'] as bool?,
+    );
+    await refresh();
+  }
+
+  Future<void> updateCity(String id, {String? name, bool? isActive}) async {
+    final token = currentAuthenticationToken ?? '';
+    final cityId = int.tryParse(id);
+    if (cityId == null) return;
+    await UpdateCityCall.call(
+      token: token,
+      cityId: cityId,
+      name: name,
+      isActive: isActive,
+    );
+    await refresh();
+  }
+
+  Future<void> deleteCity(String id) async {
+    final token = currentAuthenticationToken ?? '';
+    final cityId = int.tryParse(id);
+    if (cityId == null) return;
+    await DeleteCityCall.call(token: token, cityId: cityId);
     await refresh();
   }
 }

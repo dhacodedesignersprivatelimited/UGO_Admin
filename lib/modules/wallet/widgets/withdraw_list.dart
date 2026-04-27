@@ -60,130 +60,137 @@ class _WithdrawDataTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowHeight: 42,
-          dataRowMinHeight: 44,
-          dataRowMaxHeight: 56,
-          horizontalMargin: 10,
-          columnSpacing: 18,
-          headingRowColor: WidgetStatePropertyAll(Colors.grey.shade100),
-          columns: const [
-            DataColumn(label: Text('Request ID')),
-            DataColumn(label: Text('Driver')),
-            DataColumn(label: Text('Phone')),
-            DataColumn(label: Text('Amount')),
-            DataColumn(label: Text('Mode')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Action')),
-          ],
-          rows: rows.map((w) {
-            final status = (w['status']?.toString() ?? 'pending').trim();
-            final statusColor = _statusColor(status);
-            final canAct = _canApproveOrReject(status);
-            final amount = w['amount']?.toString() ?? '0';
-            final mode = (w['upi_or_bank']?.toString() ?? '').trim();
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                headingRowHeight: 42,
+                dataRowMinHeight: 44,
+                dataRowMaxHeight: 56,
+                horizontalMargin: 10,
+                columnSpacing: 18,
+                headingRowColor: WidgetStatePropertyAll(Colors.grey.shade100),
+                columns: const [
+                  DataColumn(label: Text('Request ID')),
+                  DataColumn(label: Text('Driver')),
+                  DataColumn(label: Text('Phone')),
+                  DataColumn(label: Text('Amount')),
+                  DataColumn(label: Text('Mode')),
+                  DataColumn(label: Text('Status')),
+                  DataColumn(label: Text('Date')),
+                  DataColumn(label: Text('Action')),
+                ],
+                rows: rows.map((w) {
+                  final status = (w['status']?.toString() ?? 'pending').trim();
+                  final statusColor = _statusColor(status);
+                  final canAct = _canApproveOrReject(status);
+                  final amount = w['amount']?.toString() ?? '0';
+                  final mode = (w['upi_or_bank']?.toString() ?? '').trim();
 
-            return DataRow(
-              cells: [
-                DataCell(Text(w['wr_id']?.toString() ?? w['id']?.toString() ?? '-')),
-                DataCell(
-                  SizedBox(
-                    width: 130,
-                    child: Text(
-                      w['driver_name']?.toString() ?? 'Unknown',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                DataCell(Text(w['phone']?.toString() ?? '-')),
-                DataCell(
-                  Text(
-                    amount.startsWith('₹') ? amount : '₹$amount',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-                DataCell(
-                  SizedBox(
-                    width: 140,
-                    child: Text(
-                      mode.isEmpty ? '-' : mode,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      _statusLabel(status),
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                DataCell(
-                  SizedBox(
-                    width: 120,
-                    child: Text(
-                      w['date']?.toString() ?? '-',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                    ),
-                  ),
-                ),
-                DataCell(
-                  !canAct
-                      ? const Text('-', style: TextStyle(color: Colors.grey))
-                      : Row(
-                          children: [
-                            SizedBox(
-                              height: 30,
-                              child: ElevatedButton(
-                                onPressed: onApprove == null ? null : () => onApprove!(w),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2E7D32),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: const Text('Approve', style: TextStyle(fontSize: 12)),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            SizedBox(
-                              height: 30,
-                              child: OutlinedButton(
-                                onPressed: onReject == null ? null : () => onReject!(w),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFFC62828),
-                                  side: const BorderSide(color: Color(0xFFC62828)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: const Text('Reject', style: TextStyle(fontSize: 12)),
-                              ),
-                            ),
-                          ],
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(w['wr_id']?.toString() ?? w['id']?.toString() ?? '-')),
+                      DataCell(
+                        SizedBox(
+                          width: 130,
+                          child: Text(
+                            w['driver_name']?.toString() ?? 'Unknown',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
+                      ),
+                      DataCell(Text(w['phone']?.toString() ?? '-')),
+                      DataCell(
+                        Text(
+                          amount.startsWith('₹') ? amount : '₹$amount',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      DataCell(
+                        SizedBox(
+                          width: 140,
+                          child: Text(
+                            mode.isEmpty ? '-' : mode,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            _statusLabel(status),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        SizedBox(
+                          width: 120,
+                          child: Text(
+                            w['date']?.toString() ?? '-',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        !canAct
+                            ? const Text('-', style: TextStyle(color: Colors.grey))
+                            : Row(
+                                children: [
+                                  SizedBox(
+                                    height: 30,
+                                    child: ElevatedButton(
+                                      onPressed: onApprove == null ? null : () => onApprove!(w),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF2E7D32),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text('Approve', style: TextStyle(fontSize: 12)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  SizedBox(
+                                    height: 30,
+                                    child: OutlinedButton(
+                                      onPressed: onReject == null ? null : () => onReject!(w),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: const Color(0xFFC62828),
+                                        side: const BorderSide(color: Color(0xFFC62828)),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text('Reject', style: TextStyle(fontSize: 12)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

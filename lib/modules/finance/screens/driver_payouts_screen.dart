@@ -350,17 +350,23 @@ class _DriverPayoutsScreenState extends ConsumerState<DriverPayoutsScreen> {
                                 border: Border.all(color: theme.alternate),
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: SizedBox(
-                                  width: 940,
-                                  child: Column(
-                                    children: [
-                                      _tableHeader(theme),
-                                      for (final m in payouts) _tableRow(theme, m),
-                                    ],
-                                  ),
-                                ),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final contentW =
+                                      constraints.maxWidth > 940 ? constraints.maxWidth : 940.0;
+                                  return SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: SizedBox(
+                                      width: contentW,
+                                      child: Column(
+                                        children: [
+                                          _tableHeader(theme),
+                                          for (final m in payouts) _tableRow(theme, m),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             );
                           },

@@ -51,7 +51,9 @@ class WalletSummaryCards extends StatelessWidget {
           backgroundColor: const Color(0xFFE3DDF7),
           accentColor: const Color(0xFF5E35B1),
           icon: Icons.pending_actions_rounded,
-          subtitle: pendingWithdrawalsCount > 0 ? '$pendingWithdrawalsCount pending' : null,
+          subtitle: pendingWithdrawalsCount > 0
+              ? '$pendingWithdrawalsCount pending'
+              : null,
         ),
       ],
     );

@@ -32,10 +32,13 @@ class FinanceControlHubScreen extends ConsumerStatefulWidget {
   static String routePath = '/finance-control';
 
   @override
-  ConsumerState<FinanceControlHubScreen> createState() => _FinanceControlHubScreenState();
+  ConsumerState<FinanceControlHubScreen> createState() =>
+      _FinanceControlHubScreenState();
 }
 
-class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScreen> with SingleTickerProviderStateMixin {
+class _FinanceControlHubScreenState
+    extends ConsumerState<FinanceControlHubScreen>
+    with SingleTickerProviderStateMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -122,7 +125,8 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                       child: Text(
                         '$txCount recent transaction${txCount == 1 ? '' : 's'}',
                         style: FlutterFlowTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                              font: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600),
                               color: FlutterFlowTheme.of(context).secondaryText,
                             ),
                       ),
@@ -132,7 +136,8 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                   if (index == 1) {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -140,8 +145,11 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                           children: [
                             Text(
                               'Financial Overview',
-                              style: FlutterFlowTheme.of(context).titleMedium.override(
-                                    font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
+                              style: FlutterFlowTheme.of(context)
+                                  .titleMedium
+                                  .override(
+                                    font: GoogleFonts.interTight(
+                                        fontWeight: FontWeight.w600),
                                   ),
                             ),
                             const SizedBox(height: 12),
@@ -174,7 +182,8 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                   if (index == txCount + 2) {
                     return Card(
                       margin: const EdgeInsets.only(top: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       child: Padding(
                         padding: const EdgeInsets.all(14),
                         child: Column(
@@ -182,8 +191,11 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                           children: [
                             Text(
                               'Quick Links',
-                              style: FlutterFlowTheme.of(context).labelLarge.override(
-                                    font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                              style: FlutterFlowTheme.of(context)
+                                  .labelLarge
+                                  .override(
+                                    font: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w600),
                                   ),
                             ),
                             const SizedBox(height: 8),
@@ -191,19 +203,24 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                               context,
                               icon: Icons.money_rounded,
                               text: 'Earnings module',
-                              onTap: () => context.pushNamedAuth(EarningsScreen.routeName, context.mounted),
+                              onTap: () => context.pushNamedAuth(
+                                  EarningsScreen.routeName, context.mounted),
                             ),
                             _linkTile(
                               context,
                               icon: Icons.payments_rounded,
                               text: 'Driver payouts queue',
-                              onTap: () => context.pushNamedAuth(DriverPayoutsScreen.routeName, context.mounted),
+                              onTap: () => context.pushNamedAuth(
+                                  DriverPayoutsScreen.routeName,
+                                  context.mounted),
                             ),
                             _linkTile(
                               context,
                               icon: Icons.table_chart_rounded,
                               text: 'Finance reports & CSV',
-                              onTap: () => context.pushNamedAuth(FinanceReportsScreen.routeName, context.mounted),
+                              onTap: () => context.pushNamedAuth(
+                                  FinanceReportsScreen.routeName,
+                                  context.mounted),
                             ),
                           ],
                         ),
@@ -212,13 +229,17 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                   }
 
                   final tx = state.recentTransactions[index - 2];
-                  final type = (tx['transaction_type'] ?? tx['type'] ?? 'Transaction').toString();
-                  final date = (tx['date'] ?? tx['created_at'] ?? '').toString();
+                  final type =
+                      (tx['transaction_type'] ?? tx['type'] ?? 'Transaction')
+                          .toString();
+                  final date =
+                      (tx['date'] ?? tx['created_at'] ?? '').toString();
                   final desc = (tx['description'] ?? '').toString();
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Column(
@@ -228,8 +249,10 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                             children: [
                               CircleAvatar(
                                 radius: 22,
-                                backgroundColor: theme.primary.withValues(alpha: 0.12),
-                                child: Icon(Icons.receipt_long_rounded, color: theme.primary),
+                                backgroundColor:
+                                    theme.primary.withValues(alpha: 0.12),
+                                child: Icon(Icons.receipt_long_rounded,
+                                    color: theme.primary),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -238,29 +261,38 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
                                   children: [
                                     Text(
                                       type,
-                                      style: FlutterFlowTheme.of(context).titleSmall.override(
-                                            font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
+                                      style: FlutterFlowTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            font: GoogleFonts.interTight(
+                                                fontWeight: FontWeight.w600),
                                           ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       date,
-                                      style: FlutterFlowTheme.of(context).bodySmall.override(
-                                            color: FlutterFlowTheme.of(context).secondaryText,
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodySmall
+                                          .override(
+                                            color: FlutterFlowTheme.of(context)
+                                                .secondaryText,
                                           ),
                                     ),
                                   ],
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: theme.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   'TX',
-                                  style: FlutterFlowTheme.of(context).labelSmall.override(
+                                  style: FlutterFlowTheme.of(context)
+                                      .labelSmall
+                                      .override(
                                         font: GoogleFonts.inter(),
                                         color: theme.primary,
                                       ),
@@ -288,7 +320,6 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
     );
   }
 
-
   Widget _metricTile(
     FlutterFlowTheme theme,
     String title,
@@ -311,7 +342,9 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
           const SizedBox(height: 6),
           Text(title, style: theme.bodySmall),
           const SizedBox(height: 2),
-          Text(value, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(value,
+              style:
+                  GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
           Text(sub, style: theme.bodySmall),
         ],
       ),
@@ -344,5 +377,4 @@ class _FinanceControlHubScreenState extends ConsumerState<FinanceControlHubScree
       ),
     );
   }
-
 }

@@ -62,12 +62,8 @@ class DriverTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final screenW = MediaQuery.sizeOf(context).width;
-    const horizontalPad = 32.0;
-    final viewport = math.max(screenW - horizontalPad, 320.0);
     // Column widths (1150) + horizontal row padding (24) to avoid overflow.
     const tableMinW = 1174.0;
-    final contentW = viewport < tableMinW ? tableMinW : viewport;
 
     Widget tabChip(DriverManagementTab tab, String label, Color color) {
       final selected = tab == activeTab;
@@ -152,17 +148,22 @@ class DriverTable extends StatelessWidget {
           if (rows.isEmpty)
             _emptyState(theme)
           else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: contentW,
-                child: Column(
-                  children: [
-                    _tableHeader(theme),
-                    ...rows.map((r) => _tableRow(r, theme)),
-                  ],
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final contentW = math.max(tableMinW, constraints.maxWidth);
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: contentW,
+                    child: Column(
+                      children: [
+                        _tableHeader(theme),
+                        ...rows.map((r) => _tableRow(r, theme)),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           Padding(
             padding: const EdgeInsets.all(10),

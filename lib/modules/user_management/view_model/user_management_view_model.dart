@@ -44,33 +44,40 @@ class UserManagementViewModel extends ChangeNotifier {
       statusFilter = 'blocked';
     }
     
-    final res = await AllUsersCall.call(
-      token: currentAuthenticationToken,
-      page: page,
-      limit: pageSize,
-      status: statusFilter,
-    );
-    if (!res.succeeded) {
+    try {
+      final res = await AllUsersCall.call(
+        token: currentAuthenticationToken,
+        page: page,
+        limit: pageSize,
+        status: statusFilter,
+      );
+      if (!res.succeeded) {
+        isLoading = false;
+        errorMessage = 'Could not load users';
+        notifyListeners();
+        return;
+      }
+
+      // Parse pagination info and users.
+      final count = AllUsersCall.userall(res.jsonBody) ?? 0;
+
+      // Update the appropriate count based on current tab.
+      if (tab == UserManagementTab.all) {
+        totalCount = count;
+      } else if (tab == UserManagementTab.active) {
+        totalActiveCount = count;
+      } else if (tab == UserManagementTab.blocked) {
+        totalBlockedCount = count;
+      }
+
+      pagedUsers = _toRows(_extractUsers(res.jsonBody));
+      isLoading = false;
+      notifyListeners();
+    } catch (_) {
       isLoading = false;
       errorMessage = 'Could not load users';
       notifyListeners();
-      return;
     }
-    // Parse pagination info and users
-    final count = AllUsersCall.userall(res.jsonBody) ?? 0;
-    
-    // Update the appropriate count based on current tab
-    if (tab == UserManagementTab.all) {
-      totalCount = count;
-    } else if (tab == UserManagementTab.active) {
-      totalActiveCount = count;
-    } else if (tab == UserManagementTab.blocked) {
-      totalBlockedCount = count;
-    }
-    
-    pagedUsers = _toRows(_extractUsers(res.jsonBody));
-    isLoading = false;
-    notifyListeners();
   }
 
   Future<bool> toggleBlockUser(int userId) async {

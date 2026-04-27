@@ -17,7 +17,8 @@ class FinanceReportsScreen extends ConsumerStatefulWidget {
   static String routePath = '/finance-reports';
 
   @override
-  ConsumerState<FinanceReportsScreen> createState() => _FinanceReportsScreenState();
+  ConsumerState<FinanceReportsScreen> createState() =>
+      _FinanceReportsScreenState();
 }
 
 class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
@@ -52,11 +53,11 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
     final fromS = _isoDate(_from);
     final toS = _isoDate(_to);
     await ref.read(reportsProvider.notifier).runReport(
-      kind: kind,
-      from: fromS,
-      to: toS,
-      group: _group,
-    );
+          kind: kind,
+          from: fromS,
+          to: toS,
+          group: _group,
+        );
   }
 
   String? _buildCsv(dynamic root) {
@@ -73,7 +74,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
           final b = StringBuffer('period_key,net_platform_movement_inr\n');
           for (final row in series) {
             if (row is Map) {
-              b.writeln('${row['period_key']},${row['net_platform_movement_inr']}');
+              b.writeln(
+                  '${row['period_key']},${row['net_platform_movement_inr']}');
             }
           }
           return b.toString();
@@ -93,7 +95,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
       final buf = StringBuffer('status,count,amount_inr\n');
       for (final row in rows) {
         if (row is Map) {
-          buf.writeln('${row['status']},${row['cnt'] ?? row['COUNT'] ?? ''},${row['amt'] ?? row['SUM(amount)'] ?? ''}');
+          buf.writeln(
+              '${row['status']},${row['cnt'] ?? row['COUNT'] ?? ''},${row['amt'] ?? row['SUM(amount)'] ?? ''}');
         }
       }
       return buf.toString();
@@ -101,11 +104,14 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
 
     if (kind == 'referrals' && data['rows'] is List) {
       final rows = data['rows'] as List;
-      if (rows.isEmpty) return 'driver_referral_id,period_key,matched_pro_rides,theoretical_max_payout_inr\n';
-      final buf = StringBuffer('driver_referral_id,period_key,matched_pro_rides,theoretical_max_payout_inr,accrued_referrer_payout_inr\n');
+      if (rows.isEmpty)
+        return 'driver_referral_id,period_key,matched_pro_rides,theoretical_max_payout_inr\n';
+      final buf = StringBuffer(
+          'driver_referral_id,period_key,matched_pro_rides,theoretical_max_payout_inr,accrued_referrer_payout_inr\n');
       for (final row in rows) {
         if (row is Map) {
-          buf.writeln('${row['driver_referral_id']},${row['period_key']},${row['matched_pro_rides']},${row['theoretical_max_payout_inr']},${row['accrued_referrer_payout_inr']}');
+          buf.writeln(
+              '${row['driver_referral_id']},${row['period_key']},${row['matched_pro_rides']},${row['theoretical_max_payout_inr']},${row['accrued_referrer_payout_inr']}');
         }
       }
       return buf.toString();
@@ -118,16 +124,19 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
     final csv = _buildCsv(root);
     if (csv == null || csv.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No tabular data to export — run a report first or use JSON copy.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'No tabular data to export — run a report first or use JSON copy.')));
       }
       return;
     }
     await Clipboard.setData(ClipboardData(text: csv));
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('CSV copied to clipboard')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('CSV copied to clipboard')));
     }
   }
-  
+
   String? _formatPrettyJson(dynamic data) {
     if (data == null) return null;
     const encoder = JsonEncoder.withIndent('  ');
@@ -205,14 +214,17 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
   Widget _buildRevenueView(FlutterFlowTheme theme, Map<String, dynamic> data) {
     final ledger = data['ledger'] as Map?;
     if (ledger == null) {
-      return _emptyReportCard(theme, 'No revenue data available for selected period.');
+      return _emptyReportCard(
+          theme, 'No revenue data available for selected period.');
     }
 
     final byType = ledger['by_type'] as Map?;
     final entries = byType?.entries.toList() ?? const [];
     final maxVal = entries.isEmpty
         ? 1.0
-        : entries.map((e) => _asDouble(e.value)).reduce((a, b) => a > b ? a : b);
+        : entries
+            .map((e) => _asDouble(e.value))
+            .reduce((a, b) => a > b ? a : b);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -287,7 +299,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
               else
                 ...entries.map((e) {
                   final amount = _asDouble(e.value);
-                  final ratio = maxVal <= 0 ? 0.0 : (amount / maxVal).clamp(0.0, 1.0);
+                  final ratio =
+                      maxVal <= 0 ? 0.0 : (amount / maxVal).clamp(0.0, 1.0);
                   final label = e.key.toString().replaceAll('_', ' ');
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -300,7 +313,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                               child: Text(
                                 label,
                                 style: theme.bodySmall.override(
-                                  font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                  font: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600),
                                 ),
                               ),
                             ),
@@ -314,7 +328,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                             value: ratio,
                             minHeight: 8,
                             backgroundColor: Colors.grey.shade300,
-                            valueColor: const AlwaysStoppedAnimation(Color(0xFFFF7A3D)),
+                            valueColor:
+                                const AlwaysStoppedAnimation(Color(0xFFFF7A3D)),
                           ),
                         ),
                       ],
@@ -329,13 +344,15 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
   }
 
   Widget _buildPayoutsView(FlutterFlowTheme theme, Map<String, dynamic> data) {
-    final rows = (data['by_status'] as List?)?.whereType<Map>().toList() ?? const [];
+    final rows =
+        (data['by_status'] as List?)?.whereType<Map>().toList() ?? const [];
     if (rows.isEmpty) {
       return _emptyReportCard(theme, 'No payouts in this period.');
     }
 
     final totalCount = rows.fold<int>(0, (sum, r) => sum + _asInt(r['cnt']));
-    final totalAmt = rows.fold<double>(0, (sum, r) => sum + _asDouble(r['amt']));
+    final totalAmt =
+        rows.fold<double>(0, (sum, r) => sum + _asDouble(r['amt']));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -371,24 +388,36 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: theme.secondaryBackground,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
                 child: Row(
                   children: [
                     Expanded(child: Text('Status', style: theme.labelMedium)),
-                    SizedBox(width: 70, child: Text('Count', style: theme.labelMedium, textAlign: TextAlign.right)),
+                    SizedBox(
+                        width: 70,
+                        child: Text('Count',
+                            style: theme.labelMedium,
+                            textAlign: TextAlign.right)),
                     const SizedBox(width: 10),
-                    SizedBox(width: 120, child: Text('Amount', style: theme.labelMedium, textAlign: TextAlign.right)),
+                    SizedBox(
+                        width: 120,
+                        child: Text('Amount',
+                            style: theme.labelMedium,
+                            textAlign: TextAlign.right)),
                   ],
                 ),
               ),
               ...rows.map((r) {
-                final status = (r['status'] ?? '-').toString().replaceAll('_', ' ');
+                final status =
+                    (r['status'] ?? '-').toString().replaceAll('_', ' ');
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: const BoxDecoration(
                     border: Border(top: BorderSide(color: Color(0xFFE6E6E6))),
                   ),
@@ -402,12 +431,14 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                       ),
                       SizedBox(
                         width: 70,
-                        child: Text('${_asInt(r['cnt'])}', textAlign: TextAlign.right),
+                        child: Text('${_asInt(r['cnt'])}',
+                            textAlign: TextAlign.right),
                       ),
                       const SizedBox(width: 10),
                       SizedBox(
                         width: 120,
-                        child: Text(_money(r['amt']), textAlign: TextAlign.right),
+                        child:
+                            Text(_money(r['amt']), textAlign: TextAlign.right),
                       ),
                     ],
                   ),
@@ -420,7 +451,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
     );
   }
 
-  Widget _buildReferralsView(FlutterFlowTheme theme, Map<String, dynamic> data) {
+  Widget _buildReferralsView(
+      FlutterFlowTheme theme, Map<String, dynamic> data) {
     final rows = (data['rows'] as List?)?.whereType<Map>().toList() ?? const [];
     final rate = data['rate_inr_per_match'];
 
@@ -436,7 +468,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
         ),
         const SizedBox(height: 12),
         if (rows.isEmpty)
-          _emptyReportCard(theme, 'No referral payout rows found for selected period.')
+          _emptyReportCard(
+              theme, 'No referral payout rows found for selected period.')
         else
           Container(
             padding: const EdgeInsets.all(12),
@@ -451,14 +484,14 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                 Text('Referral Rows', style: theme.titleSmall),
                 const SizedBox(height: 8),
                 ...rows.take(20).map(
-                  (r) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      '#${r['driver_referral_id']}  ·  ${r['period_key']}  ·  rides ${r['matched_pro_rides']}  ·  payout ${_money(r['accrued_referrer_payout_inr'])}',
-                      style: GoogleFonts.inter(fontSize: 12),
+                      (r) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '#${r['driver_referral_id']}  ·  ${r['period_key']}  ·  rides ${r['matched_pro_rides']}  ·  payout ${_money(r['accrued_referrer_payout_inr'])}',
+                          style: GoogleFonts.inter(fontSize: 12),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -495,8 +528,12 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                OutlinedButton(onPressed: _pickFrom, child: Text(_from == null ? 'From' : _isoDate(_from)!)),
-                OutlinedButton(onPressed: _pickTo, child: Text(_to == null ? 'To' : _isoDate(_to)!)),
+                OutlinedButton(
+                    onPressed: _pickFrom,
+                    child: Text(_from == null ? 'From' : _isoDate(_from)!)),
+                OutlinedButton(
+                    onPressed: _pickTo,
+                    child: Text(_to == null ? 'To' : _isoDate(_to)!)),
                 TextButton(
                   onPressed: () => setState(() {
                     _from = null;
@@ -508,10 +545,15 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                 DropdownButton<String>(
                   value: _group,
                   items: const [
-                    DropdownMenuItem(value: 'none', child: Text('Revenue group: none')),
-                    DropdownMenuItem(value: 'daily', child: Text('Revenue group: daily')),
-                    DropdownMenuItem(value: 'weekly', child: Text('Revenue group: weekly')),
-                    DropdownMenuItem(value: 'monthly', child: Text('Revenue group: monthly')),
+                    DropdownMenuItem(
+                        value: 'none', child: Text('Revenue group: none')),
+                    DropdownMenuItem(
+                        value: 'daily', child: Text('Revenue group: daily')),
+                    DropdownMenuItem(
+                        value: 'weekly', child: Text('Revenue group: weekly')),
+                    DropdownMenuItem(
+                        value: 'monthly',
+                        child: Text('Revenue group: monthly')),
                   ],
                   onChanged: (v) {
                     if (v != null) setState(() => _group = v);
@@ -520,10 +562,12 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _tile(theme, 'Revenue', () => _run('revenue'), reportAsync.isLoading),
-            _tile(theme, 'Payouts by status', () => _run('payouts'), reportAsync.isLoading),
-            _tile(theme, 'Referral pairs', () => _run('referrals'), reportAsync.isLoading),
-            
+            _tile(
+                theme, 'Revenue', () => _run('revenue'), reportAsync.isLoading),
+            _tile(theme, 'Payouts by status', () => _run('payouts'),
+                reportAsync.isLoading),
+            _tile(theme, 'Referral pairs', () => _run('referrals'),
+                reportAsync.isLoading),
             reportAsync.when(
               loading: () => Column(
                 children: [
@@ -535,7 +579,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
               ),
               error: (err, stack) => Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: Text('Error: $err', style: TextStyle(color: theme.error)),
+                child:
+                    Text('Error: $err', style: TextStyle(color: theme.error)),
               ),
               data: (state) {
                 final prettyJson = _formatPrettyJson(state.data);
@@ -545,7 +590,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                 final data = (root is Map && root['data'] is Map)
                     ? Map<String, dynamic>.from(root['data'] as Map)
                     : <String, dynamic>{};
-                final kind = (data['kind'] ?? state.reportKind ?? '').toString();
+                final kind =
+                    (data['kind'] ?? state.reportKind ?? '').toString();
 
                 return Column(
                   children: [
@@ -553,7 +599,8 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF1E6),
                           borderRadius: BorderRadius.circular(999),
@@ -572,8 +619,11 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
                     if (kind == 'revenue') _buildRevenueView(theme, data),
                     if (kind == 'payouts') _buildPayoutsView(theme, data),
                     if (kind == 'referrals') _buildReferralsView(theme, data),
-                    if (kind != 'revenue' && kind != 'payouts' && kind != 'referrals')
-                      _emptyReportCard(theme, 'Unsupported report response format.'),
+                    if (kind != 'revenue' &&
+                        kind != 'payouts' &&
+                        kind != 'referrals')
+                      _emptyReportCard(
+                          theme, 'Unsupported report response format.'),
                     Wrap(
                       alignment: WrapAlignment.end,
                       spacing: 8,
@@ -595,11 +645,13 @@ class _FinanceReportsScreenState extends ConsumerState<FinanceReportsScreen> {
     );
   }
 
-  Widget _tile(FlutterFlowTheme theme, String title, VoidCallback onTap, bool isLoading) {
+  Widget _tile(FlutterFlowTheme theme, String title, VoidCallback onTap,
+      bool isLoading) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+        title:
+            Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: isLoading ? null : onTap,
       ),
