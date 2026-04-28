@@ -81,8 +81,9 @@ class UserTableV2 extends StatelessWidget {
               Text(
                 label,
                 style: GoogleFonts.inter(
-                  color:
-                      selected ? const Color(0xFF111111) : const Color(0xFF616161),
+                  color: selected
+                      ? const Color(0xFF111111)
+                      : const Color(0xFF616161),
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
@@ -125,8 +126,8 @@ class UserTableV2 extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom:
-                      BorderSide(color: theme.alternate.withValues(alpha: 0.45)),
+                  bottom: BorderSide(
+                      color: theme.alternate.withValues(alpha: 0.45)),
                 ),
               ),
               child: Row(
@@ -201,7 +202,8 @@ class UserTableV2 extends StatelessWidget {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: selected ? Colors.blue : Colors.transparent,
+                                color:
+                                    selected ? Colors.blue : Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -350,7 +352,8 @@ class UserTableV2 extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
       child: Text(
         status,
         style: GoogleFonts.inter(
@@ -399,12 +402,14 @@ class UserTableV2 extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(r.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(r.name,
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
                       Text(
                         r.phone,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: theme.secondaryText),
+                        style:
+                            TextStyle(fontSize: 11, color: theme.secondaryText),
                       ),
                     ],
                   ),
@@ -434,8 +439,8 @@ class UserTableV2 extends StatelessWidget {
           ),
           Expanded(
             flex: 14,
-            child:
-                Text(r.walletBalance, style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(r.walletBalance,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
           Expanded(
             flex: 10,
@@ -454,7 +459,9 @@ class UserTableV2 extends StatelessWidget {
                 ),
                 _actionIconButton(
                   icon: Icon(
-                    r.isBlocked ? Icons.block_rounded : Icons.check_circle_outline,
+                    r.isBlocked
+                        ? Icons.block_rounded
+                        : Icons.check_circle_outline,
                     size: 16,
                   ),
                   fg: r.isBlocked

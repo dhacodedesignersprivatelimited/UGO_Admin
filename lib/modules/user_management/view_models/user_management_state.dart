@@ -61,8 +61,11 @@ class UserManagementState {
     return list.sublist(start, end);
   }
 
-  int get startDisplay => filteredUsers.isEmpty ? 0 : ((clampedPage - 1) * pageSize) + 1;
-  int get endDisplay => filteredUsers.isEmpty ? 0 : ((clampedPage - 1) * pageSize + pagedUsers.length);
+  int get startDisplay =>
+      filteredUsers.isEmpty ? 0 : ((clampedPage - 1) * pageSize) + 1;
+  int get endDisplay => filteredUsers.isEmpty
+      ? 0
+      : ((clampedPage - 1) * pageSize + pagedUsers.length);
 
   bool get hasNonDefaultTableState {
     return tab != UserManagementTab.all ||

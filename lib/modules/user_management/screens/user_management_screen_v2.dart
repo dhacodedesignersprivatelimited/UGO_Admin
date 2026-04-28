@@ -22,7 +22,8 @@ class UserManagementScreenV2 extends ConsumerStatefulWidget {
       _UserManagementScreenV2State();
 }
 
-class _UserManagementScreenV2State extends ConsumerState<UserManagementScreenV2> {
+class _UserManagementScreenV2State
+    extends ConsumerState<UserManagementScreenV2> {
   final _searchController = TextEditingController();
 
   @override
@@ -100,7 +101,8 @@ class _UserManagementScreenV2State extends ConsumerState<UserManagementScreenV2>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 52, color: Color(0xFFC62828)),
+              const Icon(Icons.error_outline_rounded,
+                  size: 52, color: Color(0xFFC62828)),
               const SizedBox(height: 16),
               const Text(
                 'Failed to load users',

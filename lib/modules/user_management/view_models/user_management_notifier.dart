@@ -91,7 +91,8 @@ class UserManagementNotifier extends StateNotifier<UserManagementState> {
   }
 }
 
-final userManagementRepositoryProvider = Provider<UserManagementRepository>((ref) {
+final userManagementRepositoryProvider =
+    Provider<UserManagementRepository>((ref) {
   return UserManagementRepository();
 });
 
