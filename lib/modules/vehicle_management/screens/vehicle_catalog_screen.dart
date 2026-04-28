@@ -364,7 +364,9 @@ class _VehicleCatalogScreenState extends ConsumerState<VehicleCatalogScreen> {
   ) async {
     String formatNum(num? value, {required num fallback}) {
       final v = value ?? fallback;
-      return v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(2);
+      return v == v.roundToDouble()
+          ? v.toInt().toString()
+          : v.toStringAsFixed(2);
     }
 
     final startCtrl = TextEditingController(

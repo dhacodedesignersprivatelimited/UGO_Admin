@@ -26,11 +26,14 @@ class VehicleCatalogNotifier extends StateNotifier<VehicleCatalogState> {
 
       final vehiclesByType = <int, List<AdminVehicleRow>>{};
       for (final vehicle in adminVehicles) {
-        vehiclesByType.putIfAbsent(vehicle.vehicleTypeId, () => []).add(vehicle);
+        vehiclesByType
+            .putIfAbsent(vehicle.vehicleTypeId, () => [])
+            .add(vehicle);
       }
 
       final mergedTypes = types.map((type) {
-        final flatVehicles = vehiclesByType[type.id] ?? const <AdminVehicleRow>[];
+        final flatVehicles =
+            vehiclesByType[type.id] ?? const <AdminVehicleRow>[];
         if (flatVehicles.isEmpty) return type;
 
         final normalizedFlatVehicles = flatVehicles
@@ -39,8 +42,9 @@ class VehicleCatalogNotifier extends StateNotifier<VehicleCatalogState> {
                 id: v.id,
                 name: v.name,
                 vehicleTypeId: v.vehicleTypeId,
-                vehicleTypeName:
-                    v.vehicleTypeName.isNotEmpty ? v.vehicleTypeName : type.name,
+                vehicleTypeName: v.vehicleTypeName.isNotEmpty
+                    ? v.vehicleTypeName
+                    : type.name,
                 rideCategory: v.rideCategory,
                 seatingCapacity: v.seatingCapacity,
                 luggageCapacity: v.luggageCapacity,

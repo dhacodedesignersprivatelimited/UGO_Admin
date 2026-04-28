@@ -43,7 +43,6 @@ class VehicleTypeEntry {
       return '${ApiConfig.baseUrl}/${raw.replaceFirst(RegExp(r'^/'), '')}';
     }
 
-
     int toInt(dynamic value) {
       if (value is int) return value;
       if (value is num) return value.toInt();
@@ -54,7 +53,8 @@ class VehicleTypeEntry {
     final id = toInt(g('id') ?? g('vehicle_type_id'));
     final name =
         (g('name') ?? g('vehicle_type') ?? g('vehicleType') ?? '').toString();
-    final imageUrl = normalizeImageUrl(g('image') ?? g('imageUrl') ?? g('image_url'));
+    final imageUrl =
+        normalizeImageUrl(g('image') ?? g('imageUrl') ?? g('image_url'));
 
     List<AdminVehicleRow> subs = [];
     final rawSubs = g('admin_vehicles') ?? g('vehicles') ?? g('subVehicles');

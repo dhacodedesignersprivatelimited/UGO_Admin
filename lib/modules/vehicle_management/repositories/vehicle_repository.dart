@@ -94,7 +94,8 @@ class VehicleRepository {
     );
     if (!response.succeeded) {
       final reason = _extractApiError(response);
-      throw Exception('Failed to set pricing (${response.statusCode}): $reason');
+      throw Exception(
+          'Failed to set pricing (${response.statusCode}): $reason');
     }
   }
 }
