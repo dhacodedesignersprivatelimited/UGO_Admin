@@ -1,82 +1,89 @@
 import '/shared/widgets/admin_drawer.dart';
 import '/shared/widgets/admin_pop_scope.dart';
+import '/shared/widgets/responsive_body.dart';
 import '/index.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/config/theme/flutter_flow_util.dart';
 import '/config/theme/flutter_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import 'reviews_model.dart';
-export 'reviews_model.dart';
+// Note: Uncomment if you are using a model file in FlutterFlow
+// import 'driver_reviews_model.dart';
+// export 'driver_reviews_model.dart';
 
-class ReviewsWidget extends StatefulWidget {
-  const ReviewsWidget({super.key});
+class DriverReviewsWidget extends StatefulWidget {
+  const DriverReviewsWidget({super.key});
 
-  static String routeName = 'Reviews';
-  static String routePath = '/reviews';
+  static String routeName = 'DriverReviews';
+  static String routePath = '/driver-reviews';
 
   @override
-  State<ReviewsWidget> createState() => _ReviewsWidgetState();
+  State<DriverReviewsWidget> createState() => _DriverReviewsWidgetState();
 }
 
-class _ReviewsWidgetState extends State<ReviewsWidget> {
-  late ReviewsModel _model;
+class _DriverReviewsWidgetState extends State<DriverReviewsWidget> {
+  // late DriverReviewsModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   // State for filter
   String _activeFilter = 'All'; // 'All', 'Positive', 'Negative'
 
-  // MOCK DATA: Replace with your actual backend data for User Reviews
-  final List<Map<String, dynamic>> _mockUserReviews = [
+  // MOCK DATA: Replace with your actual backend data for Driver Reviews
+  final List<Map<String, dynamic>> _mockDriverReviews = [
     {
-      'id': '1',
-      'name': 'Ethan Harper',
-      'avatar': 'https://images.unsplash.com/photo-1536164261511-3a17e671d380?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUxNDZ8&ixlib=rb-4.1.0&q=80&w=1080',
-      'date': '2 weeks ago',
+      'id': 'REV-8832',
+      'driverName': 'Rajesh Kumar',
+      'driverId': 'DRV-1042',
+      'reviewerName': 'Amit Sharma',
+      'avatar': 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUyMDB8&ixlib=rb-4.1.0&q=80&w=1080',
+      'date': '2 days ago',
       'rating': 5,
-      'comment': 'The driver was incredibly friendly and made the ride very enjoyable. The car was clean and comfortable, and we arrived at our destination ahead of schedule. Highly recommend!',
-      'upvotes': 12,
+      'comment': 'Excellent driving skills and very polite. Reached the airport right on time despite the heavy traffic. The car was spotless.',
+      'upvotes': 15,
+      'downvotes': 0,
+    },
+    {
+      'id': 'REV-9910',
+      'driverName': 'Suresh Reddy',
+      'driverId': 'DRV-2291',
+      'reviewerName': 'Priya Patel',
+      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUyMDF8&ixlib=rb-4.1.0&q=80&w=1080',
+      'date': '1 week ago',
+      'rating': 2,
+      'comment': 'Driver was talking on the phone constantly while driving. Also refused to turn on the AC until I insisted multiple times.',
+      'upvotes': 34,
       'downvotes': 2,
     },
     {
-      'id': '2',
-      'name': 'Olivia Hayes',
-      'avatar': 'https://images.unsplash.com/photo-1594751439417-df8aab2a0c11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUxNDd8&ixlib=rb-4.1.0&q=80&w=1080',
-      'date': '1 month ago',
-      'rating': 3,
-      'comment': 'The ride was smooth and the driver was polite. However, the car could have been a bit cleaner. Overall, a decent experience.',
+      'id': 'REV-7741',
+      'driverName': 'Anita Desai',
+      'driverId': 'DRV-0883',
+      'reviewerName': 'Rahul Verma',
+      'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUyMDJ8&ixlib=rb-4.1.0&q=80&w=1080',
+      'date': '3 weeks ago',
+      'rating': 4,
+      'comment': 'Very smooth ride. She knew all the shortcuts to avoid the main road blocks. Dropped one star because pickup took slightly longer than estimated.',
       'upvotes': 8,
       'downvotes': 1,
-    },
-    {
-      'id': '3',
-      'name': 'Marcus Vance',
-      'avatar': 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUxNDl8&ixlib=rb-4.1.0&q=80&w=1080',
-      'date': '2 months ago',
-      'rating': 1,
-      'comment': 'Driver arrived 20 minutes late and refused to turn on the AC. Very unprofessional behavior.',
-      'upvotes': 24,
-      'downvotes': 0,
     },
   ];
 
   @override
   void initState() {
     super.initState();
-    _model = createModel(context, () => ReviewsModel());
+    // _model = createModel(context, () => DriverReviewsModel());
   }
 
   @override
   void dispose() {
-    _model.dispose();
+    // _model.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     // Apply Filtering logic (Positive >= 4, Negative <= 3)
-    List<Map<String, dynamic>> filteredReviews = _mockUserReviews.where((review) {
+    List<Map<String, dynamic>> filteredReviews = _mockDriverReviews.where((review) {
       if (_activeFilter == 'Positive') return review['rating'] >= 4;
       if (_activeFilter == 'Negative') return review['rating'] <= 3;
       return true; // 'All'
@@ -100,7 +107,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
               onPressed: () => context.goNamedAuth(DashboardScreen.routeName, context.mounted),
             ),
             title: Text(
-              'User Reviews',
+              'Driver Reviews',
               style: FlutterFlowTheme.of(context).headlineMedium.override(
                 font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                 color: Colors.white,
@@ -215,7 +222,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
             ),
             const SizedBox(height: 8),
             Text(
-              'There are no user reviews matching this filter.',
+              'There are no driver reviews matching this filter.',
               textAlign: TextAlign.center,
               style: FlutterFlowTheme.of(context).bodyMedium.override(
                 color: FlutterFlowTheme.of(context).secondaryText,
@@ -251,6 +258,7 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
         children: [
           // Header: Avatar, Name, Time
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 48,
@@ -269,18 +277,38 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      review['name'],
+                      review['driverName'],
                       style: theme.titleMedium.override(
                         font: GoogleFonts.interTight(fontWeight: FontWeight.w700),
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      review['date'],
-                      style: theme.bodySmall.override(
-                        font: GoogleFonts.inter(),
-                        color: theme.secondaryText,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: theme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            review['driverId'],
+                            style: theme.labelSmall.override(
+                              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                              color: theme.primary,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          review['date'],
+                          style: theme.bodySmall.override(
+                            font: GoogleFonts.inter(),
+                            color: theme.secondaryText,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -288,7 +316,11 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
               // Optional: Action button (e.g. Delete/Hide review)
               IconButton(
                 icon: Icon(Icons.more_vert_rounded, color: theme.secondaryText),
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Options menu tapped')),
+                  );
+                },
               )
             ],
           ),
@@ -296,13 +328,23 @@ class _ReviewsWidgetState extends State<ReviewsWidget> {
 
           // Star Rating Row
           Row(
-            children: List.generate(5, (index) {
-              return Icon(
-                index < rating ? Icons.star_rounded : Icons.star_border_rounded,
-                color: theme.warning,
-                size: 20,
-              );
-            }),
+            children: [
+              ...List.generate(5, (index) {
+                return Icon(
+                  index < rating ? Icons.star_rounded : Icons.star_border_rounded,
+                  color: theme.warning,
+                  size: 20,
+                );
+              }),
+              const SizedBox(width: 8),
+              Text(
+                'by ${review['reviewerName']}',
+                style: theme.bodySmall.override(
+                  font: GoogleFonts.inter(),
+                  color: theme.secondaryText,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
 

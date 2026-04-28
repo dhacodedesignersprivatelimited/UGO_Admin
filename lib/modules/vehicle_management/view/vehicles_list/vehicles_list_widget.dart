@@ -611,7 +611,7 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
     final imgUrl = imgPath != null && imgPath.isNotEmpty
         ? (imgPath.startsWith('http')
             ? imgPath
-            : '${ApiConfig.baseUrl}$imgPath')
+            : '${ApiConfig.baseUrl}/${imgPath.replaceFirst(RegExp(r'^/'), '')}')
         : null;
 
     var subVehicles = _getVehiclesFromNested(type);

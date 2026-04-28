@@ -36,8 +36,7 @@ export '/modules/user_management/view/user_details/user_details_widget.dart'
     show UserDetailsWidget;
 export '/modules/user_management/view/blocked_users/blocked_users_widget.dart'
     show BlockedUsersWidget;
-export '/modules/driver_management/view/kyc_pending/kyc_pending_widget.dart'
-    show KycPendingWidget;
+
 export '/modules/driver_management/view/driver_kyc_list/driver_kyc_list_widget.dart'
     show DriverKycListWidget;
 export '/modules/user_management/view/add_user/add_user_widget.dart'
@@ -74,9 +73,21 @@ export '/modules/finance_management/view/finance_automation/finance_automation_w
     show FinanceAutomationWidget;
 export '/modules/finance_management/view/finance_sla_dashboard/finance_sla_dashboard_widget.dart'
     show FinanceSlaDashboardWidget;
-export '/modules/driver_management/view/driver_module_hub/driver_module_hub_screen.dart'
-    show DriverModuleHubScreen;
-export '/modules/user_management/view/user_module_hub/user_module_hub_screen.dart'
-    show UserModuleHubScreen;
 export '/modules/ride_management/view/operations_module_hub/operations_module_hub_screen.dart'
     show OperationsModuleHubScreen;
+export '/modules/driver_management/view/blocked_drivers/blocked_drivers_widget.dart'
+    show BlockedDriversWidget;
+export '/modules/driver_management/view/driver_complaints/driver_complaints_widget.dart'
+    show DriverComplaintsWidget;
+export '/modules/driver_management/view/driver_reviews/driver_reviews_widget.dart'
+    show DriverReviewsWidget;
+export '/modules/finance/screens/user_wallets_screen.dart'
+    show UserWalletsScreen;
+export '/modules/finance/screens/driver_wallets_screen.dart'
+    show DriverWalletsScreen;
+export '/modules/finance/screens/wallet_transactions_screen.dart'
+    show WalletTransactionsScreen;
+export '/modules/finance/screens/wallet_adjust_screen.dart'
+    show WalletAdjustScreen;
+export '/modules/finance/screens/wallets_screen.dart'
+    show WalletsScreen;

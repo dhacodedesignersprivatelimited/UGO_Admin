@@ -39,6 +39,7 @@ class _AddUserWidgetState extends State<AddUserWidget> {
     _model.lastNameFocusNode ??= FocusNode();
     _model.emailTextController ??= TextEditingController();
     _model.emailFocusNode ??= FocusNode();
+    // Controllers for FCM initialized in model to prevent null errors, but ignored in UI
     _model.fcmTokenTextController ??= TextEditingController();
     _model.fcmTokenFocusNode ??= FocusNode();
   }
@@ -54,7 +55,6 @@ class _AddUserWidgetState extends State<AddUserWidget> {
     final firstName = _model.firstNameTextController!.text.trim();
     final lastName = _model.lastNameTextController!.text.trim();
     final email = _model.emailTextController!.text.trim();
-    final fcmToken = _model.fcmTokenTextController!.text.trim();
 
     if (mobile.isEmpty || firstName.isEmpty || lastName.isEmpty || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,7 +71,7 @@ class _AddUserWidgetState extends State<AddUserWidget> {
         firstName: firstName,
         lastName: lastName,
         email: email,
-        fcmToken: fcmToken.isEmpty ? 'admin_created' : fcmToken,
+        fcmToken: 'admin_created', // Hardcoded safely behind the scenes
       );
 
       if (!mounted) return;
@@ -84,9 +84,7 @@ class _AddUserWidgetState extends State<AddUserWidget> {
         );
         context.goNamedAuth(AllusersWidget.routeName, context.mounted);
       } else {
-        final msg = getJsonField(response.jsonBody, r'''$.message''')
-                ?.toString() ??
-            'Failed to create user';
+        final msg = getJsonField(response.jsonBody, r'''$.message''')?.toString() ?? 'Failed to create user';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700),
         );
@@ -106,81 +104,118 @@ class _AddUserWidgetState extends State<AddUserWidget> {
   Widget build(BuildContext context) {
     return AdminPopScope(
       fallbackRouteName: AllusersWidget.routeName,
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        drawer: buildAdminDrawer(context),
-        appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
-          automaticallyImplyLeading: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-            onPressed: () =>
-                context.goNamedAuth(AllusersWidget.routeName, context.mounted),
+      child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Scaffold(
+          key: scaffoldKey,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          drawer: buildAdminDrawer(context),
+          appBar: AppBar(
+            backgroundColor: FlutterFlowTheme.of(context).primary,
+            automaticallyImplyLeading: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
+              onPressed: () => context.goNamedAuth(AllusersWidget.routeName, context.mounted),
+            ),
+            title: Text(
+              'New User',
+              style: FlutterFlowTheme.of(context).headlineMedium.override(
+                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 22,
+              ),
+            ),
+            elevation: 0,
           ),
-          title: Text(
-            'Create User',
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                  color: Colors.white,
-                  fontSize: 22,
-                ),
-          ),
-          elevation: 2,
-        ),
-        body: SingleChildScrollView(
-          child: ResponsiveContainer(
-            maxWidth: 600,
-            child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          body: Column(
             children: [
-              _buildTextField(
-                controller: _model.mobileNumberTextController!,
-                focusNode: _model.mobileNumberFocusNode!,
-                label: 'Mobile Number',
-                hint: 'e.g. 9985956313',
-                keyboardType: TextInputType.phone,
-                prefixIcon: Icons.phone_rounded,
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  child: ResponsiveContainer(
+                    maxWidth: 700,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildSectionCard(
+                          title: 'Personal Information',
+                          icon: Icons.person_rounded,
+                          children: [
+                            _buildTextField(
+                              controller: _model.mobileNumberTextController!,
+                              focusNode: _model.mobileNumberFocusNode!,
+                              label: 'Mobile Number *',
+                              hint: 'e.g. 9985956313',
+                              keyboardType: TextInputType.phone,
+                              prefixIcon: Icons.phone_rounded,
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: _model.firstNameTextController!,
+                                    focusNode: _model.firstNameFocusNode!,
+                                    label: 'First Name *',
+                                    hint: 'e.g. Pavan',
+                                    prefixIcon: Icons.person_outline_rounded,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: _model.lastNameTextController!,
+                                    focusNode: _model.lastNameFocusNode!,
+                                    label: 'Last Name *',
+                                    hint: 'e.g. Kumar',
+                                    prefixIcon: Icons.person_outline_rounded,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _model.emailTextController!,
+                              focusNode: _model.emailFocusNode!,
+                              label: 'Email Address *',
+                              hint: 'e.g. user@example.com',
+                              keyboardType: TextInputType.emailAddress,
+                              prefixIcon: Icons.email_rounded,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 40), // Spacer before bottom bar
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                controller: _model.firstNameTextController!,
-                focusNode: _model.firstNameFocusNode!,
-                label: 'First Name',
-                hint: 'e.g. Pavan',
-                prefixIcon: Icons.person_outline_rounded,
-              ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                controller: _model.lastNameTextController!,
-                focusNode: _model.lastNameFocusNode!,
-                label: 'Last Name',
-                hint: 'e.g. Kumar',
-                prefixIcon: Icons.person_outline_rounded,
-              ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                controller: _model.emailTextController!,
-                focusNode: _model.emailFocusNode!,
-                label: 'Email',
-                hint: 'e.g. user@example.com',
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: Icons.email_rounded,
-              ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                controller: _model.fcmTokenTextController!,
-                focusNode: _model.fcmTokenFocusNode!,
-                label: 'FCM Token (optional)',
-                hint: 'Leave empty if unknown',
-                prefixIcon: Icons.token_rounded,
-              ),
-              const SizedBox(height: 32),
-              FFButtonWidget(
-                onPressed: _isSubmitting ? null : () => _submit(),
-                text: _isSubmitting ? 'Creating...' : 'Create User',
-                icon: _isSubmitting
-                    ? SizedBox(
+
+              // Sticky Bottom Action Bar
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).primaryBackground,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      offset: const Offset(0, -4),
+                      blurRadius: 10,
+                    )
+                  ],
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 700),
+                    child: FFButtonWidget(
+                      onPressed: _isSubmitting ? null : () => _submit(),
+                      text: _isSubmitting ? 'Creating User Profile...' : 'Complete User Onboarding',
+                      icon: _isSubmitting
+                          ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -188,23 +223,79 @@ class _AddUserWidgetState extends State<AddUserWidget> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.person_add_rounded, size: 22, color: Colors.white),
-                options: FFButtonOptions(
-                  width: double.infinity,
-                  height: 52,
-                  color: FlutterFlowTheme.of(context).primary,
-                  textStyle: FlutterFlowTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                        color: Colors.white,
+                          : const Icon(Icons.check_circle_rounded, size: 22, color: Colors.white),
+                      options: FFButtonOptions(
+                        width: double.infinity,
+                        height: 56,
+                        color: FlutterFlowTheme.of(context).primary,
+                        textStyle: FlutterFlowTheme.of(context).titleMedium.override(
+                          font: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                          color: Colors.white,
+                        ),
+                        elevation: 3,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    elevation: 2,
-                    borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
+                ),
               ),
             ],
           ),
         ),
-        ),
+      ),
+    );
+  }
+
+  // --- UI HELPER METHODS ---
+
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: FlutterFlowTheme.of(context).primaryBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: FlutterFlowTheme.of(context).alternate, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: FlutterFlowTheme.of(context).primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: FlutterFlowTheme.of(context).titleMedium.override(
+                  font: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                  color: FlutterFlowTheme.of(context).primaryText,
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
+          ),
+          ...children,
+        ],
       ),
     );
   }
@@ -217,35 +308,45 @@ class _AddUserWidgetState extends State<AddUserWidget> {
     TextInputType? keyboardType,
     required IconData prefixIcon,
   }) {
+    final theme = FlutterFlowTheme.of(context);
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: theme.bodyMedium.override(
+          font: GoogleFonts.inter(),
+          color: theme.secondaryText,
+        ),
         hintText: hint,
-        prefixIcon: Icon(prefixIcon, color: FlutterFlowTheme.of(context).primary),
+        hintStyle: theme.bodySmall.override(
+          font: GoogleFonts.inter(),
+          color: theme.alternate,
+        ),
+        prefixIcon: Icon(prefixIcon, color: theme.secondaryText, size: 20),
         filled: true,
-        fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+        fillColor: theme.primaryBackground,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: theme.alternate),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: FlutterFlowTheme.of(context).alternate),
+          borderSide: BorderSide(color: theme.alternate),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: FlutterFlowTheme.of(context).primary,
+            color: theme.primary,
             width: 2,
           ),
         ),
       ),
-      style: FlutterFlowTheme.of(context).bodyMedium.override(
-            font: GoogleFonts.inter(),
-          ),
+      style: theme.bodyMedium.override(
+        font: GoogleFonts.inter(),
+      ),
     );
   }
 }

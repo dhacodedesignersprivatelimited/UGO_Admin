@@ -45,16 +45,35 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Unblock User'),
-        content: const Text('Are you sure you want to unblock this user?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Unblock User',
+          style: FlutterFlowTheme.of(context).headlineSmall.override(
+            font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to restore this user\'s access to the platform?',
+          style: FlutterFlowTheme.of(context).bodyMedium,
+        ),
+        actionsPadding: const EdgeInsets.all(16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: FlutterFlowTheme.of(context).secondaryText),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: FlutterFlowTheme.of(context).primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Unblock', style: TextStyle(color: FlutterFlowTheme.of(context).primary)),
+            child: const Text('Unblock User'),
           ),
         ],
       ),
@@ -72,21 +91,28 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
           const SnackBar(
             content: Text('User unblocked successfully'),
             backgroundColor: Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
           ),
         );
         _refresh();
       } else {
-        final msg = getJsonField(response.jsonBody, r'''$.message''')
-                ?.toString() ??
-            'Failed to unblock';
+        final msg = getJsonField(response.jsonBody, r'''$.message''')?.toString() ?? 'Failed to unblock';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700),
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red.shade700),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -103,7 +129,7 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
     return AdminPopScope(
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
         drawer: buildAdminDrawer(context),
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).primary,
@@ -115,19 +141,19 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
           title: Text(
             'Blocked Users',
             style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                  color: Colors.white,
-                  fontSize: 22,
-                ),
+              font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+              color: Colors.white,
+              fontSize: 22,
+            ),
           ),
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 24),
               onPressed: _refresh,
-              tooltip: 'Refresh',
+              tooltip: 'Refresh List',
             ),
           ],
-          elevation: 2,
+          elevation: 0,
         ),
         body: FutureBuilder<ApiCallResponse>(
           future: _blockedFuture,
@@ -137,11 +163,21 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: FlutterFlowTheme.of(context).primary),
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                        color: FlutterFlowTheme.of(context).primary,
+                        strokeWidth: 3,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Text(
-                      'Loading blocked users...',
-                      style: FlutterFlowTheme.of(context).bodyMedium,
+                      'Fetching blocked accounts...',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        font: GoogleFonts.inter(),
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                      ),
                     ),
                   ],
                 ),
@@ -156,17 +192,40 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: FlutterFlowTheme.of(context).error),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).error.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.error_outline_rounded, size: 48, color: FlutterFlowTheme.of(context).error),
+                      ),
                       const SizedBox(height: 16),
                       Text(
-                        'Failed to load blocked users',
-                        style: FlutterFlowTheme.of(context).bodyLarge,
+                        'Failed to load data',
+                        style: FlutterFlowTheme.of(context).titleLarge.override(
+                          font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'There was an issue connecting to the server.',
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
-                      ElevatedButton(
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FlutterFlowTheme.of(context).primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
                         onPressed: _refresh,
-                        child: const Text('Retry'),
+                        icon: const Icon(Icons.refresh_rounded, size: 20),
+                        label: const Text('Try Again'),
                       ),
                     ],
                   ),
@@ -185,25 +244,34 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.block_rounded,
-                        size: 80,
-                        color: FlutterFlowTheme.of(context).secondaryText.withValues(alpha:0.5),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primaryBackground,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                        ),
+                        child: Icon(
+                          Icons.gpp_good_rounded,
+                          size: 64,
+                          color: FlutterFlowTheme.of(context).success,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       Text(
                         'No blocked users',
                         style: FlutterFlowTheme.of(context).titleLarge.override(
-                              font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
-                            ),
+                          font: GoogleFonts.interTight(fontWeight: FontWeight.w700),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Blocked users will appear here. You can block users from their profile.',
+                        'Your platform looks clean. Users blocked by administrators will appear here.',
                         textAlign: TextAlign.center,
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                            ),
+                          font: GoogleFonts.inter(),
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                        ),
                       ),
                     ],
                   ),
@@ -212,119 +280,239 @@ class _BlockedUsersWidgetState extends State<BlockedUsersWidget> {
             }
 
             return ResponsiveContainer(
+              maxWidth: 800,
               child: RefreshIndicator(
                 onRefresh: () async => _refresh(),
                 color: FlutterFlowTheme.of(context).primary,
                 child: ListView.builder(
                   padding: EdgeInsetsDirectional.fromSTEB(
-                    ResponsiveBody.responsiveHorizontalPadding(context),
-                    16,
-                    ResponsiveBody.responsiveHorizontalPadding(context),
+                    ResponsiveBody.responsiveHorizontalPadding(context) == 0 ? 16 : ResponsiveBody.responsiveHorizontalPadding(context),
+                    24,
+                    ResponsiveBody.responsiveHorizontalPadding(context) == 0 ? 16 : ResponsiveBody.responsiveHorizontalPadding(context),
                     40,
                   ),
-                itemCount: users.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        '$total blocked user${total == 1 ? '' : 's'}',
-                        style: FlutterFlowTheme.of(context).titleSmall.override(
-                              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                            ),
-                      ),
-                    );
-                  }
-                  final u = users[index - 1];
-                  final userId = castToType<int>(getJsonField(u, r'''$.id''') ?? getJsonField(u, r'''$.user_id'''));
-                  final name = getJsonField(u, r'''$.name''')?.toString() ??
-                      '${getJsonField(u, r'''$.first_name''') ?? ''} ${getJsonField(u, r'''$.last_name''') ?? ''}'
-                          .trim() ??
-                      'User ${userId ?? index}';
-                  final mobile = getJsonField(u, r'''$.mobile_number''')?.toString() ?? '';
-                  final email = getJsonField(u, r'''$.email''')?.toString() ?? '';
-                  final img = getJsonField(u, r'''$.profile_image''')?.toString();
-                  final imgUrl = img != null && img.isNotEmpty && img != 'null'
-                      ? (img.startsWith('http') ? img : '${ApiConfig.baseUrl}/$img')
-                      : null;
-                  final reason = getJsonField(u, r'''$.blocked_reason''')?.toString() ??
-                      getJsonField(u, r'''$.reason_for_blocking''')?.toString();
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      leading: SafeNetworkAvatar(
-                        imageUrl: imgUrl ?? '',
-                        radius: 28,
-                      ),
-                      title: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              name,
-                              style: FlutterFlowTheme.of(context).titleMedium.override(
-                                    font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
-                                  ),
-                            ),
-                          ),
-                          if (userId != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                                borderRadius: BorderRadius.circular(8),
+                  itemCount: users.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.block_rounded, size: 20, color: FlutterFlowTheme.of(context).secondaryText),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$total Restricted Account${total == 1 ? '' : 's'}',
+                              style: FlutterFlowTheme.of(context).titleSmall.override(
+                                font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                color: FlutterFlowTheme.of(context).secondaryText,
                               ),
-                              child: Text(
-                                'ID: $userId',
-                                style: FlutterFlowTheme.of(context).labelSmall.override(
-                                  font: GoogleFonts.inter(),
-                                  color: FlutterFlowTheme.of(context).primary,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final u = users[index - 1];
+                    final userId = castToType<int>(getJsonField(u, r'''$.id''') ?? getJsonField(u, r'''$.user_id'''));
+                    final name = getJsonField(u, r'''$.name''')?.toString() ??
+                        '${getJsonField(u, r'''$.first_name''') ?? ''} ${getJsonField(u, r'''$.last_name''') ?? ''}'.trim();
+                    final finalName = name.isNotEmpty ? name : 'User ${userId ?? index}';
+
+                    final mobile = getJsonField(u, r'''$.mobile_number''')?.toString() ?? '';
+                    final email = getJsonField(u, r'''$.email''')?.toString() ?? '';
+                    final img = getJsonField(u, r'''$.profile_image''')?.toString();
+                    final imgUrl = img != null && img.isNotEmpty && img != 'null'
+                        ? (img.startsWith('http') ? img : '${ApiConfig.baseUrl}/$img')
+                        : null;
+                    final reason = getJsonField(u, r'''$.blocked_reason''')?.toString() ??
+                        getJsonField(u, r'''$.reason_for_blocking''')?.toString();
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context).primaryBackground,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Top Row: Avatar, Info, Action
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                InkWell(
+                                  onTap: userId != null
+                                      ? () => context.pushNamedAuth(
+                                    UserDetailsWidget.routeName,
+                                    context.mounted,
+                                    queryParameters: {'userId': userId.toString()},
+                                  )
+                                      : null,
+                                  child: SafeNetworkAvatar(
+                                    imageUrl: imgUrl ?? '',
+                                    radius: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              finalName,
+                                              style: FlutterFlowTheme.of(context).titleMedium.override(
+                                                font: GoogleFonts.interTight(fontWeight: FontWeight.w700),
+                                                color: FlutterFlowTheme.of(context).primaryText,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (userId != null)
+                                            Padding(
+                                              padding: const EdgeInsets.only(left: 8),
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: FlutterFlowTheme.of(context).primary.withValues(alpha: 0.1),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  'ID: $userId',
+                                                  style: FlutterFlowTheme.of(context).labelSmall.override(
+                                                    font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                                    color: FlutterFlowTheme.of(context).primary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      if (mobile.isNotEmpty)
+                                        Row(
+                                          children: [
+                                            Icon(Icons.phone_rounded, size: 14, color: FlutterFlowTheme.of(context).secondaryText),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              mobile,
+                                              style: FlutterFlowTheme.of(context).bodySmall.override(
+                                                font: GoogleFonts.inter(),
+                                                color: FlutterFlowTheme.of(context).secondaryText,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      if (email.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.email_rounded, size: 14, color: FlutterFlowTheme.of(context).secondaryText),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  email,
+                                                  style: FlutterFlowTheme.of(context).bodySmall.override(
+                                                    font: GoogleFonts.inter(),
+                                                    color: FlutterFlowTheme.of(context).secondaryText,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                if (userId != null)
+                                  FilledButton.tonalIcon(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: FlutterFlowTheme.of(context).success.withValues(alpha: 0.1),
+                                      foregroundColor: FlutterFlowTheme.of(context).success,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    icon: const Icon(Icons.lock_open_rounded, size: 18),
+                                    label: Text(
+                                      'Unblock',
+                                      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                    ),
+                                    onPressed: () => _unblockUser(userId),
+                                  ),
+                              ],
+                            ),
+
+                            // Bottom Row: Reason Box
+                            if (reason != null && reason.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context).error.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: FlutterFlowTheme.of(context).error.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline_rounded,
+                                      color: FlutterFlowTheme.of(context).error,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Reason for Restriction',
+                                            style: FlutterFlowTheme.of(context).labelSmall.override(
+                                              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                              color: FlutterFlowTheme.of(context).error,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            reason,
+                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                              font: GoogleFonts.inter(),
+                                              color: FlutterFlowTheme.of(context).primaryText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                        ],
+                            ]
+                          ],
+                        ),
                       ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            mobile.isNotEmpty ? mobile : (email.isNotEmpty ? email : '—'),
-                            style: FlutterFlowTheme.of(context).bodySmall,
-                          ),
-                          if (reason != null && reason.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Reason: $reason',
-                                style: FlutterFlowTheme.of(context).bodySmall.override(
-                                      color: FlutterFlowTheme.of(context).error,
-                                    ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      trailing: userId != null
-                          ? TextButton.icon(
-                              icon: const Icon(Icons.lock_open_rounded, size: 18),
-                              label: const Text('Unblock'),
-                              onPressed: () => _unblockUser(userId),
-                            )
-                          : null,
-                      onTap: userId != null
-                          ? () => context.pushNamedAuth(
-                                UserDetailsWidget.routeName,
-                                context.mounted,
-                                queryParameters: {'userId': userId.toString()},
-                              )
-                          : null,
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
             );
           },
         ),

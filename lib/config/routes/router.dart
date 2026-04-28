@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '/modules/ride_management/view/ride_management_screen.dart';
+import '../../modules/finance/screens/earnings_screen.dart';
+import '../../modules/finance/screens/finance_reports_screen.dart';
 import '/config/routes/nav.dart';
-import '/config/routes/serialization_util.dart';
 import '/index.dart';
-import '/modules/finance/finance_module.dart';
 
 GoRouter createRouter(AppStateNotifier appStateNotifier) {
   return GoRouter(
@@ -62,12 +61,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         requireAuth: true,
         builder: (context, params) => const DashboardScreen(),
       ).toRoute(appStateNotifier),
-      FFRoute(
-        name: UserModuleHubScreen.routeName,
-        path: UserModuleHubScreen.routePath,
-        requireAuth: true,
-        builder: (context, params) => const UserModuleHubScreen(),
-      ).toRoute(appStateNotifier),
+
       FFRoute(
         name: UserManagementWidget.routeName,
         path: UserManagementWidget.routePath,
@@ -142,12 +136,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         path: BlockedUsersWidget.routePath,
         requireAuth: true,
         builder: (context, params) => const BlockedUsersWidget(),
-      ).toRoute(appStateNotifier),
-      FFRoute(
-        name: KycPendingWidget.routeName,
-        path: KycPendingWidget.routePath,
-        requireAuth: true,
-        builder: (context, params) => const KycPendingWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: DriverKycListWidget.routeName,
@@ -255,10 +243,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const FareSurgeSettingsWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: DriverPayoutsScreen.routeName,
-        path: DriverPayoutsScreen.routePath,
+        name: DriverPayoutsWidget.routeName,
+        path: DriverPayoutsWidget.routePath,
         requireAuth: true,
-        builder: (context, params) => const DriverPayoutsScreen(),
+        builder: (context, params) => const DriverPayoutsWidget(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: FinanceReportsScreen.routeName,
@@ -267,21 +255,34 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const FinanceReportsScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
-        name: FinanceControlHubScreen.routeName,
-        path: FinanceControlHubScreen.routePath,
+        name: UserWalletsScreen.routeName,
+        path: UserWalletsScreen.routePath,
         requireAuth: true,
-        builder: (context, params) {
-          final tab = params.getParam('tab', ParamType.int) as int? ?? 0;
-          final rideId = params.getParam('rideId', ParamType.int) as int?;
-          final userId = params.getParam('userId', ParamType.int) as int?;
-          final driverId = params.getParam('driverId', ParamType.int) as int?;
-          return FinanceControlHubScreen(
-            initialTabIndex: tab,
-            initialRideId: rideId,
-            initialUserId: userId,
-            initialDriverId: driverId,
-          );
-        },
+        builder: (context, params) => const UserWalletsScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: DriverWalletsScreen.routeName,
+        path: DriverWalletsScreen.routePath,
+        requireAuth: true,
+        builder: (context, params) => const DriverWalletsScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: WalletTransactionsScreen.routeName,
+        path: WalletTransactionsScreen.routePath,
+        requireAuth: true,
+        builder: (context, params) => const WalletTransactionsScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: WalletAdjustScreen.routeName,
+        path: WalletAdjustScreen.routePath,
+        requireAuth: true,
+        builder: (context, params) => const WalletAdjustScreen(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: WalletsScreen.routeName,
+        path: WalletsScreen.routePath,
+        requireAuth: true,
+        builder: (context, params) => const WalletsScreen(),
       ).toRoute(appStateNotifier),
       FFRoute(
         name: FinanceAuditTimelineWidget.routeName,
@@ -328,6 +329,24 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         path: AccountWidget.routePath,
         requireAuth: true,
         builder: (context, params) => const AccountWidget(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: BlockedDriversWidget.routeName,
+        path: BlockedDriversWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const BlockedDriversWidget(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: DriverComplaintsWidget.routeName,
+        path: DriverComplaintsWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const DriverComplaintsWidget(),
+      ).toRoute(appStateNotifier),
+      FFRoute(
+        name: DriverReviewsWidget.routeName,
+        path: DriverReviewsWidget.routePath,
+        requireAuth: true,
+        builder: (context, params) => const DriverReviewsWidget(),
       ).toRoute(appStateNotifier),
     ],
   );

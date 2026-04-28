@@ -1,5 +1,3 @@
-import '/core/auth/auth_util.dart';
-import '/core/network/api_calls.dart';
 import '/shared/widgets/admin_drawer.dart';
 import '/shared/widgets/admin_pop_scope.dart';
 import '/shared/widgets/responsive_body.dart';
@@ -7,64 +5,63 @@ import '/index.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/config/theme/flutter_flow_util.dart';
 import '/config/theme/flutter_flow_widgets.dart';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import 'user_complaints_model.dart';
-export 'user_complaints_model.dart';
+// Note: Ensure you have your model file created if you are using FlutterFlow's standard architecture.
+// import 'driver_complaints_model.dart';
+// export 'driver_complaints_model.dart';
 
-class UserComplaintsWidget extends StatefulWidget {
-  const UserComplaintsWidget({super.key});
+class DriverComplaintsWidget extends StatefulWidget {
+  const DriverComplaintsWidget({super.key});
 
-  static String routeName = 'userComplaints';
-  static String routePath = '/userComplaints';
+  static String routeName = 'DriverComplaints';
+  static String routePath = '/driver-complaints';
 
   @override
-  State<UserComplaintsWidget> createState() => _UserComplaintsWidgetState();
+  State<DriverComplaintsWidget> createState() => _DriverComplaintsWidgetState();
 }
 
-class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
-  late UserComplaintsModel _model;
+class _DriverComplaintsWidgetState extends State<DriverComplaintsWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  // late DriverComplaintsModel _model; // Uncomment if using a model
 
   // MOCK DATA: Replace this with your actual API call data later
-  final List<Map<String, dynamic>> _mockUserComplaints = [
+  final List<Map<String, dynamic>> _mockDriverComplaints = [
     {
-      'id': 'CMP-123456789',
-      'name': 'Alex Johnson',
-      'avatar': 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzQwNTJ8&ixlib=rb-4.1.0&q=80&w=1080',
+      'id': 'DCMP-44556',
+      'name': 'Rajesh Kumar (Driver)',
+      'avatar': 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUyMDB8&ixlib=rb-4.1.0&q=80&w=1080',
       'status': 'Pending',
-      'date': 'Oct 24, 2026',
-      'preview': 'Driver took a much longer route than necessary and refused to follow the map.',
+      'date': 'Oct 28, 2026',
+      'preview': 'Passenger booked a Mini Cab but tried to fit 6 people inside. Refused to cancel the ride when informed of the limit.',
     },
     {
-      'id': 'CMP-987654321',
-      'name': 'Sarah Williams',
-      'avatar': 'https://images.unsplash.com/photo-1535295972055-1c762f4483e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzQwNTN8&ixlib=rb-4.1.0&q=80&w=1080',
+      'id': 'DCMP-99882',
+      'name': 'Suresh Reddy (Driver)',
+      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUyMDF8&ixlib=rb-4.1.0&q=80&w=1080',
       'status': 'Resolved',
-      'date': 'Oct 23, 2026',
-      'preview': 'Car interior was not clean and smelled strongly like smoke.',
+      'date': 'Oct 26, 2026',
+      'preview': 'Passenger made a mess with food in the back seat and refused to pay the cleaning fee.',
     },
     {
-      'id': 'CMP-112233445',
-      'name': 'Michael Chen',
-      'avatar': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzQwNTN8&ixlib=rb-4.1.0&q=80&w=1080',
+      'id': 'DCMP-11223',
+      'name': 'Anita Desai (Driver)',
+      'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjQ1NzUyMDJ8&ixlib=rb-4.1.0&q=80&w=1080',
       'status': 'In Review',
-      'date': 'Oct 21, 2026',
-      'preview': 'Payment was charged twice to my card for the same trip.',
+      'date': 'Oct 25, 2026',
+      'preview': 'Passenger placed the pin at the wrong location and argued aggressively when I arrived at the exact pinned spot.',
     },
   ];
 
   @override
   void initState() {
     super.initState();
-    _model = createModel(context, () => UserComplaintsModel());
+    // _model = createModel(context, () => DriverComplaintsModel()); // Uncomment if using a model
   }
 
   @override
   void dispose() {
-    _model.dispose();
+    // _model.dispose(); // Uncomment if using a model
     super.dispose();
   }
 
@@ -88,7 +85,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
               onPressed: () => context.goNamedAuth(DashboardScreen.routeName, context.mounted),
             ),
             title: Text(
-              'User Complaints',
+              'Driver Complaints',
               style: FlutterFlowTheme.of(context).headlineMedium.override(
                 font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                 color: Colors.white,
@@ -98,7 +95,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
             centerTitle: false,
             elevation: 0,
           ),
-          body: _buildComplaintsList(_mockUserComplaints),
+          body: _buildComplaintsList(_mockDriverComplaints),
         ),
       ),
     );
@@ -122,7 +119,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
                   border: Border.all(color: FlutterFlowTheme.of(context).alternate),
                 ),
                 child: Icon(
-                  Icons.inbox_rounded,
+                  Icons.local_taxi_rounded,
                   size: 64,
                   color: FlutterFlowTheme.of(context).secondaryText,
                 ),
@@ -136,7 +133,7 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
               ),
               const SizedBox(height: 8),
               Text(
-                'There are currently no complaints filed by users.',
+                'There are currently no complaints filed by drivers against users.',
                 textAlign: TextAlign.center,
                 style: FlutterFlowTheme.of(context).bodyMedium.override(
                   font: GoogleFonts.inter(),
@@ -149,15 +146,17 @@ class _UserComplaintsWidgetState extends State<UserComplaintsWidget> {
       );
     }
 
-    return ResponsiveContainer(
-      maxWidth: 800,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: complaints.length,
-        itemBuilder: (context, index) {
-          final complaint = complaints[index];
-          return _buildComplaintTile(complaint);
-        },
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: complaints.length,
+          itemBuilder: (context, index) {
+            final complaint = complaints[index];
+            return _buildComplaintTile(complaint);
+          },
+        ),
       ),
     );
   }

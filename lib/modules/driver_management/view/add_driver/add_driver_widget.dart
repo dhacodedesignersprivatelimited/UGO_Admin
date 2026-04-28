@@ -39,8 +39,6 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
     _model.lastNameFocusNode ??= FocusNode();
     _model.emailTextController ??= TextEditingController();
     _model.emailFocusNode ??= FocusNode();
-    _model.fcmTokenTextController ??= TextEditingController();
-    _model.fcmTokenFocusNode ??= FocusNode();
     _model.cityTextController ??= TextEditingController();
     _model.cityFocusNode ??= FocusNode();
     _model.stateTextController ??= TextEditingController();
@@ -100,13 +98,13 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
       try {
         final files = selectedMedia
             .map((m) => FFUploadedFile(
-                  name: m.storagePath.split('/').last,
-                  bytes: m.bytes,
-                  height: m.dimensions?.height,
-                  width: m.dimensions?.width,
-                  blurHash: m.blurHash,
-                  originalFilename: m.originalFilename,
-                ))
+          name: m.storagePath.split('/').last,
+          bytes: m.bytes,
+          height: m.dimensions?.height,
+          width: m.dimensions?.width,
+          blurHash: m.blurHash,
+          originalFilename: m.originalFilename,
+        ))
             .toList();
         if (files.isNotEmpty) {
           onPicked(files.first);
@@ -126,7 +124,6 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
     final firstName = _model.firstNameTextController!.text.trim();
     final lastName = _model.lastNameTextController!.text.trim();
     final email = _model.emailTextController!.text.trim();
-    final fcmToken = _model.fcmTokenTextController!.text.trim();
     final city = _model.cityTextController!.text.trim();
     final state = _model.stateTextController!.text.trim();
     final postalCode = _model.postalCodeTextController!.text.trim();
@@ -166,7 +163,7 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
         token: currentAuthenticationToken,
         driver: driver,
         vehicle: vehicle,
-        fcmToken: fcmToken.isEmpty ? 'admin_created' : fcmToken,
+        fcmToken: 'admin_created', // Hardcoded safely behind the scenes
         profileImage: _fileOrNull(_model.profileImage),
         licenseFrontImage: _fileOrNull(_model.licenseFrontImage),
         licenseBackImage: _fileOrNull(_model.licenseBackImage),
@@ -199,9 +196,7 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
           context.goNamedAuth(AllusersWidget.routeName, context.mounted);
         }
       } else {
-        final msg = getJsonField(response.jsonBody, r'''$.message''')
-                ?.toString() ??
-            'Failed to create driver';
+        final msg = getJsonField(response.jsonBody, r'''$.message''')?.toString() ?? 'Failed to create driver';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700),
         );
@@ -228,25 +223,24 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
         },
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
           drawer: buildAdminDrawer(context),
           appBar: AppBar(
             backgroundColor: FlutterFlowTheme.of(context).primary,
             automaticallyImplyLeading: true,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-              onPressed: () =>
-                  context.goNamedAuth(AllusersWidget.routeName, context.mounted),
+              onPressed: () => context.goNamedAuth(AllusersWidget.routeName, context.mounted),
             ),
             title: Text(
-              'Create Driver',
+              ' New Driver',
               style: FlutterFlowTheme.of(context).headlineMedium.override(
-                    font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                    color: Colors.white,
-                    fontSize: 22,
-                  ),
+                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 22,
+              ),
             ),
-            elevation: 2,
+            elevation: 0,
           ),
           body: LayoutBuilder(
             builder: (context, constraints) {
@@ -255,138 +249,185 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
                 horizontal: isWide ? 32 : 16,
                 vertical: isWide ? 24 : 16,
               );
-              return SingleChildScrollView(
-                padding: padding,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 700),
-                    child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildTextField(
-                  controller: _model.mobileNumberTextController!,
-                  focusNode: _model.mobileNumberFocusNode!,
-                  label: 'Mobile Number *',
-                  hint: 'e.g. 9107988035',
-                  keyboardType: TextInputType.phone,
-                  prefixIcon: Icons.phone_rounded,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _model.firstNameTextController!,
-                  focusNode: _model.firstNameFocusNode!,
-                  label: 'First Name *',
-                  hint: 'e.g. harideep',
-                  prefixIcon: Icons.person_outline_rounded,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _model.lastNameTextController!,
-                  focusNode: _model.lastNameFocusNode!,
-                  label: 'Last Name *',
-                  hint: 'e.g. yadav',
-                  prefixIcon: Icons.person_outline_rounded,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _model.emailTextController!,
-                  focusNode: _model.emailFocusNode!,
-                  label: 'Email *',
-                  hint: 'e.g. driver@example.com',
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: Icons.email_rounded,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _model.fcmTokenTextController!,
-                  focusNode: _model.fcmTokenFocusNode!,
-                  label: 'FCM Token (optional)',
-                  hint: 'Leave empty if unknown',
-                  prefixIcon: Icons.token_rounded,
-                ),
-                const SizedBox(height: 20),
-                _buildVehicleTypeDropdown(),
-                const SizedBox(height: 20),
-                Text(
-                  'Address (optional)',
-                  style: FlutterFlowTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                      ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: _buildTextField(
-                        controller: _model.cityTextController!,
-                        focusNode: _model.cityFocusNode!,
-                        label: 'City',
-                        hint: 'e.g. Delhi',
-                        prefixIcon: Icons.location_city_rounded,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _model.stateTextController!,
-                        focusNode: _model.stateFocusNode!,
-                        label: 'State',
-                        hint: 'e.g. Delhi',
-                        prefixIcon: Icons.map_rounded,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _model.postalCodeTextController!,
-                  focusNode: _model.postalCodeFocusNode!,
-                  label: 'Postal Code',
-                  hint: 'e.g. 110001',
-                  keyboardType: TextInputType.number,
-                  prefixIcon: Icons.pin_drop_rounded,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _model.referralCodeTextController!,
-                  focusNode: _model.referralCodeFocusNode!,
-                  label: 'Used Referral Code (optional)',
-                  hint: 'Referral code from another driver',
-                  prefixIcon: Icons.card_giftcard_rounded,
-                ),
-                const SizedBox(height: 28),
-                _buildDocumentsSection(constraints.maxWidth),
-                const SizedBox(height: 32),
-                FFButtonWidget(
-                  onPressed: _isSubmitting ? null : () => _submit(),
-                  text: _isSubmitting ? 'Creating...' : 'Create Driver',
-                  icon: _isSubmitting
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+              return Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: padding,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 800),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildSectionCard(
+                                title: 'Personal Information',
+                                icon: Icons.person_rounded,
+                                children: [
+                                  _buildTextField(
+                                    controller: _model.mobileNumberTextController!,
+                                    focusNode: _model.mobileNumberFocusNode!,
+                                    label: 'Mobile Number *',
+                                    hint: 'e.g. 9107988035',
+                                    keyboardType: TextInputType.phone,
+                                    prefixIcon: Icons.phone_rounded,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildTextField(
+                                          controller: _model.firstNameTextController!,
+                                          focusNode: _model.firstNameFocusNode!,
+                                          label: 'First Name *',
+                                          hint: 'e.g. Hari',
+                                          prefixIcon: Icons.person_outline_rounded,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildTextField(
+                                          controller: _model.lastNameTextController!,
+                                          focusNode: _model.lastNameFocusNode!,
+                                          label: 'Last Name *',
+                                          hint: 'e.g. Yadav',
+                                          prefixIcon: Icons.person_outline_rounded,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildTextField(
+                                    controller: _model.emailTextController!,
+                                    focusNode: _model.emailFocusNode!,
+                                    label: 'Email Address *',
+                                    hint: 'e.g. driver@example.com',
+                                    keyboardType: TextInputType.emailAddress,
+                                    prefixIcon: Icons.email_rounded,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              _buildSectionCard(
+                                title: 'Location & Assignment',
+                                icon: Icons.map_rounded,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: _buildTextField(
+                                          controller: _model.cityTextController!,
+                                          focusNode: _model.cityFocusNode!,
+                                          label: 'City',
+                                          hint: 'e.g. Hyderabad',
+                                          prefixIcon: Icons.location_city_rounded,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildTextField(
+                                          controller: _model.stateTextController!,
+                                          focusNode: _model.stateFocusNode!,
+                                          label: 'State',
+                                          hint: 'e.g. TS',
+                                          prefixIcon: Icons.map_rounded,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildTextField(
+                                    controller: _model.postalCodeTextController!,
+                                    focusNode: _model.postalCodeFocusNode!,
+                                    label: 'Postal Code',
+                                    hint: 'e.g. 500001',
+                                    keyboardType: TextInputType.number,
+                                    prefixIcon: Icons.pin_drop_rounded,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              _buildSectionCard(
+                                title: 'Vehicle & System Integration',
+                                icon: Icons.local_taxi_rounded,
+                                children: [
+                                  _buildVehicleTypeDropdown(),
+                                  const SizedBox(height: 16),
+                                  _buildTextField(
+                                    controller: _model.referralCodeTextController!,
+                                    focusNode: _model.referralCodeFocusNode!,
+                                    label: 'Used Referral Code (optional)',
+                                    hint: 'Referral code from another driver',
+                                    prefixIcon: Icons.card_giftcard_rounded,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              _buildSectionCard(
+                                title: 'Driver & Vehicle Documents',
+                                icon: Icons.folder_shared_rounded,
+                                children: [
+                                  _buildDocumentsSection(),
+                                ],
+                              ),
+                              const SizedBox(height: 40),
+                            ],
                           ),
-                        )
-                      : const Icon(Icons.drive_eta_rounded, size: 22, color: Colors.white),
-                  options: FFButtonOptions(
-                    width: double.infinity,
-                    height: 52,
-                    color: FlutterFlowTheme.of(context).primary,
-                    textStyle: FlutterFlowTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                          color: Colors.white,
                         ),
-                    elevation: 2,
-                    borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
+
+                  // Sticky Bottom Action Bar
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).primaryBackground,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          offset: const Offset(0, -4),
+                          blurRadius: 10,
+                        )
+                      ],
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 800),
+                        child: FFButtonWidget(
+                          onPressed: _isSubmitting ? null : () => _submit(),
+                          text: _isSubmitting ? 'Creating Driver Profile...' : 'Complete Driver Onboarding',
+                          icon: _isSubmitting
+                              ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                              : const Icon(Icons.check_circle_rounded, size: 22, color: Colors.white),
+                          options: FFButtonOptions(
+                            width: double.infinity,
+                            height: 56,
+                            color: FlutterFlowTheme.of(context).primary,
+                            textStyle: FlutterFlowTheme.of(context).titleMedium.override(
+                              font: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                              color: Colors.white,
+                            ),
+                            elevation: 3,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               );
             },
           ),
@@ -395,89 +436,175 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
     );
   }
 
-  Widget _buildDocumentsSection(double maxWidth) {
+  // --- UI HELPER METHODS ---
+
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: FlutterFlowTheme.of(context).primaryBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: FlutterFlowTheme.of(context).alternate, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha:0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: FlutterFlowTheme.of(context).primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: FlutterFlowTheme.of(context).titleMedium.override(
+                  font: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                  color: FlutterFlowTheme.of(context).primaryText,
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentsSection() {
     final theme = FlutterFlowTheme.of(context);
-    final isNarrow = maxWidth < 400;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Documents (optional)',
-          style: theme.titleMedium.override(
-            font: GoogleFonts.inter(fontWeight: FontWeight.w700),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Upload license, Aadhaar, PAN, RC & vehicle documents',
+          'Upload required files to complete driver verification.',
           style: theme.bodySmall.override(
             font: GoogleFonts.inter(),
             color: theme.secondaryText,
           ),
         ),
         const SizedBox(height: 16),
-        Wrap(
-          spacing: isNarrow ? 8 : 12,
-          runSpacing: isNarrow ? 8 : 12,
+        Column(
           children: [
-            _buildDocTile('Profile', _model.profileImage, (f) => _model.profileImage = f, isNarrow),
-            _buildDocTile('License Front', _model.licenseFrontImage, (f) => _model.licenseFrontImage = f, isNarrow),
-            _buildDocTile('License Back', _model.licenseBackImage, (f) => _model.licenseBackImage = f, isNarrow),
-            _buildDocTile('Aadhaar Front', _model.aadhaarFrontImage, (f) => _model.aadhaarFrontImage = f, isNarrow),
-            _buildDocTile('Aadhaar Back', _model.aadhaarBackImage, (f) => _model.aadhaarBackImage = f, isNarrow),
-            _buildDocTile('PAN', _model.panImage, (f) => _model.panImage = f, isNarrow),
-            _buildDocTile('RC Front', _model.rcFrontImage, (f) => _model.rcFrontImage = f, isNarrow),
-            _buildDocTile('RC Back', _model.rcBackImage, (f) => _model.rcBackImage = f, isNarrow),
-            _buildDocTile('Vehicle', _model.vehicleImage, (f) => _model.vehicleImage = f, isNarrow),
-            _buildDocTile('Registration', _model.registrationImage, (f) => _model.registrationImage = f, isNarrow),
-            _buildDocTile('Insurance', _model.insuranceImage, (f) => _model.insuranceImage = f, isNarrow),
-            _buildDocTile('Pollution Cert', _model.pollutionCertificateImage, (f) => _model.pollutionCertificateImage = f, isNarrow),
+            _buildDocTile('Profile Photo', _model.profileImage, (f) => _model.profileImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('License Front', _model.licenseFrontImage, (f) => _model.licenseFrontImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('License Back', _model.licenseBackImage, (f) => _model.licenseBackImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('Aadhaar Front', _model.aadhaarFrontImage, (f) => _model.aadhaarFrontImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('Aadhaar Back', _model.aadhaarBackImage, (f) => _model.aadhaarBackImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('PAN Card', _model.panImage, (f) => _model.panImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('RC Front', _model.rcFrontImage, (f) => _model.rcFrontImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('RC Back', _model.rcBackImage, (f) => _model.rcBackImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('Vehicle Image', _model.vehicleImage, (f) => _model.vehicleImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('Registration Certificate', _model.registrationImage, (f) => _model.registrationImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('Vehicle Insurance', _model.insuranceImage, (f) => _model.insuranceImage = f),
+            const SizedBox(height: 12),
+            _buildDocTile('Pollution Certificate', _model.pollutionCertificateImage, (f) => _model.pollutionCertificateImage = f),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildDocTile(String label, FFUploadedFile file, void Function(FFUploadedFile) onPicked, bool isNarrow) {
+  Widget _buildDocTile(String label, FFUploadedFile file, void Function(FFUploadedFile) onPicked) {
     final hasImage = file.bytes?.isNotEmpty ?? false;
     final theme = FlutterFlowTheme.of(context);
-    final size = isNarrow ? 130.0 : 156.0;
+
     return InkWell(
-      onTap: _model.isUploadingDoc
-          ? null
-          : () => _pickDocumentImage(onPicked),
+      onTap: _model.isUploadingDoc ? null : () => _pickDocumentImage(onPicked),
       borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: size,
-        height: isNarrow ? 100 : 120,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: theme.secondaryBackground,
+          color: hasImage ? theme.primary.withValues(alpha: 0.05) : theme.secondaryBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: hasImage ? theme.primary.withValues(alpha:0.5) : theme.alternate,
+            color: hasImage ? theme.primary : theme.alternate,
             width: hasImage ? 2 : 1,
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            if (_model.isUploadingDoc)
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2, color: theme.primary),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: hasImage ? theme.primary.withValues(alpha: 0.1) : theme.primaryBackground,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: _model.isUploadingDoc
+                  ? Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: theme.primary),
+                ),
               )
-            else if (hasImage)
-              Icon(Icons.check_circle_rounded, color: theme.primary, size: 36)
-            else
-              Icon(Icons.add_photo_alternate_rounded, color: theme.secondaryText, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: theme.bodySmall.override(font: GoogleFonts.inter()),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+                  : Icon(
+                hasImage ? Icons.check_circle_rounded : Icons.insert_drive_file_outlined,
+                color: hasImage ? theme.primary : theme.secondaryText,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: theme.bodyMedium.override(
+                      font: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        color: hasImage ? theme.primary : theme.primaryText,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    hasImage ? 'Document uploaded successfully' : 'Tap to upload document',
+                    style: theme.bodySmall.override(
+                      font: GoogleFonts.inter(),
+                      color: hasImage ? theme.primary : theme.secondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              hasImage ? Icons.edit_rounded : Icons.cloud_upload_outlined,
+              color: hasImage ? theme.primary : theme.secondaryText,
+              size: 20,
             ),
           ],
         ),
@@ -493,47 +620,48 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Vehicle Type *',
-          style: theme.titleSmall.override(
+          'Vehicle Category *',
+          style: theme.bodyMedium.override(
             font: GoogleFonts.inter(fontWeight: FontWeight.w600),
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: theme.secondaryBackground,
+            color: theme.primaryBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: theme.alternate),
           ),
           child: _model.isLoadingVehicleTypes
               ? const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                )
+            padding: EdgeInsets.all(20),
+            child: Center(child: CircularProgressIndicator()),
+          )
               : DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    value: _model.selectedVehicleTypeId,
-                    isExpanded: true,
-                    hint: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Select vehicle type'),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    items: types
-                        .map((t) {
-                          final id = castToType<int>(t['id'] ?? t['vehicle_type_id']);
-                          final name = (t['name'] ?? t['vehicle_type_name'] ?? t['vehicle_type'] ?? 'Vehicle $id')?.toString();
-                          if (id == null) return null;
-                          return DropdownMenuItem<int>(
-                            value: id,
-                            child: Text(name ?? 'Vehicle $id'),
-                          );
-                        })
-                        .whereType<DropdownMenuItem<int>>()
-                        .toList(),
-                    onChanged: (v) => setState(() => _model.selectedVehicleTypeId = v),
-                  ),
-                ),
+            child: DropdownButton<int>(
+              value: _model.selectedVehicleTypeId,
+              isExpanded: true,
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.secondaryText),
+              hint: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Select vehicle type', style: theme.bodyMedium),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              items: types
+                  .map((t) {
+                final id = castToType<int>(t['id'] ?? t['vehicle_type_id']);
+                final name = (t['name'] ?? t['vehicle_type_name'] ?? t['vehicle_type'] ?? 'Vehicle $id')?.toString();
+                if (id == null) return null;
+                return DropdownMenuItem<int>(
+                  value: id,
+                  child: Text(name ?? 'Vehicle $id', style: theme.bodyMedium),
+                );
+              })
+                  .whereType<DropdownMenuItem<int>>()
+                  .toList(),
+              onChanged: (v) => setState(() => _model.selectedVehicleTypeId = v),
+            ),
+          ),
         ),
       ],
     );
@@ -547,35 +675,45 @@ class _AddDriverWidgetState extends State<AddDriverWidget> {
     TextInputType? keyboardType,
     required IconData prefixIcon,
   }) {
+    final theme = FlutterFlowTheme.of(context);
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: theme.bodyMedium.override(
+          font: GoogleFonts.inter(),
+          color: theme.secondaryText,
+        ),
         hintText: hint,
-        prefixIcon: Icon(prefixIcon, color: FlutterFlowTheme.of(context).primary),
+        hintStyle: theme.bodySmall.override(
+          font: GoogleFonts.inter(),
+          color: theme.alternate,
+        ),
+        prefixIcon: Icon(prefixIcon, color: theme.secondaryText, size: 20),
         filled: true,
-        fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+        fillColor: theme.primaryBackground,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: theme.alternate),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: FlutterFlowTheme.of(context).alternate),
+          borderSide: BorderSide(color: theme.alternate),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: FlutterFlowTheme.of(context).primary,
+            color: theme.primary,
             width: 2,
           ),
         ),
       ),
-      style: FlutterFlowTheme.of(context).bodyMedium.override(
-            font: GoogleFonts.inter(),
-          ),
+      style: theme.bodyMedium.override(
+        font: GoogleFonts.inter(),
+      ),
     );
   }
 }

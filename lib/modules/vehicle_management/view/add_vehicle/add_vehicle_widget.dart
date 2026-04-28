@@ -206,7 +206,7 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
     if (imgPath == null || imgPath.isEmpty) return null;
     return imgPath.startsWith('http')
         ? imgPath
-        : '${ApiConfig.baseUrl}$imgPath';
+        : '${ApiConfig.baseUrl}/${imgPath.replaceFirst(RegExp(r'^/'), '')}';
   }
 
   Future<void> _openEditVehicleTypeDialog(Map<String, dynamic> type) async {
@@ -1020,7 +1020,7 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                         final imgUrl = imgPath != null && imgPath.isNotEmpty
                             ? (imgPath.startsWith('http')
                                 ? imgPath
-                                : '${ApiConfig.baseUrl}$imgPath')
+                                : '${ApiConfig.baseUrl}/${imgPath.replaceFirst(RegExp(r'^/'), '')}')
                             : null;
                         final validImg = imgUrl != null && imgUrl.isNotEmpty;
                         return DropdownMenuItem<int>(

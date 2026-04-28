@@ -32,7 +32,5 @@ export '/modules/dashboard/view_model/finance_hub_view_model.dart';
 export '/modules/dashboard/view_model/operations_hub_view_model.dart';
 export '/modules/driver_management/view_model/driver_module_view_model.dart';
 export '/modules/user_management/view_model/user_module_view_model.dart';
-export '/modules/driver_management/view/driver_module_hub/driver_module_hub_screen.dart';
 export '/modules/ride_management/view/operations_module_hub/operations_module_hub_screen.dart';
-export '/modules/user_management/view/user_module_hub/user_module_hub_screen.dart';
 export 'admin_route_catalog.dart';

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../modules/finance/screens/earnings_screen.dart';
+import '../../modules/finance/screens/finance_reports_screen.dart';
 import '/core/auth/auth_util.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/config/theme/flutter_flow_util.dart';
 import '/index.dart';
-import '/modules/finance/finance_module.dart';
 
 abstract class _DrawerNode {}
 
@@ -88,6 +89,11 @@ Widget buildAdminDrawer(BuildContext context) {
         label: 'User Complaints',
         routeName: UserComplaintsWidget.routeName,
       ),
+      _NavItem(
+        icon: Icons.star_rounded,
+        label: 'User Reviews',
+        routeName: ReviewsWidget.routeName,
+      ),
     ]),
     _NavSection('Driver Management', Icons.drive_eta_rounded, [
       _NavItem(
@@ -96,24 +102,35 @@ Widget buildAdminDrawer(BuildContext context) {
         routeName: DriversWidget.routeName,
       ),
       _NavItem(
-        icon: Icons.verified_user_rounded,
-        label: 'Pending Approvals',
-        routeName: KycPendingWidget.routeName,
-      ),
-      _NavItem(
         icon: Icons.fact_check_rounded,
         label: 'Driver KYC List',
         routeName: DriverKycListWidget.routeName,
       ),
+      // _NavItem(
+      //   icon: Icons.map_rounded,
+      //   label: 'Online Drivers',
+      //   routeName: LiveDriverMapWidget.routeName,
+      // ),
+
       _NavItem(
-        icon: Icons.map_rounded,
-        label: 'Online Drivers',
-        routeName: LiveDriverMapWidget.routeName,
+        icon: Icons.support_agent_rounded,
+        label: 'Driver Complaints',
+        routeName: DriverComplaintsWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.star_rounded,
+        label: 'Driver Reviews',
+        routeName: DriverReviewsWidget.routeName,
       ),
       _NavItem(
         icon: Icons.badge_rounded,
         label: 'Add Driver',
         routeName: AddDriverWidget.routeName,
+      ),
+      _NavItem(
+        icon: Icons.block_rounded,
+        label: 'Blocked Drivers',
+        routeName: BlockedDriversWidget.routeName,
       ),
     ]),
     _NavSection('Ride Management', Icons.local_taxi_rounded, [
@@ -123,33 +140,47 @@ Widget buildAdminDrawer(BuildContext context) {
         routeName: RideManagementScreen.routeName,
       ),
     ]),
-    _NavSection('Finance Management', Icons.account_balance_wallet_rounded, [
-      _NavItem(
-        icon: Icons.account_balance_rounded,
-        label: 'Wallet Dashboard',
-        routeName: WalletManagementWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.hub_rounded,
-        label: 'Control Center',
-        routeName: FinanceControlHubScreen.routeName,
-      ),
-      _NavItem(
-        icon: Icons.currency_exchange_rounded,
-        label: 'Total Earnings',
-        routeName: EarningsScreen.routeName,
-      ),
-      _NavItem(
-        icon: Icons.payments_rounded,
-        label: 'Driver Payouts',
-        routeName: DriverPayoutsScreen.routeName,
-      ),
-      _NavItem(
-        icon: Icons.table_chart_rounded,
-        label: 'Finance Reports',
-        routeName: FinanceReportsScreen.routeName,
-      ),
-    ]),
+    _NavSection(
+      'Wallet & Finance',
+      Icons.account_balance_wallet_rounded,
+      [
+        _NavItem(
+          icon: Icons.dashboard_customize_rounded,
+          label: 'Dashboard',
+          routeName: WalletManagementWidget.routeName,
+        ),
+        _NavItem(
+          icon: Icons.account_balance_wallet_rounded,
+          label: 'Wallets',
+          routeName: WalletsScreen.routeName,
+        ),
+        _NavItem(
+          icon: Icons.receipt_long_rounded,
+          label: 'Transactions',
+          routeName: WalletTransactionsScreen.routeName,
+        ),
+        _NavItem(
+          icon: Icons.currency_exchange_rounded,
+          label: 'Earnings',
+          routeName: EarningsScreen.routeName,
+        ),
+        _NavItem(
+          icon: Icons.payments_rounded,
+          label: 'Payouts',
+          routeName: DriverPayoutsWidget.routeName,
+        ),
+        _NavItem(
+          icon: Icons.bar_chart_rounded,
+          label: 'Reports',
+          routeName: FinanceReportsScreen.routeName,
+        ),
+        _NavItem(
+          icon: Icons.tune_rounded,
+          label: 'Adjust',
+          routeName: WalletAdjustScreen.routeName,
+        ),
+      ],
+    ),
     _NavSection('Vehicle Management', Icons.directions_car_rounded, [
       _NavItem(
         icon: Icons.category_rounded,
@@ -199,11 +230,6 @@ Widget buildAdminDrawer(BuildContext context) {
         icon: Icons.notifications_active_rounded,
         label: 'Notifications',
         routeName: NotificationsWidget.routeName,
-      ),
-      _NavItem(
-        icon: Icons.star_rounded,
-        label: 'Reviews',
-        routeName: ReviewsWidget.routeName,
       ),
     ]),
     _NavSection('System Admin', Icons.admin_panel_settings_rounded, [

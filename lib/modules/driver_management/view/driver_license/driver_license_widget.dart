@@ -1,8 +1,9 @@
 import '/core/auth/auth_util.dart';
 import '/core/network/api_calls.dart';
+import '/core/network/api_config.dart';
 import '/shared/widgets/admin_drawer.dart';
 import '/shared/widgets/admin_pop_scope.dart';
-import '/index.dart'; // Assumes DriversWidget is exported here
+import '/index.dart';
 import '/config/theme/flutter_flow_icon_button.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/config/theme/flutter_flow_util.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'driver_license_model.dart';
 export 'driver_license_model.dart';
 
@@ -197,12 +200,19 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                 panEnabled: true,
                 minScale: 1.0,
                 maxScale: 4.0,
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Image.asset(
-                    'assets/images/error_image.webp',
-                    fit: BoxFit.contain,
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(color: Colors.white54),
+                  ),
+                  errorWidget: (context, error, stackTrace) => Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.broken_image_rounded, color: Colors.white54, size: 64),
+                      const SizedBox(height: 16),
+                      Text('Image not available', style: TextStyle(color: Colors.white70)),
+                    ],
                   ),
                 ),
               ),
@@ -217,21 +227,21 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
   Widget _buildDocumentCard(String title, String jsonPath, IconData icon, Color iconColor) {
     final rawPath = getJsonField(_model.getdriverid?.jsonBody ?? '', jsonPath)?.toString();
     final fullUrl = (rawPath != null && rawPath.isNotEmpty && rawPath != 'null')
-        ? 'https://ugotaxi.icacorp.org$rawPath'
+        ? (rawPath.startsWith('http') ? rawPath : '${ApiConfig.baseUrl}/${rawPath.replaceFirst(RegExp(r'^/'), '')}')
         : '';
 
     return Container(
       width: MediaQuery.of(context).size.width > 600 ? 350 : double.infinity,
       margin: const EdgeInsets.only(bottom: 16.0, right: 16.0),
       decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12.0),
+        color: FlutterFlowTheme.of(context).primaryBackground,
+        borderRadius: BorderRadius.circular(16.0),
         border: Border.all(color: FlutterFlowTheme.of(context).alternate),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.03),
-            blurRadius: 6.0,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha:0.02),
+            blurRadius: 8.0,
+            offset: const Offset(0, 2),
           )
         ],
       ),
@@ -244,7 +254,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
               height: 50,
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha:0.1),
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(12.0),
               ),
               child: Icon(icon, color: iconColor, size: 28),
             ),
@@ -263,7 +273,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                     fullUrl.isEmpty ? 'Not Uploaded' : 'Tap to verify',
                     style: FlutterFlowTheme.of(context).labelSmall.override(
                       font: GoogleFonts.inter(),
-                      color: fullUrl.isEmpty ? Colors.red : FlutterFlowTheme.of(context).secondaryText,
+                      color: fullUrl.isEmpty ? FlutterFlowTheme.of(context).error : FlutterFlowTheme.of(context).secondaryText,
                     ),
                   ),
                 ],
@@ -291,26 +301,99 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
     );
   }
 
+  // --- UI Helpers for ID Card ---
+  Widget _buildIDCardRow(IconData icon, String text) {
+    if (text.isEmpty || text == 'null' || text == '—') return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: FlutterFlowTheme.of(context).secondaryText),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: FlutterFlowTheme.of(context).primaryText,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String text, Color color, {bool filled = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: filled ? color : color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: filled ? color : color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        text.toUpperCase(),
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+          color: filled ? Colors.white : color,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
   void _handleBack() {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.goNamedAuth(AllusersWidget.routeName, context.mounted);
+      context.goNamedAuth(DriverKycListWidget.routeName, context.mounted);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    // Extract data for ID Card
+    final firstName = _driverString(r'''$.first_name''');
+    final lastName = _driverString(r'''$.last_name''');
+    final name = '$firstName $lastName'.trim();
+
+    final phone = _driverString(r'''$.mobile_number''');
+    final email = _driverString(r'''$.email''');
+
+    final kycStatusRaw = _driverString(r'''$.kyc_status''').toLowerCase();
+    final kycStatus = kycStatusRaw.isEmpty || kycStatusRaw == 'null' ? 'pending' : kycStatusRaw;
+
+    final isActive = _driverBool(r'''$.is_active''');
+
+    // Determine colors
+    final kycColor = kycStatus == 'approved'
+        ? const Color(0xFF2E7D32)
+        : kycStatus == 'pending'
+        ? const Color(0xFFF57C00)
+        : theme.error;
+
+    final photoRaw = getJsonField(_model.getdriverid?.jsonBody ?? '', r'''$.data.profile_image''')?.toString() ?? '';
+    final photoUrl = photoRaw.isNotEmpty && photoRaw != 'null'
+        ? (photoRaw.startsWith('http') ? photoRaw : '${ApiConfig.baseUrl}/${photoRaw.replaceFirst(RegExp(r'^/'), '')}')
+        : '';
+
     return AdminPopScope(
       onCannotPop: _handleBack,
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
           key: scaffoldKey,
-          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+          backgroundColor: const Color(0xFFF4F6FA),
           drawer: buildAdminDrawer(context),
           appBar: AppBar(
-            backgroundColor: FlutterFlowTheme.of(context).primary,
+            backgroundColor: const Color(0xFFFF7A00),
             automaticallyImplyLeading: true,
             leading: FlutterFlowIconButton(
               borderColor: Colors.transparent,
@@ -321,19 +404,19 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
             ),
             title: Text(
               'KYC Verification',
-              style: FlutterFlowTheme.of(context).headlineMedium.override(
+              style: theme.headlineMedium.override(
                 font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                 color: Colors.white,
                 fontSize: 20.0,
               ),
             ),
             centerTitle: true,
-            elevation: 2.0,
+            elevation: 0.0,
           ),
           body: SafeArea(
             top: true,
             child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: FlutterFlowTheme.of(context).primary))
+                ? Center(child: CircularProgressIndicator(color: theme.primary))
                 : SingleChildScrollView(
               child: Center(
                 child: ConstrainedBox(
@@ -341,20 +424,157 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          'Submitted Documents',
-                          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                            font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+
+                        // 1. ID CARD LAYOUT
+                        Container(
+                          width: double.infinity,
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                            border: Border.all(color: Colors.grey.shade300, width: 1),
+                          ),
+                          child: Column(
+                            children: [
+                              // Card Header
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFF7A00),
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'DRIVER KYC PROFILE',
+                                    style: GoogleFonts.interTight(
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      letterSpacing: 1.5,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Card Body
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Passport-style Photo
+                                    Container(
+                                      width: 90,
+                                      height: 110,
+                                      decoration: BoxDecoration(
+                                        color: theme.secondaryBackground,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: theme.alternate, width: 2),
+                                        image: photoUrl.isNotEmpty
+                                            ? DecorationImage(
+                                          image: CachedNetworkImageProvider(photoUrl),
+                                          fit: BoxFit.cover,
+                                        )
+                                            : null,
+                                      ),
+                                      child: photoUrl.isEmpty
+                                          ? Icon(Icons.person, size: 40, color: theme.secondaryText)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 20),
+
+                                    // Identity Details
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            name.isNotEmpty ? name : 'Unknown Driver',
+                                            style: GoogleFonts.interTight(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 22,
+                                              color: theme.primaryText,
+                                              height: 1.1,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'ID: ${widget.userId ?? '—'}',
+                                            style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 14,
+                                              color: theme.primary,
+                                            ),
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(vertical: 8),
+                                            child: Divider(height: 1),
+                                          ),
+                                          _buildIDCardRow(Icons.phone_iphone_rounded, phone),
+                                          _buildIDCardRow(Icons.email_rounded, email),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Card Footer (Status)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
+                                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildStatusBadge('KYC ${kycStatus.toUpperCase()}', kycColor, filled: true),
+                                    _buildStatusBadge(
+                                      isActive ? 'ACTIVE' : 'DISABLED',
+                                      isActive ? const Color(0xFF2E7D32) : theme.error,
+                                      filled: true,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
+
+                        const SizedBox(height: 40.0),
+
+                        // 2. SUBMITTED DOCUMENTS
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Submitted Documents',
+                            style: theme.headlineSmall.override(
+                              font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8.0),
-                        Text(
-                          'Review the driver\'s uploaded identification and vehicle documents.',
-                          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.inter(),
-                            color: FlutterFlowTheme.of(context).secondaryText,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Review the driver\'s uploaded identification and vehicle documents.',
+                            style: theme.bodyMedium.override(
+                              font: GoogleFonts.inter(),
+                              color: theme.secondaryText,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24.0),
@@ -362,127 +582,109 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                         Wrap(
                           children: [
                             _buildDocumentCard('Driving License', r'''$.data.license_image''', Icons.badge_rounded, Colors.blue),
-                            _buildDocumentCard('Profile Picture', r'''$.data.profile_image''', Icons.account_circle_rounded, Colors.purple),
-                            _buildDocumentCard('Aadhar Card', r'''$.data.aadhaar_image''', Icons.contact_emergency_rounded, Colors.orange),
+                            _buildDocumentCard('Aadhaar Document', r'''$.data.aadhaar_image''', Icons.contact_emergency_rounded, Colors.orange),
                             _buildDocumentCard('PAN Card', r'''$.data.pan_image''', Icons.credit_card_rounded, Colors.green),
                             _buildDocumentCard('Registration (RC)', r'''$.data.rc_image''', Icons.directions_car_rounded, Colors.teal),
                           ],
-                        ),
+                        ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
 
                         const SizedBox(height: 32.0),
 
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24.0),
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(16.0),
-                          border:
-                              Border.all(color: FlutterFlowTheme.of(context).alternate),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha:0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            )
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Driver Status',
-                                  style: FlutterFlowTheme.of(context)
-                                      .titleLarge
-                                      .override(
-                                        font: GoogleFonts.interTight(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                ),
-                                FFButtonWidget(
-                                  onPressed:
-                                      _isUpdating ? null : _openEditDriverDialog,
-                                  text: 'Edit Details',
-                                  options: FFButtonOptions(
-                                    height: 36,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 14),
-                                    color: FlutterFlowTheme.of(context).primary,
-                                    textStyle: FlutterFlowTheme.of(context)
-                                        .labelMedium
-                                        .override(
-                                          color: Colors.white,
-                                          font: GoogleFonts.inter(),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8.0),
-                            Text(
-                              'Update active and online status for this driver.',
-                              style: FlutterFlowTheme.of(context).bodyMedium,
-                            ),
-                            const SizedBox(height: 16.0),
-                            SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text('Active'),
-                              subtitle: Text(
-                                _driverBool(r'''$.is_active''')
-                                    ? 'Driver is active'
-                                    : 'Driver is inactive',
-                                style: FlutterFlowTheme.of(context)
-                                    .bodySmall
-                                    .override(
-                                      color: FlutterFlowTheme.of(context)
-                                          .secondaryText,
-                                    ),
-                              ),
-                              value: _driverBool(r'''$.is_active'''),
-                              onChanged: _isUpdating
-                                  ? null
-                                  : (val) => _updateDriver(isActive: val),
-                            ),
-                            SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text('Online'),
-                              subtitle: Text(
-                                _driverBool(r'''$.is_online''')
-                                    ? 'Driver is online'
-                                    : 'Driver is offline',
-                                style: FlutterFlowTheme.of(context)
-                                    .bodySmall
-                                    .override(
-                                      color: FlutterFlowTheme.of(context)
-                                          .secondaryText,
-                                    ),
-                              ),
-                              value: _driverBool(r'''$.is_online'''),
-                              onChanged: _isUpdating
-                                  ? null
-                                  : (val) => _updateDriver(isOnline: val),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 32.0),
-
+                        // 3. DRIVER STATUS SETTINGS
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(24.0),
                           decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).secondaryBackground,
+                            color: theme.secondaryBackground,
                             borderRadius: BorderRadius.circular(16.0),
-                            border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                            border: Border.all(color: theme.alternate),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha:0.04),
+                                color: Colors.black.withValues(alpha:0.02),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Driver Account Settings',
+                                    style: theme.titleLarge.override(
+                                      font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  FFButtonWidget(
+                                    onPressed: _isUpdating ? null : _openEditDriverDialog,
+                                    text: 'Edit Details',
+                                    icon: const Icon(Icons.edit_rounded, size: 16),
+                                    options: FFButtonOptions(
+                                      height: 36,
+                                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                                      color: theme.primary.withValues(alpha: 0.1),
+                                      textStyle: theme.labelMedium.override(
+                                        color: theme.primary,
+                                        font: GoogleFonts.inter(),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      elevation: 0,
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16.0),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                activeColor: const Color(0xFF2E7D32),
+                                title: const Text('Active Account'),
+                                subtitle: Text(
+                                  _driverBool(r'''$.is_active''')
+                                      ? 'Driver is currently active'
+                                      : 'Driver account is disabled',
+                                  style: theme.bodySmall.override(color: theme.secondaryText),
+                                ),
+                                value: _driverBool(r'''$.is_active'''),
+                                onChanged: _isUpdating
+                                    ? null
+                                    : (val) => _updateDriver(isActive: val),
+                              ),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                activeColor: const Color(0xFF2E7D32),
+                                title: const Text('Online Status'),
+                                subtitle: Text(
+                                  _driverBool(r'''$.is_online''')
+                                      ? 'Visible to dispatch'
+                                      : 'Not accepting rides',
+                                  style: theme.bodySmall.override(color: theme.secondaryText),
+                                ),
+                                value: _driverBool(r'''$.is_online'''),
+                                onChanged: _isUpdating
+                                    ? null
+                                    : (val) => _updateDriver(isOnline: val),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
+
+                        const SizedBox(height: 32.0),
+
+                        // 4. VERIFICATION DECISION
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24.0),
+                          decoration: BoxDecoration(
+                            color: theme.secondaryBackground,
+                            borderRadius: BorderRadius.circular(16.0),
+                            border: Border.all(color: theme.alternate),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha:0.02),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               )
@@ -493,14 +695,14 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                             children: [
                               Text(
                                 'Verification Decision',
-                                style: FlutterFlowTheme.of(context).titleLarge.override(
+                                style: theme.titleLarge.override(
                                   font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                                 ),
                               ),
                               const SizedBox(height: 8.0),
                               Text(
                                 'Once approved, the driver will be authorized to accept rides on the platform.',
-                                style: FlutterFlowTheme.of(context).bodyMedium,
+                                style: theme.bodyMedium,
                               ),
                               const SizedBox(height: 24.0),
                               Row(
@@ -518,16 +720,15 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
                                               content: const Text('Driver KYC Rejected'),
-                                              backgroundColor: FlutterFlowTheme.of(context).error,
+                                              backgroundColor: theme.error,
                                             ),
                                           );
-                                          // After decision, navigate back to Drivers widget
-                                          context.goNamedAuth(AllusersWidget.routeName, context.mounted);
+                                          context.goNamedAuth(DriversWidget.routeName, context.mounted);
                                         } else {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
                                               content: Text('Failed: ${(_model.kycRejected?.jsonBody ?? '').toString()}'),
-                                              backgroundColor: FlutterFlowTheme.of(context).primaryText,
+                                              backgroundColor: theme.primaryText,
                                             ),
                                           );
                                         }
@@ -537,13 +738,13 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                       icon: const Icon(Icons.close_rounded, size: 18),
                                       options: FFButtonOptions(
                                         height: 50.0,
-                                        color: FlutterFlowTheme.of(context).error.withValues(alpha:0.1),
-                                        textStyle: FlutterFlowTheme.of(context).titleSmall.override(
+                                        color: theme.error.withValues(alpha:0.1),
+                                        textStyle: theme.titleSmall.override(
                                           font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                                          color: FlutterFlowTheme.of(context).error,
+                                          color: theme.error,
                                         ),
                                         elevation: 0.0,
-                                        borderSide: BorderSide(color: FlutterFlowTheme.of(context).error, width: 1.5),
+                                        borderSide: BorderSide(color: theme.error.withValues(alpha: 0.5), width: 1.5),
                                         borderRadius: BorderRadius.circular(10.0),
                                       ),
                                     ),
@@ -562,16 +763,15 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
                                               content: const Text('Driver KYC Approved Successfully!'),
-                                              backgroundColor: FlutterFlowTheme.of(context).success,
+                                              backgroundColor: theme.success,
                                             ),
                                           );
-                                          // After decision, navigate back to Drivers widget
-                                          context.goNamedAuth(AllusersWidget.routeName, context.mounted);
+                                          context.goNamedAuth(DriversWidget.routeName, context.mounted);
                                         } else {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
                                               content: Text('Failed: ${(_model.apiResultmsc?.jsonBody ?? '').toString()}'),
-                                              backgroundColor: FlutterFlowTheme.of(context).error,
+                                              backgroundColor: theme.error,
                                             ),
                                           );
                                         }
@@ -582,7 +782,7 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                                       options: FFButtonOptions(
                                         height: 50.0,
                                         color: const Color(0xFF2E7D32),
-                                        textStyle: FlutterFlowTheme.of(context).titleSmall.override(
+                                        textStyle: theme.titleSmall.override(
                                           font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
                                           color: Colors.white,
                                         ),
@@ -595,28 +795,8 @@ class _DriverLicenseWidgetState extends State<DriverLicenseWidget> {
                               ),
                             ],
                           ),
-                        ),
-                        if (_driverString(r'''$.kyc_status''').toLowerCase() ==
-                            'pending') ...[
-                          const SizedBox(height: 20.0),
-                          FFButtonWidget(
-                            onPressed: () => context.goNamedAuth(
-                                DriverKycListWidget.routeName, context.mounted),
-                            text: 'Go to Driver KYC List',
-                            options: FFButtonOptions(
-                              height: 48.0,
-                              color: FlutterFlowTheme.of(context).primary,
-                              textStyle: FlutterFlowTheme.of(context)
-                                  .titleSmall
-                                  .override(
-                                    color: Colors.white,
-                                    font: GoogleFonts.interTight(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                          ),
-                        ],
+                        ).animate().fadeIn(duration: 500.ms, delay: 300.ms),
+
                         const SizedBox(height: 40.0),
                       ],
                     ),
@@ -703,7 +883,7 @@ class _EditDriverDialogState extends State<_EditDriverDialog> {
 
   void _submit() {
     final preferredCityId =
-        int.tryParse(_preferredCityController.text.trim());
+    int.tryParse(_preferredCityController.text.trim());
     Navigator.pop(
       context,
       _DriverEditData(
@@ -720,7 +900,12 @@ class _EditDriverDialogState extends State<_EditDriverDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Edit Driver Details'),
+      backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        'Edit Driver Details',
+        style: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+      ),
       content: SizedBox(
         width: 360,
         child: SingleChildScrollView(
@@ -766,7 +951,7 @@ class _EditDriverDialogState extends State<_EditDriverDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text('Cancel', style: TextStyle(color: FlutterFlowTheme.of(context).secondaryText)),
         ),
         ElevatedButton(
           onPressed: _submit,
@@ -774,14 +959,14 @@ class _EditDriverDialogState extends State<_EditDriverDialog> {
             backgroundColor: FlutterFlowTheme.of(context).primary,
             foregroundColor: Colors.white,
             textStyle: FlutterFlowTheme.of(context).labelMedium.override(
-                  color: Colors.white,
-                  font: GoogleFonts.inter(),
-                  fontWeight: FontWeight.w600,
-                ),
+              color: Colors.white,
+              font: GoogleFonts.inter(),
+              fontWeight: FontWeight.w600,
+            ),
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
-          child: const Text('Save'),
+          child: const Text('Save Changes'),
         ),
       ],
     );
