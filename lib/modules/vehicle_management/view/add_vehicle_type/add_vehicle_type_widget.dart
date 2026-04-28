@@ -51,7 +51,8 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
       allowPhoto: true,
     );
     if (selectedMedia != null &&
-        selectedMedia.every((m) => validateFileFormat(m.storagePath, context))) {
+        selectedMedia
+            .every((m) => validateFileFormat(m.storagePath, context))) {
       setState(() => _model.isDataUploading = true);
       try {
         final files = selectedMedia
@@ -114,8 +115,8 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
             ),
           );
           _model.nameTextController?.clear();
-          setState(() => _model.uploadedLocalFile =
-              FFUploadedFile(bytes: Uint8List.fromList([]), originalFilename: ''));
+          setState(() => _model.uploadedLocalFile = FFUploadedFile(
+              bytes: Uint8List.fromList([]), originalFilename: ''));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -144,7 +145,8 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
             backgroundColor: FlutterFlowTheme.of(context).primary,
             automaticallyImplyLeading: false,
             leading: IconButton(
-              icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+              icon:
+                  const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
               onPressed: () => scaffoldKey.currentState?.openDrawer(),
             ),
             title: Text(
@@ -165,7 +167,7 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  FlutterFlowTheme.of(context).primary.withValues(alpha:0.15),
+                  FlutterFlowTheme.of(context).primary.withValues(alpha: 0.15),
                   FlutterFlowTheme.of(context).secondaryBackground,
                 ],
               ),
@@ -179,11 +181,13 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                     const SizedBox(height: 20),
                     Text(
                       'Add Vehicle Type',
-                      style: FlutterFlowTheme.of(context).headlineMedium.override(
-                            font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            fontSize: 28,
-                          ),
+                      style:
+                          FlutterFlowTheme.of(context).headlineMedium.override(
+                                font: GoogleFonts.interTight(
+                                    fontWeight: FontWeight.bold),
+                                color: FlutterFlowTheme.of(context).primaryText,
+                                fontSize: 28,
+                              ),
                     )
                         .animate()
                         .fadeIn(duration: 300.ms)
@@ -207,12 +211,14 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha:0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
                           BoxShadow(
-                            color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
+                            color: FlutterFlowTheme.of(context)
+                                .primary
+                                .withValues(alpha: 0.08),
                             blurRadius: 30,
                             offset: const Offset(0, 4),
                           ),
@@ -223,8 +229,11 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                         children: [
                           Text(
                             'Vehicle Type Name',
-                            style: FlutterFlowTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                            style: FlutterFlowTheme.of(context)
+                                .titleSmall
+                                .override(
+                                  font: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600),
                                 ),
                           ),
                           const SizedBox(height: 8),
@@ -234,7 +243,8 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                             decoration: InputDecoration(
                               hintText: 'e.g. AUTO, BIKE, CAR',
                               filled: true,
-                              fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+                              fillColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
@@ -258,12 +268,16 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                           )
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 150.ms)
-                              .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                              .slideY(
+                                  begin: 0.1, end: 0, curve: Curves.easeOut),
                           const SizedBox(height: 24),
                           Text(
                             'Vehicle Type Image',
-                            style: FlutterFlowTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                            style: FlutterFlowTheme.of(context)
+                                .titleSmall
+                                .override(
+                                  font: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600),
                                 ),
                           ),
                           const SizedBox(height: 8),
@@ -277,18 +291,26 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                                    FlutterFlowTheme.of(context).secondary.withValues(alpha:0.1),
+                                    FlutterFlowTheme.of(context)
+                                        .primary
+                                        .withValues(alpha: 0.1),
+                                    FlutterFlowTheme.of(context)
+                                        .secondary
+                                        .withValues(alpha: 0.1),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.3),
+                                  color: FlutterFlowTheme.of(context)
+                                      .primary
+                                      .withValues(alpha: 0.3),
                                   width: 2,
                                   style: BorderStyle.solid,
                                 ),
                               ),
-                              child: _model.uploadedLocalFile.bytes?.isNotEmpty ?? false
+                              child: _model.uploadedLocalFile.bytes
+                                          ?.isNotEmpty ??
+                                      false
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(14),
                                       child: Stack(
@@ -302,7 +324,8 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                                             bottom: 8,
                                             right: 8,
                                             child: IconButton(
-                                              icon: const Icon(Icons.edit, color: Colors.white),
+                                              icon: const Icon(Icons.edit,
+                                                  color: Colors.white),
                                               style: IconButton.styleFrom(
                                                 backgroundColor: Colors.black54,
                                               ),
@@ -314,22 +337,30 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                                     )
                                   : Center(
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           if (_model.isDataUploading)
                                             const CircularProgressIndicator()
                                           else
                                             Icon(
-                                              Icons.add_photo_alternate_outlined,
+                                              Icons
+                                                  .add_photo_alternate_outlined,
                                               size: 48,
-                                              color: FlutterFlowTheme.of(context).primary,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primary,
                                             ),
                                           const SizedBox(height: 12),
                                           Text(
                                             'Tap to upload image',
-                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodyMedium
+                                                .override(
                                                   font: GoogleFonts.inter(),
-                                                  color: FlutterFlowTheme.of(context).secondaryText,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .secondaryText,
                                                 ),
                                           ),
                                         ],
@@ -339,22 +370,31 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                           )
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 200.ms)
-                              .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                              .slideY(
+                                  begin: 0.1, end: 0, curve: Curves.easeOut),
                           const SizedBox(height: 32),
                           FFButtonWidget(
                             onPressed: _isSubmitting ? null : _submit,
-                            text: _isSubmitting ? 'Adding...' : 'Add Vehicle Type',
+                            text: _isSubmitting
+                                ? 'Adding...'
+                                : 'Add Vehicle Type',
                             icon: Icon(
-                              _isSubmitting ? Icons.hourglass_empty : Icons.add_circle_outline,
+                              _isSubmitting
+                                  ? Icons.hourglass_empty
+                                  : Icons.add_circle_outline,
                               size: 22,
                               color: Colors.white,
                             ),
                             options: FFButtonOptions(
                               height: 56,
-                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
                               color: FlutterFlowTheme.of(context).primary,
-                              textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                                    font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                              textStyle: FlutterFlowTheme.of(context)
+                                  .titleSmall
+                                  .override(
+                                    font: GoogleFonts.interTight(
+                                        fontWeight: FontWeight.bold),
                                     color: Colors.white,
                                   ),
                               elevation: 4,
@@ -363,13 +403,14 @@ class _AddVehicleTypeWidgetState extends State<AddVehicleTypeWidget>
                           )
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 250.ms)
-                              .slideY(begin: 0.15, end: 0, curve: Curves.easeOut),
+                              .slideY(
+                                  begin: 0.15, end: 0, curve: Curves.easeOut),
                         ],
                       ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 500.ms, delay: 50.ms)
-                        .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1), curve: Curves.easeOut),
+                    ).animate().fadeIn(duration: 500.ms, delay: 50.ms).scale(
+                        begin: const Offset(0.95, 0.95),
+                        end: const Offset(1, 1),
+                        curve: Curves.easeOut),
                   ],
                 ),
               ),

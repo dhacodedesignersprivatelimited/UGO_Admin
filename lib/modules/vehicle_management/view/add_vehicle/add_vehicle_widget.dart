@@ -92,7 +92,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
       allowPhoto: true,
     );
     if (selectedMedia != null &&
-        selectedMedia.every((m) => validateFileFormat(m.storagePath, context))) {
+        selectedMedia
+            .every((m) => validateFileFormat(m.storagePath, context))) {
       safeSetState(() => _model.isDataUploading_typeImage = true);
       try {
         final files = selectedMedia
@@ -203,7 +204,9 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
   String? _vehicleTypeImageUrlFromMap(Map<String, dynamic> type) {
     final imgPath = getJsonField(type, r'''$.image''')?.toString();
     if (imgPath == null || imgPath.isEmpty) return null;
-    return imgPath.startsWith('http') ? imgPath : '${ApiConfig.baseUrl}$imgPath';
+    return imgPath.startsWith('http')
+        ? imgPath
+        : '${ApiConfig.baseUrl}$imgPath';
   }
 
   Future<void> _openEditVehicleTypeDialog(Map<String, dynamic> type) async {
@@ -253,8 +256,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                         );
                         if (selectedMedia == null ||
                             !selectedMedia.every(
-                              (m) =>
-                                  validateFileFormat(m.storagePath, dialogContext),
+                              (m) => validateFileFormat(
+                                  m.storagePath, dialogContext),
                             )) {
                           return;
                         }
@@ -312,8 +315,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                             ScaffoldMessenger.of(this.context).showSnackBar(
                               SnackBar(
                                 content: const Text('Name is required.'),
-                                backgroundColor: FlutterFlowTheme.of(this.context)
-                                    .error,
+                                backgroundColor:
+                                    FlutterFlowTheme.of(this.context).error,
                               ),
                             );
                             return;
@@ -330,7 +333,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                           if (response.succeeded) {
                             ScaffoldMessenger.of(this.context).showSnackBar(
                               const SnackBar(
-                                content: Text('Vehicle type updated successfully.'),
+                                content:
+                                    Text('Vehicle type updated successfully.'),
                               ),
                             );
                             _loadVehicleTypes();
@@ -495,7 +499,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
             width: 2,
           ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       style: FlutterFlowTheme.of(context).bodyLarge,
     );
@@ -518,7 +523,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
             backgroundColor: FlutterFlowTheme.of(context).primary,
             automaticallyImplyLeading: false,
             leading: IconButton(
-              icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+              icon:
+                  const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
               onPressed: () => scaffoldKey.currentState?.openDrawer(),
             ),
             title: Text(
@@ -549,7 +555,7 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  FlutterFlowTheme.of(context).primary.withValues(alpha:0.12),
+                  FlutterFlowTheme.of(context).primary.withValues(alpha: 0.12),
                   FlutterFlowTheme.of(context).secondaryBackground,
                 ],
               ),
@@ -598,12 +604,14 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha:0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
+                    color: FlutterFlowTheme.of(context)
+                        .primary
+                        .withValues(alpha: 0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 4),
                   ),
@@ -623,7 +631,9 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                   _buildFieldLabel('Vehicle Type Image'),
                   const SizedBox(height: 8),
                   InkWell(
-                    onTap: _model.isDataUploading_typeImage ? null : _pickTypeImage,
+                    onTap: _model.isDataUploading_typeImage
+                        ? null
+                        : _pickTypeImage,
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       height: 160,
@@ -632,17 +642,25 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                            FlutterFlowTheme.of(context).secondary.withValues(alpha:0.08),
+                            FlutterFlowTheme.of(context)
+                                .primary
+                                .withValues(alpha: 0.1),
+                            FlutterFlowTheme.of(context)
+                                .secondary
+                                .withValues(alpha: 0.08),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.3),
+                          color: FlutterFlowTheme.of(context)
+                              .primary
+                              .withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
-                      child: _model.uploadedLocalFile_typeImage.bytes?.isNotEmpty ?? false
+                      child: _model.uploadedLocalFile_typeImage.bytes
+                                  ?.isNotEmpty ??
+                              false
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(14),
                               child: Stack(
@@ -656,7 +674,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                                     bottom: 8,
                                     right: 8,
                                     child: IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.white),
+                                      icon: const Icon(Icons.edit,
+                                          color: Colors.white),
                                       style: IconButton.styleFrom(
                                         backgroundColor: Colors.black54,
                                       ),
@@ -676,14 +695,18 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                                     Icon(
                                       Icons.add_photo_alternate_outlined,
                                       size: 48,
-                                      color: FlutterFlowTheme.of(context).primary,
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
                                     ),
                                   const SizedBox(height: 12),
                                   Text(
                                     'Tap to upload image',
-                                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
                                           font: GoogleFonts.inter(),
-                                          color: FlutterFlowTheme.of(context).secondaryText,
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
                                         ),
                                   ),
                                 ],
@@ -696,7 +719,9 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                     onPressed: _isSubmittingType ? null : _submitVehicleType,
                     text: _isSubmittingType ? 'Adding...' : 'Add Vehicle Type',
                     icon: Icon(
-                      _isSubmittingType ? Icons.hourglass_empty : Icons.add_circle_outline,
+                      _isSubmittingType
+                          ? Icons.hourglass_empty
+                          : Icons.add_circle_outline,
                       size: 22,
                       color: Colors.white,
                     ),
@@ -704,10 +729,12 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                       height: 56,
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       color: FlutterFlowTheme.of(context).primary,
-                      textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-                            color: Colors.white,
-                          ),
+                      textStyle:
+                          FlutterFlowTheme.of(context).titleSmall.override(
+                                font: GoogleFonts.interTight(
+                                    fontWeight: FontWeight.bold),
+                                color: Colors.white,
+                              ),
                       elevation: 4,
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -718,11 +745,12 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                       Expanded(
                         child: Text(
                           'View Vehicle Types',
-                          style: FlutterFlowTheme.of(context).titleMedium.override(
-                                font: GoogleFonts.interTight(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                          style:
+                              FlutterFlowTheme.of(context).titleMedium.override(
+                                    font: GoogleFonts.interTight(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                         ),
                       ),
                       IconButton(
@@ -744,8 +772,9 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color:
-                            FlutterFlowTheme.of(context).primary.withValues(alpha: 0.08),
+                        color: FlutterFlowTheme.of(context)
+                            .primary
+                            .withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -791,7 +820,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                                     ),
                                     child: Icon(
                                       Icons.directions_car,
-                                      color: FlutterFlowTheme.of(context).primary,
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
                                     ),
                                   ),
                                 ),
@@ -830,8 +860,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                                   if (id != null)
                                     Text(
                                       'ID: $id',
-                                      style:
-                                          FlutterFlowTheme.of(context).bodySmall,
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodySmall,
                                     ),
                                 ],
                               ),
@@ -896,12 +926,14 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha:0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
+                    color: FlutterFlowTheme.of(context)
+                        .primary
+                        .withValues(alpha: 0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 4),
                   ),
@@ -942,12 +974,14 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                         ],
                       ),
                     ),
-                  if (!_model.isLoadingVehicleTypes && _model.vehicleTypesList.isNotEmpty)
+                  if (!_model.isLoadingVehicleTypes &&
+                      _model.vehicleTypesList.isNotEmpty)
                     DropdownButtonFormField<int>(
                       value: _model.selectedVehicleTypeId,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+                        fillColor:
+                            FlutterFlowTheme.of(context).secondaryBackground,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -966,8 +1000,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                             width: 2,
                           ),
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                       ),
                       hint: Text(
                         'Select vehicle type',
@@ -976,11 +1010,17 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                             ),
                       ),
                       items: _model.vehicleTypesList.map((vt) {
-                        final id = getJsonField(vt, r'''$.id''') ?? getJsonField(vt, r'''$._id''');
-                        final name = getJsonField(vt, r'''$.name''')?.toString() ?? 'Unknown';
-                        final imgPath = getJsonField(vt, r'''$.image''')?.toString();
+                        final id = getJsonField(vt, r'''$.id''') ??
+                            getJsonField(vt, r'''$._id''');
+                        final name =
+                            getJsonField(vt, r'''$.name''')?.toString() ??
+                                'Unknown';
+                        final imgPath =
+                            getJsonField(vt, r'''$.image''')?.toString();
                         final imgUrl = imgPath != null && imgPath.isNotEmpty
-                            ? (imgPath.startsWith('http') ? imgPath : '${ApiConfig.baseUrl}$imgPath')
+                            ? (imgPath.startsWith('http')
+                                ? imgPath
+                                : '${ApiConfig.baseUrl}$imgPath')
                             : null;
                         final validImg = imgUrl != null && imgUrl.isNotEmpty;
                         return DropdownMenuItem<int>(
@@ -998,7 +1038,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => Icon(
                                       Icons.directions_car,
-                                      color: FlutterFlowTheme.of(context).primary,
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
                                       size: 28,
                                     ),
                                   ),
@@ -1020,20 +1061,25 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                         safeSetState(() {
                           _model.selectedVehicleTypeId = v;
                           final selected = _model.vehicleTypesList.where((x) {
-                            final id = getJsonField(x, r'''$.id''') ?? getJsonField(x, r'''$._id''');
+                            final id = getJsonField(x, r'''$.id''') ??
+                                getJsonField(x, r'''$._id''');
                             return castToType<int>(id) == v;
                           }).firstOrNull;
                           _model.selectedVehicleTypeName = selected != null
-                              ? getJsonField(selected, r'''$.name''')?.toString()
+                              ? getJsonField(selected, r'''$.name''')
+                                  ?.toString()
                               : null;
                         });
                       },
                     ),
-                  if (!_model.isLoadingVehicleTypes && _model.vehicleTypesList.isEmpty)
+                  if (!_model.isLoadingVehicleTypes &&
+                      _model.vehicleTypesList.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.08),
+                        color: FlutterFlowTheme.of(context)
+                            .primary
+                            .withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -1050,7 +1096,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                     value: _model.selectedRideCategory ?? 'pro',
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+                      fillColor:
+                          FlutterFlowTheme.of(context).secondaryBackground,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -1069,8 +1116,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                           width: 2,
                         ),
                       ),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
                     ),
                     items: const ['pro', 'normal'].map((v) {
                       return DropdownMenuItem<String>(
@@ -1078,8 +1125,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                         child: Text(v[0].toUpperCase() + v.substring(1)),
                       );
                     }).toList(),
-                    onChanged: (v) =>
-                        safeSetState(() => _model.selectedRideCategory = v ?? 'pro'),
+                    onChanged: (v) => safeSetState(
+                        () => _model.selectedRideCategory = v ?? 'pro'),
                   ),
                   const SizedBox(height: 20),
                   _buildFieldLabel('Seating Capacity'),
@@ -1104,15 +1151,16 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                   const SizedBox(height: 8),
                   InkWell(
                     onTap: () async {
-                      final selectedMedia = await selectMediaWithSourceBottomSheet(
+                      final selectedMedia =
+                          await selectMediaWithSourceBottomSheet(
                         context: context,
                         allowPhoto: true,
                       );
                       if (selectedMedia != null &&
                           selectedMedia.every((m) =>
                               validateFileFormat(m.storagePath, context))) {
-                        safeSetState(() =>
-                            _model.isDataUploading_uploadDataTws = true);
+                        safeSetState(
+                            () => _model.isDataUploading_uploadDataTws = true);
                         try {
                           final files = selectedMedia
                               .map((m) => FFUploadedFile(
@@ -1125,9 +1173,8 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                                   ))
                               .toList();
                           if (files.isNotEmpty) {
-                            safeSetState(() =>
-                                _model.uploadedLocalFile_uploadDataTws =
-                                    files.first);
+                            safeSetState(() => _model
+                                .uploadedLocalFile_uploadDataTws = files.first);
                           }
                         } finally {
                           safeSetState(() =>
@@ -1143,58 +1190,69 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
-                            FlutterFlowTheme.of(context).secondary.withValues(alpha:0.08),
+                            FlutterFlowTheme.of(context)
+                                .primary
+                                .withValues(alpha: 0.1),
+                            FlutterFlowTheme.of(context)
+                                .secondary
+                                .withValues(alpha: 0.08),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.3),
+                          color: FlutterFlowTheme.of(context)
+                              .primary
+                              .withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
-                      child:
-                          _model.uploadedLocalFile_uploadDataTws.bytes?.isNotEmpty ?? false
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      Image.memory(
-                                        _model.uploadedLocalFile_uploadDataTws.bytes!,
-                                        fit: BoxFit.cover,
-                                      ),
-                                      Positioned(
-                                        right: 8,
-                                        top: 8,
-                                        child: Icon(
-                                          Icons.edit,
-                                          color: Colors.white,
-                                          size: 20,
+                      child: _model.uploadedLocalFile_uploadDataTws.bytes
+                                  ?.isNotEmpty ??
+                              false
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.memory(
+                                    _model
+                                        .uploadedLocalFile_uploadDataTws.bytes!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Positioned(
+                                    right: 8,
+                                    top: 8,
+                                    child: Icon(
+                                      Icons.edit,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.add_photo_alternate_outlined,
+                                    size: 48,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tap to upload vehicle image',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
                                         ),
-                                      ),
-                                    ],
                                   ),
-                                )
-                              : Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.add_photo_alternate_outlined,
-                                        size: 48,
-                                        color: FlutterFlowTheme.of(context).primary,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Tap to upload vehicle image',
-                                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                              color: FlutterFlowTheme.of(context).secondaryText,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                ],
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -1205,17 +1263,24 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                     runSpacing: 8,
                     children: [
                       TextButton(
-                        onPressed: _isSubmittingSubType ? null : _resetSubTypeForm,
+                        onPressed:
+                            _isSubmittingSubType ? null : _resetSubTypeForm,
                         child: Text(
                           'Reset',
-                          style: FlutterFlowTheme.of(context).bodyLarge.override(
-                                color: FlutterFlowTheme.of(context).secondaryText,
+                          style: FlutterFlowTheme.of(context)
+                              .bodyLarge
+                              .override(
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
                               ),
                         ),
                       ),
                       FFButtonWidget(
-                        onPressed: _isSubmittingSubType ? null : _submitVehicleSubType,
-                        text: _isSubmittingSubType ? 'Saving...' : 'Save Vehicle Sub Type',
+                        onPressed:
+                            _isSubmittingSubType ? null : _submitVehicleSubType,
+                        text: _isSubmittingSubType
+                            ? 'Saving...'
+                            : 'Save Vehicle Sub Type',
                         icon: _isSubmittingSubType
                             ? null
                             : Icon(
@@ -1227,10 +1292,12 @@ class _AddVehicleWidgetState extends State<AddVehicleWidget>
                           height: 48,
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           color: FlutterFlowTheme.of(context).primary,
-                          textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.interTight(fontWeight: FontWeight.w600),
-                                color: Colors.white,
-                              ),
+                          textStyle:
+                              FlutterFlowTheme.of(context).titleSmall.override(
+                                    font: GoogleFonts.interTight(
+                                        fontWeight: FontWeight.w600),
+                                    color: Colors.white,
+                                  ),
                           elevation: 2,
                           borderRadius: BorderRadius.circular(12),
                         ),

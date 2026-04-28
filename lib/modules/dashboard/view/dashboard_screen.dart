@@ -51,336 +51,413 @@ class DashboardScreenView extends StatelessWidget {
     final theme = FlutterFlowTheme.of(context);
 
     if (state.isLoading && !state.hasPreviewData) {
-          return CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: List.generate(
-                      6,
-                      (_) => const SkeletonBlock(width: 170, height: 100, radius: 14),
-                    ),
-                  ),
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: List.generate(
+                  6,
+                  (_) =>
+                      const SkeletonBlock(width: 170, height: 100, radius: 14),
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: const SkeletonBlock(
-                    width: double.infinity,
-                    height: 300,
-                    radius: 14,
-                  ),
-                ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: const SkeletonBlock(
+                width: double.infinity,
+                height: 300,
+                radius: 14,
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: const SkeletonBlock(
-                    width: double.infinity,
-                    height: 250,
-                    radius: 14,
-                  ),
-                ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: const SkeletonBlock(
+                width: double.infinity,
+                height: 250,
+                radius: 14,
               ),
-            ],
-          );
+            ),
+          ),
+        ],
+      );
     }
     return RefreshIndicator(
-          color: DashboardTokens.primaryOrange,
-          onRefresh: onRefresh,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (state.errorMessage != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Material(
-                            color: theme.error.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.warning_amber_rounded, color: theme.error),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      state.errorMessage!,
-                                      style: GoogleFonts.inter(
-                                        color: theme.error,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: onRefresh,
-                                    child: const Text('Retry'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (state.isBackgroundRefreshing)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: LinearProgressIndicator(minHeight: 2),
-                        ),
-                      if (!state.isLoading)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+      color: DashboardTokens.primaryOrange,
+      onRefresh: onRefresh,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (state.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Material(
+                        color: theme.error.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
                           child: Row(
                             children: [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: theme.error),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  'Today: ${state.ridesCompletedToday} rides completed · ${state.newUsersToday} new users',
+                                  state.errorMessage!,
                                   style: GoogleFonts.inter(
+                                    color: theme.error,
                                     fontSize: 13,
-                                    color: theme.secondaryText,
                                   ),
                                 ),
                               ),
-                              if (state.lastUpdatedAt != null)
-                                Text(
-                                  'Updated ${dateTimeFormat("relative", state.lastUpdatedAt)}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: theme.secondaryText,
-                                  ),
-                                ),
+                              TextButton(
+                                onPressed: onRefresh,
+                                child: const Text('Retry'),
+                              ),
                             ],
                           ),
                         ),
-                      DashboardMetricGrid(
+                      ),
+                    ),
+                  if (state.isBackgroundRefreshing)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8),
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
+                  if (!state.isLoading)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
                         children: [
-                          DashboardMetricCard(
-                            title: 'Total Rides',
-                            value: _fmtInt(state.totalRides),
-                            backgroundColor: DashboardTokens.metricRidesBg,
-                            accentColor: DashboardTokens.metricRidesAccent,
-                            icon: Icons.directions_car_rounded,
-                            onTap: () => context.pushNamedAuth(
-                              RideManagementScreen.routeName,
-                              context.mounted,
+                          Expanded(
+                            child: Text(
+                              'Today: ${state.ridesCompletedToday} rides completed · ${state.newUsersToday} new users',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: theme.secondaryText,
+                              ),
                             ),
                           ),
-                          DashboardMetricCard(
-                            title: 'Total Users',
-                            value: _fmtInt(state.totalUsers),
-                            backgroundColor: DashboardTokens.metricUsersBg,
-                            accentColor: DashboardTokens.metricUsersAccent,
-                            icon: Icons.people_outline_rounded,
-                            onTap: () => context.pushNamedAuth(
-                              AllusersWidget.routeName,
-                              context.mounted,
+                          if (state.lastUpdatedAt != null)
+                            Text(
+                              'Updated ${dateTimeFormat("relative", state.lastUpdatedAt)}',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: theme.secondaryText,
+                              ),
                             ),
-                          ),
-                          DashboardMetricCard(
-                            title: 'Total Drivers',
-                            value: _fmtInt(state.totalDrivers),
-                            backgroundColor: DashboardTokens.metricDriversBg,
-                            accentColor: DashboardTokens.metricDriversAccent,
-                            icon: Icons.badge_outlined,
-                            onTap: () => context.pushNamedAuth(
-                              DriversWidget.routeName,
-                              context.mounted,
-                            ),
-                          ),
-                          DashboardMetricCard(
-                            title: 'Total Earnings',
-                            value: _fmtMoney(state.totalEarnings),
-                            backgroundColor: DashboardTokens.metricEarningsBg,
-                            accentColor: DashboardTokens.metricEarningsAccent,
-                            icon: Icons.currency_rupee_rounded,
-                            onTap: () => context.pushNamedAuth(
-                              EarningsWidget.routeName,
-                              context.mounted,
-                            ),
-                          ),
-                          DashboardMetricCard(
-                            title: 'Admin Wallet',
-                            value: _fmtMoney(state.adminWallet),
-                            backgroundColor: DashboardTokens.metricWalletBg,
-                            accentColor: DashboardTokens.metricWalletAccent,
-                            icon: Icons.account_balance_wallet_outlined,
-                            onTap: () => context.pushNamedAuth(
-                              WalletManagementWidget.routeName,
-                              context.mounted,
-                            ),
-                          ),
-                          DashboardMetricCard(
-                            title: 'Online Drivers',
-                            value: _fmtInt(state.onlineDrivers),
-                            backgroundColor: DashboardTokens.metricOnlineBg,
-                            accentColor: DashboardTokens.metricOnlineAccent,
-                            icon: Icons.podcasts_rounded,
-                            onTap: () => context.pushNamedAuth(
-                              LiveDriverMapWidget.routeName,
-                              context.mounted,
-                            ),
-                          ),
                         ],
-                      )
-                          .animate()
-                          .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic),
+                      ),
+                    ),
+                  DashboardMetricGrid(
+                    children: [
+                      DashboardMetricCard(
+                        title: 'Total Rides',
+                        value: _fmtInt(state.totalRides),
+                        backgroundColor: DashboardTokens.metricRidesBg,
+                        accentColor: DashboardTokens.metricRidesAccent,
+                        icon: Icons.directions_car_rounded,
+                        onTap: () => context.pushNamedAuth(
+                          RideManagementScreen.routeName,
+                          context.mounted,
+                        ),
+                      ),
+                      DashboardMetricCard(
+                        title: 'Total Users',
+                        value: _fmtInt(state.totalUsers),
+                        backgroundColor: DashboardTokens.metricUsersBg,
+                        accentColor: DashboardTokens.metricUsersAccent,
+                        icon: Icons.people_outline_rounded,
+                        onTap: () => context.pushNamedAuth(
+                          AllusersWidget.routeName,
+                          context.mounted,
+                        ),
+                      ),
+                      DashboardMetricCard(
+                        title: 'Total Drivers',
+                        value: _fmtInt(state.totalDrivers),
+                        backgroundColor: DashboardTokens.metricDriversBg,
+                        accentColor: DashboardTokens.metricDriversAccent,
+                        icon: Icons.badge_outlined,
+                        onTap: () => context.pushNamedAuth(
+                          DriversWidget.routeName,
+                          context.mounted,
+                        ),
+                      ),
+                      DashboardMetricCard(
+                        title: 'Total Earnings',
+                        value: _fmtMoney(state.totalEarnings),
+                        backgroundColor: DashboardTokens.metricEarningsBg,
+                        accentColor: DashboardTokens.metricEarningsAccent,
+                        icon: Icons.currency_rupee_rounded,
+                        onTap: () => context.pushNamedAuth(
+                          EarningsWidget.routeName,
+                          context.mounted,
+                        ),
+                      ),
+                      DashboardMetricCard(
+                        title: 'Admin Wallet',
+                        value: _fmtMoney(state.adminWallet),
+                        backgroundColor: DashboardTokens.metricWalletBg,
+                        accentColor: DashboardTokens.metricWalletAccent,
+                        icon: Icons.account_balance_wallet_outlined,
+                        onTap: () => context.pushNamedAuth(
+                          WalletManagementWidget.routeName,
+                          context.mounted,
+                        ),
+                      ),
+                      DashboardMetricCard(
+                        title: 'Online Drivers',
+                        value: _fmtInt(state.onlineDrivers),
+                        backgroundColor: DashboardTokens.metricOnlineBg,
+                        accentColor: DashboardTokens.metricOnlineAccent,
+                        icon: Icons.podcasts_rounded,
+                        onTap: () => context.pushNamedAuth(
+                          LiveDriverMapWidget.routeName,
+                          context.mounted,
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: DashboardCarousel1(state: state)
+                  )
                       .animate()
-                      .fadeIn(delay: 80.ms, duration: 450.ms),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: DashboardCarousel2(
-                    state: state,
-                    onUserTap: () => context.pushNamedAuth(
-                      AllusersWidget.routeName,
-                      context.mounted,
-                    ),
-                    onDriverTap: () => context.pushNamedAuth(
-                      DriversWidget.routeName,
-                      context.mounted,
-                    ),
-                  ).animate().fadeIn(delay: 120.ms, duration: 450.ms),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: RecentRidesTable(
-                    rides: state.recentRides,
-                    userById: state.recentRideUserById,
-                    driverById: state.recentRideDriverById,
-                    isLoading: state.isLoading && state.recentRides.isEmpty,
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: WithdrawRequests(
-                    payouts: state.pendingPayouts,
-                    isLoading: state.isLoading && state.pendingPayouts.isEmpty,
-                    maxRows: 4,
-                    onViewAll: () => context.pushNamedAuth(
-                      DriverPayoutsWidget.routeName,
-                      context.mounted,
-                    ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: TopDriversList(
-                    drivers: state.topDrivers,
-                    isLoading: state.isLoading && state.topDrivers.isEmpty,
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                sliver: SliverToBoxAdapter(
-                  child: Text(
-                    'Quick Actions',
+                      .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Operational Snapshot',
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: theme.primaryText,
                     ),
                   ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                sliver: SliverToBoxAdapter(
-                  child: QuickActions(
-                    actions: [
-                      QuickActionData(
-                        label: 'Add Driver',
+                  const SizedBox(height: 12),
+                  DashboardMetricGrid(
+                    childAspectRatioThreeCols: 2.2,
+                    childAspectRatioTwoCols: 2.0,
+                    children: [
+                      DashboardMetricCard(
+                        title: 'Rides Today',
+                        value: _fmtInt(state.ridesCompletedToday),
+                        backgroundColor: DashboardTokens.metricRidesBg,
+                        accentColor: DashboardTokens.metricRidesAccent,
+                        icon: Icons.today_rounded,
+                      ),
+                      DashboardMetricCard(
+                        title: 'New Users Today',
+                        value: _fmtInt(state.newUsersToday),
+                        backgroundColor: DashboardTokens.metricUsersBg,
+                        accentColor: DashboardTokens.metricUsersAccent,
+                        icon: Icons.person_add_alt_1_rounded,
+                      ),
+                      DashboardMetricCard(
+                        title: 'Active Users',
+                        value: _fmtInt(state.usersActive),
+                        backgroundColor: DashboardTokens.metricUsersBg,
+                        accentColor: DashboardTokens.metricUsersAccent,
+                        icon: Icons.verified_user_outlined,
+                      ),
+                      DashboardMetricCard(
+                        title: 'Inactive Users',
+                        value: _fmtInt(state.usersInactive),
+                        backgroundColor: const Color(0xFFF2F4F7),
+                        accentColor: const Color(0xFF98A2B3),
+                        icon: Icons.person_off_outlined,
+                      ),
+                      DashboardMetricCard(
+                        title: 'Blocked Users',
+                        value: _fmtInt(state.usersBlocked),
+                        backgroundColor: DashboardTokens.metricEarningsBg,
+                        accentColor: DashboardTokens.metricEarningsAccent,
+                        icon: Icons.block_outlined,
+                      ),
+                      DashboardMetricCard(
+                        title: 'Driver Accounts Active',
+                        value: _fmtInt(state.driversActiveAccounts),
+                        backgroundColor: DashboardTokens.metricOnlineBg,
+                        accentColor: DashboardTokens.metricOnlineAccent,
                         icon: Icons.badge_outlined,
-                        background: const Color(0xFFFFE8D6),
-                        iconColor: DashboardTokens.primaryOrange,
-                        onTap: () => context.pushNamedAuth(
-                          AddDriverWidget.routeName,
-                          context.mounted,
-                        ),
                       ),
-                      QuickActionData(
-                        label: 'Add User',
-                        icon: Icons.person_add_alt_1_outlined,
-                        background: const Color(0xFFE8F5E9),
-                        iconColor: const Color(0xFF2E7D32),
-                        onTap: () => context.pushNamedAuth(
-                          AddUserWidget.routeName,
-                          context.mounted,
-                        ),
+                      DashboardMetricCard(
+                        title: 'Pending Driver KYC',
+                        value: _fmtInt(state.driversPendingKyc),
+                        backgroundColor: DashboardTokens.metricDriversBg,
+                        accentColor: DashboardTokens.metricDriversAccent,
+                        icon: Icons.pending_actions_rounded,
                       ),
-                      QuickActionData(
-                        label: 'Add Vehicle',
-                        icon: Icons.directions_car_outlined,
-                        background: const Color(0xFFE3F2FD),
-                        iconColor: const Color(0xFF1565C0),
-                        onTap: () => context.pushNamedAuth(
-                          AddVehicleWidget.routeName,
-                          context.mounted,
-                        ),
-                      ),
-                      QuickActionData(
-                        label: 'Add City',
-                        icon: Icons.location_city_outlined,
-                        background: const Color(0xFFF3E5F5),
-                        iconColor: const Color(0xFF6A1B9A),
-                        onTap: () => context.pushNamedAuth(
-                          ZoneManagementWidget.routeName,
-                          context.mounted,
-                        ),
-                      ),
-                      QuickActionData(
-                        label: 'Pay Outs',
-                        icon: Icons.payments_outlined,
-                        background: const Color(0xFFFFEBEE),
-                        iconColor: const Color(0xFFC62828),
-                        onTap: () => context.pushNamedAuth(
-                          DriverPayoutsWidget.routeName,
-                          context.mounted,
-                        ),
-                      ),
-                      QuickActionData(
-                        label: 'Add Incentives',
-                        icon: Icons.emoji_events_outlined,
-                        background: const Color(0xFFFFF8E1),
-                        iconColor: const Color(0xFFF9A825),
-                        onTap: () => context.pushNamedAuth(
-                          AddIncentiveWidget.routeName,
-                          context.mounted,
-                        ),
+                      DashboardMetricCard(
+                        title: 'Blocked Drivers',
+                        value: _fmtInt(state.driversBlockedAccounts),
+                        backgroundColor: DashboardTokens.metricEarningsBg,
+                        accentColor: DashboardTokens.metricEarningsAccent,
+                        icon: Icons.gpp_bad_outlined,
                       ),
                     ],
-                  ),
+                  ).animate().fadeIn(
+                      delay: 60.ms,
+                      duration: 400.ms,
+                      curve: Curves.easeOutCubic),
+                ],
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: DashboardCarousel1(state: state)
+                  .animate()
+                  .fadeIn(delay: 80.ms, duration: 450.ms),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: DashboardCarousel2(
+                state: state,
+                onUserTap: () => context.pushNamedAuth(
+                  AllusersWidget.routeName,
+                  context.mounted,
+                ),
+                onDriverTap: () => context.pushNamedAuth(
+                  DriversWidget.routeName,
+                  context.mounted,
+                ),
+              ).animate().fadeIn(delay: 120.ms, duration: 450.ms),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: RecentRidesTable(
+                rides: state.recentRides,
+                userById: state.recentRideUserById,
+                driverById: state.recentRideDriverById,
+                isLoading: state.isLoading && state.recentRides.isEmpty,
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: WithdrawRequests(
+                payouts: state.pendingPayouts,
+                isLoading: state.isLoading && state.pendingPayouts.isEmpty,
+                maxRows: 4,
+                onViewAll: () => context.pushNamedAuth(
+                  DriverPayoutsWidget.routeName,
+                  context.mounted,
                 ),
               ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-            ],
+            ),
           ),
-        );
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: TopDriversList(
+                drivers: state.topDrivers,
+                isLoading: state.isLoading && state.topDrivers.isEmpty,
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: Text(
+                'Quick Actions',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: theme.primaryText,
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            sliver: SliverToBoxAdapter(
+              child: QuickActions(
+                actions: [
+                  QuickActionData(
+                    label: 'Add Driver',
+                    icon: Icons.badge_outlined,
+                    background: const Color(0xFFFFE8D6),
+                    iconColor: DashboardTokens.primaryOrange,
+                    onTap: () => context.pushNamedAuth(
+                      AddDriverWidget.routeName,
+                      context.mounted,
+                    ),
+                  ),
+                  QuickActionData(
+                    label: 'Add User',
+                    icon: Icons.person_add_alt_1_outlined,
+                    background: const Color(0xFFE8F5E9),
+                    iconColor: const Color(0xFF2E7D32),
+                    onTap: () => context.pushNamedAuth(
+                      AddUserWidget.routeName,
+                      context.mounted,
+                    ),
+                  ),
+                  QuickActionData(
+                    label: 'Add Vehicle',
+                    icon: Icons.directions_car_outlined,
+                    background: const Color(0xFFE3F2FD),
+                    iconColor: const Color(0xFF1565C0),
+                    onTap: () => context.pushNamedAuth(
+                      AddVehicleWidget.routeName,
+                      context.mounted,
+                    ),
+                  ),
+                  QuickActionData(
+                    label: 'Add City',
+                    icon: Icons.location_city_outlined,
+                    background: const Color(0xFFF3E5F5),
+                    iconColor: const Color(0xFF6A1B9A),
+                    onTap: () => context.pushNamedAuth(
+                      ZoneManagementWidget.routeName,
+                      context.mounted,
+                    ),
+                  ),
+                  QuickActionData(
+                    label: 'Pay Outs',
+                    icon: Icons.payments_outlined,
+                    background: const Color(0xFFFFEBEE),
+                    iconColor: const Color(0xFFC62828),
+                    onTap: () => context.pushNamedAuth(
+                      DriverPayoutsWidget.routeName,
+                      context.mounted,
+                    ),
+                  ),
+                  QuickActionData(
+                    label: 'Add Incentives',
+                    icon: Icons.emoji_events_outlined,
+                    background: const Color(0xFFFFF8E1),
+                    iconColor: const Color(0xFFF9A825),
+                    onTap: () => context.pushNamedAuth(
+                      AddIncentiveWidget.routeName,
+                      context.mounted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+        ],
+      ),
+    );
   }
 }
