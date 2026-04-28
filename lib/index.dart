@@ -89,5 +89,4 @@ export '/modules/finance/screens/wallet_transactions_screen.dart'
     show WalletTransactionsScreen;
 export '/modules/finance/screens/wallet_adjust_screen.dart'
     show WalletAdjustScreen;
-export '/modules/finance/screens/wallets_screen.dart'
-    show WalletsScreen;
+export '/modules/finance/screens/wallets_screen.dart' show WalletsScreen;
