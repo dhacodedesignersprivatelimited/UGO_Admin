@@ -144,7 +144,6 @@ Widget buildAdminDrawer(BuildContext context) {
         label: 'Driver Payouts',
         routeName: DriverPayoutsScreen.routeName,
       ),
-
       _NavItem(
         icon: Icons.table_chart_rounded,
         label: 'Finance Reports',
@@ -285,7 +284,8 @@ class _DrawerExpandableSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasSelectedItem = section.items.any((item) => item.routeName == selectedName);
+    final hasSelectedItem =
+        section.items.any((item) => item.routeName == selectedName);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -437,12 +437,11 @@ class _DrawerNavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = selected
-        ? theme.primary.withValues(alpha: 0.1)
-        : Colors.transparent;
+    final bg =
+        selected ? theme.primary.withValues(alpha: 0.1) : Colors.transparent;
     final fg = selected ? theme.primary : theme.primaryText;
     final iconColor = selected ? theme.primary : theme.secondaryText;
-    
+
     final double iconSize = isSubItem ? 20 : 24;
     final double fontSize = isSubItem ? 13 : 15;
 
@@ -453,8 +452,10 @@ class _DrawerNavTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: ListTile(
           dense: true,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          contentPadding: EdgeInsets.symmetric(horizontal: isSubItem ? 16 : 12, vertical: 0),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          contentPadding: EdgeInsets.symmetric(
+              horizontal: isSubItem ? 16 : 12, vertical: 0),
           leading: Icon(icon, color: iconColor, size: iconSize),
           title: Text(
             label,
@@ -498,7 +499,8 @@ class _DrawerSignOutButton extends StatelessWidget {
             context: context,
             builder: (ctx) => AlertDialog(
               title: const Text('Sign out'),
-              content: const Text('End your session and return to the login screen?'),
+              content: const Text(
+                  'End your session and return to the login screen?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
