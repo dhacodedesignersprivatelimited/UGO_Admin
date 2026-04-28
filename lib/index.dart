@@ -41,8 +41,6 @@ export '/modules/driver_management/view/driver_kyc_list/driver_kyc_list_widget.d
     show DriverKycListWidget;
 export '/modules/user_management/view/add_user/add_user_widget.dart'
     show AddUserWidget;
-export '/modules/user_management/view/user_management_widget.dart'
-    show UserManagementWidget;
 export '/modules/driver_management/view/add_driver/add_driver_widget.dart'
     show AddDriverWidget;
 export '/modules/ride_management/view/ride_details/ride_details_widget.dart'
@@ -73,6 +71,8 @@ export '/modules/finance_management/view/finance_automation/finance_automation_w
     show FinanceAutomationWidget;
 export '/modules/finance_management/view/finance_sla_dashboard/finance_sla_dashboard_widget.dart'
     show FinanceSlaDashboardWidget;
+export '/modules/user_management/view/user_management_widget.dart'
+    show UserManagementWidget;
 export '/modules/ride_management/view/operations_module_hub/operations_module_hub_screen.dart'
     show OperationsModuleHubScreen;
 export '/modules/driver_management/view/blocked_drivers/blocked_drivers_widget.dart'

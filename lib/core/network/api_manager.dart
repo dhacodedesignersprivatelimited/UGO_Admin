@@ -17,6 +17,7 @@ import 'package:http/browser_client.dart'
 
 import '/config/theme/uploaded_file.dart';
 
+import 'api_config.dart';
 import 'get_streamed_response.dart';
 
 enum ApiCallType {
@@ -264,6 +265,33 @@ class ApiManager {
   static Map<String, String> toStringMap(Map map) =>
       map.map((key, value) => MapEntry(key.toString(), value.toString()));
 
+  static String normalizeApiUrl(String apiUrl) {
+    if (!apiUrl.startsWith('http')) {
+      return 'https://$apiUrl';
+    }
+
+    final uri = Uri.tryParse(apiUrl);
+    if (uri == null) {
+      return apiUrl;
+    }
+
+    final isLocalHost5001 =
+        (uri.host == 'localhost' || uri.host == '127.0.0.1') &&
+            uri.port == 5001;
+    if (!isLocalHost5001) {
+      return apiUrl;
+    }
+
+    final configuredBase = Uri.parse(ApiConfig.baseUrl);
+    return uri
+        .replace(
+          scheme: configuredBase.scheme,
+          host: configuredBase.host,
+          port: configuredBase.hasPort ? configuredBase.port : null,
+        )
+        .toString();
+  }
+
   static String asQueryParams(Map<String, dynamic> map) => map.entries
       .map((e) =>
           "${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}")
@@ -502,6 +530,8 @@ class ApiManager {
     ApiCallOptions? options,
     http.Client? client,
   }) async {
+    apiUrl = normalizeApiUrl(apiUrl);
+
     final callOptions = options ??
         ApiCallOptions(
           callName: callName,
@@ -521,9 +551,6 @@ class ApiManager {
     // Modify for your specific needs if this differs from your API.
     if (_accessToken != null) {
       headers[HttpHeaders.authorizationHeader] = 'Bearer $_accessToken';
-    }
-    if (!apiUrl.startsWith('http')) {
-      apiUrl = 'https://$apiUrl';
     }
 
     // If we've already made this exact call before and caching is on,
