@@ -363,18 +363,23 @@ class _RideListState extends State<RideList> {
         children: [
           _statusTabBar(),
           Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: _tableMinWidth),
-              child: Column(
-                children: [
-                  _tableHeader(),
-                  const Divider(height: 1),
-                  ...pageRides.map((r) => _tableRow(context, r)),
-                ],
-              ),
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final minWidth = math.max(_tableMinWidth, constraints.maxWidth);
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: minWidth),
+                  child: Column(
+                    children: [
+                      _tableHeader(),
+                      const Divider(height: 1),
+                      ...pageRides.map((r) => _tableRow(context, r)),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           _pagination(
             currentPage: page,

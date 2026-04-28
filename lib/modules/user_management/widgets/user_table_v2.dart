@@ -1,16 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:math' as math;
 import 'package:intl/intl.dart';
 
 import '/shared/widgets/safe_network_avatar.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/modules/dashboard/view/dashboard_tokens.dart';
-import '../model/driver_management_row.dart';
-import '../view_model/driver_management_view_model.dart';
+import '../models/user_management_row.dart';
+import '../view_models/user_management_state.dart';
 
-class DriverTable extends StatelessWidget {
-  const DriverTable({
+class UserTableV2 extends StatelessWidget {
+  const UserTableV2({
     super.key,
     required this.activeTab,
     required this.tabCounts,
@@ -18,8 +19,7 @@ class DriverTable extends StatelessWidget {
     required this.startDisplay,
     required this.endDisplay,
     required this.totalRows,
-    required this.onViewDriver,
-    required this.onViewDocuments,
+    required this.onViewUser,
     required this.onTabChanged,
     required this.onPreviousPage,
     required this.onNextPage,
@@ -28,23 +28,21 @@ class DriverTable extends StatelessWidget {
     required this.canNext,
     required this.currentPage,
     required this.totalPages,
-    required this.loadingDriverIds,
-    required this.onApprove,
-    required this.onReject,
+    required this.loadingUserIds,
+    required this.onBlock,
     required this.pageSize,
     required this.onPageSizeChanged,
     required this.pageSizeOptions,
   });
 
-  final DriverManagementTab activeTab;
-  final Map<DriverManagementTab, int> tabCounts;
-  final List<DriverManagementRow> rows;
+  final UserManagementTab activeTab;
+  final Map<UserManagementTab, int> tabCounts;
+  final List<UserManagementRow> rows;
   final int startDisplay;
   final int endDisplay;
   final int totalRows;
-  final void Function(int driverId) onViewDriver;
-  final void Function(int driverId) onViewDocuments;
-  final ValueChanged<DriverManagementTab> onTabChanged;
+  final void Function(int userId) onViewUser;
+  final ValueChanged<UserManagementTab> onTabChanged;
   final VoidCallback onPreviousPage;
   final VoidCallback onNextPage;
   final ValueChanged<int> onPageSelected;
@@ -52,9 +50,8 @@ class DriverTable extends StatelessWidget {
   final bool canNext;
   final int currentPage;
   final int totalPages;
-  final Set<int> loadingDriverIds;
-  final ValueChanged<int> onApprove;
-  final ValueChanged<int> onReject;
+  final List<int> loadingUserIds;
+  final ValueChanged<int> onBlock;
   final int pageSize;
   final ValueChanged<int> onPageSizeChanged;
   final List<int> pageSizeOptions;
@@ -62,10 +59,8 @@ class DriverTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    // Column widths (1150) + horizontal row padding (24) to avoid overflow.
-    const tableMinW = 1174.0;
 
-    Widget tabChip(DriverManagementTab tab, String label, Color color) {
+    Widget tabChip(UserManagementTab tab, String label, Color color) {
       final selected = tab == activeTab;
       return InkWell(
         onTap: () => onTabChanged(tab),
@@ -86,7 +81,9 @@ class DriverTable extends StatelessWidget {
               Text(
                 label,
                 style: GoogleFonts.inter(
-                  color: selected ? const Color(0xFF111111) : const Color(0xFF616161),
+                  color: selected
+                      ? const Color(0xFF111111)
+                      : const Color(0xFF616161),
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
@@ -129,17 +126,16 @@ class DriverTable extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: theme.alternate.withValues(alpha: 0.45)),
+                  bottom: BorderSide(
+                      color: theme.alternate.withValues(alpha: 0.45)),
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  tabChip(DriverManagementTab.all, 'All Drivers', Colors.grey),
-                  tabChip(DriverManagementTab.active, 'Active', Colors.green),
-                  tabChip(DriverManagementTab.online, 'Online', Colors.green),
-                  tabChip(DriverManagementTab.pending, 'Pending', Colors.orange),
-                  tabChip(DriverManagementTab.blocked, 'Blocked', Colors.red),
+                  tabChip(UserManagementTab.all, 'All Users', Colors.grey),
+                  tabChip(UserManagementTab.active, 'Active', Colors.green),
+                  tabChip(UserManagementTab.blocked, 'Blocked', Colors.red),
                 ],
               ),
             ),
@@ -150,11 +146,11 @@ class DriverTable extends StatelessWidget {
           else
             LayoutBuilder(
               builder: (context, constraints) {
-                final contentW = math.max(tableMinW, constraints.maxWidth);
+                final tableWidth = math.max(constraints.maxWidth, 820.0);
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: SizedBox(
-                    width: contentW,
+                    width: tableWidth,
                     child: Column(
                       children: [
                         _tableHeader(theme),
@@ -171,7 +167,9 @@ class DriverTable extends StatelessWidget {
               builder: (context, constraints) {
                 final compact = constraints.maxWidth < 760;
                 final summary = Text(
-                  totalRows == 0 ? 'No drivers' : 'Showing $startDisplay to $endDisplay of $totalRows drivers',
+                  totalRows == 0
+                      ? 'No users'
+                      : 'Showing $startDisplay to $endDisplay of $totalRows users',
                   style: GoogleFonts.inter(fontSize: 13),
                 );
 
@@ -180,7 +178,10 @@ class DriverTable extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      OutlinedButton(onPressed: canPrevious ? onPreviousPage : null, child: const Text('Previous')),
+                      OutlinedButton(
+                        onPressed: canPrevious ? onPreviousPage : null,
+                        child: const Text('Previous'),
+                      ),
                       const SizedBox(width: 6),
                       ...slots.map((slot) {
                         if (slot == null) {
@@ -196,16 +197,22 @@ class DriverTable extends StatelessWidget {
                             onTap: selected ? null : () => onPageSelected(slot),
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
-                                color: selected ? Colors.blue : Colors.transparent,
+                                color:
+                                    selected ? Colors.blue : Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 '$slot',
                                 style: TextStyle(
                                   color: selected ? Colors.white : Colors.black,
-                                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                                  fontWeight: selected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
                                 ),
                               ),
                             ),
@@ -213,7 +220,10 @@ class DriverTable extends StatelessWidget {
                         );
                       }),
                       const SizedBox(width: 6),
-                      OutlinedButton(onPressed: canNext ? onNextPage : null, child: const Text('Next')),
+                      OutlinedButton(
+                        onPressed: canNext ? onNextPage : null,
+                        child: const Text('Next'),
+                      ),
                       const SizedBox(width: 10),
                       PopupMenuButton<int>(
                         onSelected: onPageSizeChanged,
@@ -221,16 +231,24 @@ class DriverTable extends StatelessWidget {
                             .map(
                               (v) => PopupMenuItem<int>(
                                 value: v,
-                                child: Text('$v / page', style: GoogleFonts.inter(fontSize: 13)),
+                                child: Text(
+                                  '$v / page',
+                                  style: GoogleFonts.inter(fontSize: 13),
+                                ),
                               ),
                             )
                             .toList(),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: theme.alternate.withValues(alpha: 0.7)),
+                            border: Border.all(
+                              color: theme.alternate.withValues(alpha: 0.7),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -244,7 +262,11 @@ class DriverTable extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: theme.secondaryText),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 16,
+                                color: theme.secondaryText,
+                              ),
                             ],
                           ),
                         ),
@@ -299,16 +321,19 @@ class DriverTable extends StatelessWidget {
           children: [
             const SizedBox(
               width: 40,
-              child: Icon(Icons.check_box_outline_blank, size: 18, color: Colors.black38),
+              child: Icon(
+                Icons.check_box_outline_blank,
+                size: 18,
+                color: Colors.black38,
+              ),
             ),
-            SizedBox(width: 110, child: Text('Driver ID', style: style)),
-            SizedBox(width: 250, child: Text('Driver Details', style: style)),
-            SizedBox(width: 170, child: Text('Vehicle Details', style: style)),
-            SizedBox(width: 125, child: Text('Status', style: style)),
-            SizedBox(width: 130, child: Text('Wallet Balance', style: style)),
-            SizedBox(width: 100, child: Text('Total Rides', style: style)),
-            SizedBox(width: 85, child: Text('Rating', style: style)),
-            SizedBox(width: 126, child: Text('Action', style: style)),
+            Expanded(flex: 12, child: Text('User ID', style: style)),
+            Expanded(flex: 26, child: Text('User Name', style: style)),
+            Expanded(flex: 22, child: Text('Email', style: style)),
+            Expanded(flex: 14, child: Text('Status', style: style)),
+            Expanded(flex: 14, child: Text('Wallet Balance', style: style)),
+            Expanded(flex: 10, child: Text('Total Rides', style: style)),
+            const SizedBox(width: 88, child: Text('Action')),
           ],
         ),
       ),
@@ -318,10 +343,7 @@ class DriverTable extends StatelessWidget {
   Widget _statusPill(String status) {
     Color fg = const Color(0xFF198754);
     Color bg = const Color(0xFFE8F6ED);
-    if (status == 'Pending') {
-      fg = const Color(0xFFC17D00);
-      bg = const Color(0xFFFFF4DD);
-    } else if (status == 'Blocked') {
+    if (status == 'Blocked') {
       fg = const Color(0xFFC63B4D);
       bg = const Color(0xFFFDECEF);
     } else if (status == 'Inactive') {
@@ -330,7 +352,8 @@ class DriverTable extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
       child: Text(
         status,
         style: GoogleFonts.inter(
@@ -342,20 +365,35 @@ class DriverTable extends StatelessWidget {
     );
   }
 
-  Widget _tableRow(DriverManagementRow r, FlutterFlowTheme theme) {
-    final busy = loadingDriverIds.contains(r.id);
+  Widget _tableRow(UserManagementRow r, FlutterFlowTheme theme) {
+    final busy = loadingUserIds.contains(r.id);
     final rideFmt = NumberFormat.decimalPattern('en_IN');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: theme.alternate.withValues(alpha: 0.3))),
+        border: Border(
+          top: BorderSide(color: theme.alternate.withValues(alpha: 0.3)),
+        ),
       ),
       child: Row(
         children: [
-          const SizedBox(width: 40, child: Icon(Icons.check_box_outline_blank, size: 18, color: Colors.black38)),
-          SizedBox(width: 110, child: Text('DRV${r.id}', style: const TextStyle(fontWeight: FontWeight.w600))),
-          SizedBox(
-            width: 250,
+          const SizedBox(
+            width: 40,
+            child: Icon(
+              Icons.check_box_outline_blank,
+              size: 18,
+              color: Colors.black38,
+            ),
+          ),
+          Expanded(
+            flex: 12,
+            child: Text(
+              'USR${r.id}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(
+            flex: 26,
             child: Row(
               children: [
                 SafeNetworkAvatar(imageUrl: r.avatarUrl, radius: 14),
@@ -364,12 +402,14 @@ class DriverTable extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(r.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(r.name,
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
                       Text(
                         r.phone,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: theme.secondaryText),
+                        style:
+                            TextStyle(fontSize: 11, color: theme.secondaryText),
                       ),
                     ],
                   ),
@@ -377,64 +417,37 @@ class DriverTable extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(
-            width: 170,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(r.vehicle, maxLines: 1, overflow: TextOverflow.ellipsis),
-                if (r.vehicleNumber.isNotEmpty)
-                  Text(
-                    r.vehicleNumber,
-                    style: TextStyle(fontSize: 11, color: theme.secondaryText),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
+          Expanded(
+            flex: 22,
+            child: Text(r.email, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
-          SizedBox(
-            width: 125,
+          Expanded(
+            flex: 14,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _statusPill(r.status),
                 if (r.statusSubtitle.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.circle,
-                        size: 7,
-                        color: r.status == 'Active' && r.statusSubtitle == 'Online'
-                            ? const Color(0xFF1AAE6F)
-                            : Colors.black45,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        r.statusSubtitle,
-                        style: TextStyle(fontSize: 11, color: theme.secondaryText),
-                      ),
-                    ],
+                  Text(
+                    r.statusSubtitle,
+                    style: TextStyle(fontSize: 11, color: theme.secondaryText),
                   ),
                 ],
               ],
             ),
           ),
-          SizedBox(width: 130, child: Text(r.walletBalance, style: const TextStyle(fontWeight: FontWeight.w600))),
-          SizedBox(width: 100, child: Text(rideFmt.format(r.totalRides))),
-          SizedBox(
-            width: 85,
-            child: Row(
-              children: [
-                const Icon(Icons.star_rounded, size: 14, color: Color(0xFFFFB300)),
-                const SizedBox(width: 3),
-                Text(r.rating.toStringAsFixed(1)),
-              ],
-            ),
+          Expanded(
+            flex: 14,
+            child: Text(r.walletBalance,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            flex: 10,
+            child: Text(rideFmt.format(r.totalRides)),
           ),
           SizedBox(
-            width: 126,
+            width: 88,
             child: Row(
               children: [
                 _actionIconButton(
@@ -442,47 +455,24 @@ class DriverTable extends StatelessWidget {
                   fg: const Color(0xFF4A87C2),
                   bg: const Color(0xFFF3F8FE),
                   tooltip: 'View profile',
-                  onPressed: () => onViewDriver(r.id),
+                  onPressed: () => onViewUser(r.id),
                 ),
                 _actionIconButton(
-                  icon: const Icon(Icons.description_outlined, size: 16),
-                  fg: const Color(0xFF5C6773),
-                  bg: const Color(0xFFF7F8FA),
-                  tooltip: 'View documents',
-                  onPressed: () => onViewDocuments(r.id),
+                  icon: Icon(
+                    r.isBlocked
+                        ? Icons.block_rounded
+                        : Icons.check_circle_outline,
+                    size: 16,
+                  ),
+                  fg: r.isBlocked
+                      ? const Color(0xFFC63B4D)
+                      : const Color(0xFF198754),
+                  bg: r.isBlocked
+                      ? const Color(0xFFFFF2F4)
+                      : const Color(0xFFF0FBF5),
+                  tooltip: r.isBlocked ? 'Unblock' : 'Block',
+                  onPressed: busy ? null : () => onBlock(r.id),
                 ),
-                if (r.isPending) ...[
-                  _actionIconButton(
-                    icon: busy
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.check_rounded, size: 16),
-                    fg: const Color(0xFF198754),
-                    bg: const Color(0xFFF0FBF5),
-                    tooltip: 'Approve',
-                    onPressed: busy ? null : () => onApprove(r.id),
-                  ),
-                  _actionIconButton(
-                    icon: const Icon(Icons.close_rounded, size: 16),
-                    fg: const Color(0xFFC63B4D),
-                    bg: const Color(0xFFFFF2F4),
-                    tooltip: 'Reject',
-                    onPressed: busy ? null : () => onReject(r.id),
-                  ),
-                ] else
-                  _actionIconButton(
-                    icon: Icon(
-                      r.isBlocked ? Icons.block_rounded : Icons.check_circle_outline,
-                      size: 16,
-                    ),
-                    fg: r.isBlocked ? const Color(0xFFC63B4D) : const Color(0xFF198754),
-                    bg: r.isBlocked ? const Color(0xFFFFF2F4) : const Color(0xFFF0FBF5),
-                    tooltip: r.isBlocked ? 'Blocked' : 'Verified',
-                    onPressed: null,
-                  ),
               ],
             ),
           ),
@@ -499,7 +489,7 @@ class DriverTable extends StatelessWidget {
           Icon(Icons.groups_rounded, size: 44, color: theme.secondaryText),
           const SizedBox(height: 12),
           Text(
-            'No drivers found',
+            'No users found',
             style: GoogleFonts.inter(
               color: theme.secondaryText,
               fontSize: 15,
@@ -546,7 +536,11 @@ class DriverTable extends StatelessWidget {
                 : InkWell(
                     borderRadius: BorderRadius.circular(8),
                     onTap: onPressed,
-                    child: SizedBox(width: 28, height: 28, child: Center(child: icon)),
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Center(child: icon),
+                    ),
                   ),
           ),
         ),

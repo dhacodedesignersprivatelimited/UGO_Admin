@@ -31,7 +31,8 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
                     width: 48,
                     height: 48,
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
                       strokeWidth: 3,
                     ),
                   ),
@@ -107,7 +108,8 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) {
           final driverId = params.getParam('driverId', ParamType.int) as int?;
           final openDocumentsOnLoad =
-              params.getParam('openDocuments', ParamType.bool) as bool? ?? false;
+              params.getParam('openDocuments', ParamType.bool) as bool? ??
+                  false;
           return DriverDetailsWidget(
             driverId: driverId,
             openDocumentsOnLoad: openDocumentsOnLoad,

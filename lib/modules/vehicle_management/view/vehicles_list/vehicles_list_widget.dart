@@ -95,8 +95,10 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
       _errorMessage = null;
     });
     try {
-      final typesFuture = GetVehicleTypesCall.call(token: currentAuthenticationToken);
-      final vehiclesFuture = GetAllVehiclesCall.call(token: currentAuthenticationToken);
+      final typesFuture =
+          GetVehicleTypesCall.call(token: currentAuthenticationToken);
+      final vehiclesFuture =
+          GetAllVehiclesCall.call(token: currentAuthenticationToken);
 
       final results = await Future.wait([typesFuture, vehiclesFuture]);
       final typesResponse = results[0];
@@ -153,9 +155,10 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
         setState(() {
           _isLoading = false;
           _isBackgroundRefreshing = false;
-          _errorMessage = (_vehicleTypes.isNotEmpty || _adminVehicles.isNotEmpty)
-              ? 'Showing last updated data'
-              : e.toString();
+          _errorMessage =
+              (_vehicleTypes.isNotEmpty || _adminVehicles.isNotEmpty)
+                  ? 'Showing last updated data'
+                  : e.toString();
         });
         if (_vehicleTypes.isNotEmpty || _adminVehicles.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -200,10 +203,14 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
 
   /// Sub vehicles whose vehicle_type_id is not in the types list
   List<Map<String, dynamic>> _getOrphanVehicles() {
-    final typeIds = _vehicleTypes.map((t) {
-      final id = getJsonField(t, r'''$.id''') ?? getJsonField(t, r'''$._id''');
-      return id is int ? id : int.tryParse(id.toString());
-    }).whereType<int>().toSet();
+    final typeIds = _vehicleTypes
+        .map((t) {
+          final id =
+              getJsonField(t, r'''$.id''') ?? getJsonField(t, r'''$._id''');
+          return id is int ? id : int.tryParse(id.toString());
+        })
+        .whereType<int>()
+        .toSet();
     return _adminVehicles.where((v) {
       final vid = getJsonField(v, r'''$.vehicle_type_id''') ??
           getJsonField(v, r'''$.vehicleTypeId''');
@@ -250,44 +257,40 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
           ],
         ),
         const SizedBox(height: 12),
-        DashboardMetricGrid(
-          maxWidthForThreeCols: 640,
+        Row(
           children: [
-            DashboardMetricCard(
+            _buildStatCard(
               title: 'Vehicle types',
               value: '${_vehicleTypes.length}',
-              backgroundColor: DashboardTokens.metricUsersBg,
-              accentColor: DashboardTokens.metricUsersAccent,
               icon: Icons.category_outlined,
+              accentColor: DashboardTokens.metricUsersAccent,
               onTap: () => context.pushNamedAuth(
                 AddVehicleTypeWidget.routeName,
                 context.mounted,
               ),
             ),
-            DashboardMetricCard(
+            const SizedBox(width: 12),
+            _buildStatCard(
               title: 'Fleet size',
               value: '${_adminVehicles.length}',
-              backgroundColor: DashboardTokens.metricDriversBg,
-              accentColor: DashboardTokens.metricDriversAccent,
               icon: Icons.directions_car_rounded,
+              accentColor: DashboardTokens.metricDriversAccent,
               onTap: () => context.pushNamedAuth(
                 AddVehicleWidget.routeName,
                 context.mounted,
               ),
             ),
-            DashboardMetricCard(
+            const SizedBox(width: 12),
+            _buildStatCard(
               title: orphans > 0 ? 'Needs review' : 'Unassigned',
               value: orphans > 0 ? '$orphans' : '—',
-              subtitle: orphans > 0 ? 'Untyped vehicles' : 'All grouped',
-              backgroundColor: orphans > 0
-                  ? DashboardTokens.metricEarningsBg
-                  : DashboardTokens.metricWalletBg,
-              accentColor: orphans > 0
-                  ? DashboardTokens.metricEarningsAccent
-                  : DashboardTokens.metricWalletAccent,
+              subtitle: orphans > 0 ? 'Untyped' : 'All grouped',
               icon: orphans > 0
                   ? Icons.warning_amber_rounded
                   : Icons.check_circle_outline_rounded,
+              accentColor: orphans > 0
+                  ? DashboardTokens.metricEarningsAccent
+                  : DashboardTokens.metricWalletAccent,
             ),
           ],
         ),
@@ -306,11 +309,94 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
   }
 
   /// White rounded surface matching dashboard cards.
-  BoxDecoration _fleetCardDecoration() {
+  /// White rounded surface with a colored left border accent.
+  BoxDecoration _fleetCardDecoration({Color? accentColor}) {
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(DashboardTokens.cardRadius),
-      boxShadow: DashboardTokens.cardShadow,
+      border: Border(
+        left: BorderSide(
+          color: accentColor ?? DashboardTokens.primaryOrange,
+          width: 4,
+        ),
+      ),
+      boxShadow: DashboardTokens.softShadow,
+    );
+  }
+
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color accentColor,
+    String? subtitle,
+    VoidCallback? onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(DashboardTokens.cardRadius),
+            border: Border(left: BorderSide(color: accentColor, width: 4)),
+            boxShadow: DashboardTokens.softShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: accentColor, size: 20),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1A1A2E),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFF888888),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: const Color(0xFFAAAAAA),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -357,22 +443,9 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
           ),
           actions: [
             IconButton(
-              tooltip: 'Add vehicle',
-              icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 26),
-              onPressed: () =>
-                  context.pushNamedAuth(AddVehicleWidget.routeName, context.mounted),
-            ),
-            IconButton(
-              tooltip: 'Add vehicle type',
-              icon: const Icon(Icons.category_outlined, color: Colors.white, size: 24),
-              onPressed: () => context.pushNamedAuth(
-                AddVehicleTypeWidget.routeName,
-                context.mounted,
-              ),
-            ),
-            IconButton(
               tooltip: 'Refresh',
-              icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 24),
+              icon: const Icon(Icons.refresh_rounded,
+                  color: Colors.white, size: 24),
               onPressed: (_isLoading || _isBackgroundRefreshing)
                   ? null
                   : () => _loadData(backgroundRefresh: true),
@@ -516,8 +589,8 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
           ),
           const SizedBox(height: 24),
           FFButtonWidget(
-            onPressed: () =>
-                context.pushNamedAuth(AddVehicleWidget.routeName, context.mounted),
+            onPressed: () => context.pushNamedAuth(
+                AddVehicleWidget.routeName, context.mounted),
             text: 'Add vehicle',
             icon: const Icon(Icons.add, color: Colors.white, size: 20),
             options: FFButtonOptions(
@@ -531,11 +604,14 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
   }
 
   Widget _buildVehicleTypeSection(Map<String, dynamic> type) {
-    final typeId = getJsonField(type, r'''$.id''') ?? getJsonField(type, r'''$._id''');
+    final typeId =
+        getJsonField(type, r'''$.id''') ?? getJsonField(type, r'''$._id''');
     final typeName = getJsonField(type, r'''$.name''')?.toString() ?? 'Unknown';
     final imgPath = getJsonField(type, r'''$.image''')?.toString();
     final imgUrl = imgPath != null && imgPath.isNotEmpty
-        ? (imgPath.startsWith('http') ? imgPath : '${ApiConfig.baseUrl}$imgPath')
+        ? (imgPath.startsWith('http')
+            ? imgPath
+            : '${ApiConfig.baseUrl}$imgPath')
         : null;
 
     var subVehicles = _getVehiclesFromNested(type);
@@ -545,76 +621,95 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: _fleetCardDecoration(),
+      decoration:
+          _fleetCardDecoration(accentColor: DashboardTokens.primaryOrange),
       clipBehavior: Clip.antiAlias,
       child: Material(
         color: Colors.white,
         child: ExpansionTile(
-        initiallyExpanded: true,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        leading: imgUrl != null && imgUrl.isNotEmpty
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  imgUrl,
-                  width: 56,
-                  height: 56,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.directions_car,
-                    color: DashboardTokens.primaryOrange,
-                    size: 40,
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          leading: imgUrl != null && imgUrl.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    imgUrl,
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.directions_car,
+                      color: DashboardTokens.primaryOrange,
+                      size: 40,
+                    ),
                   ),
+                )
+              : Icon(
+                  Icons.directions_car,
+                  color: DashboardTokens.primaryOrange,
+                  size: 40,
+                ),
+          title: Text(
+            typeName,
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+              color: FlutterFlowTheme.of(context).primaryText,
+            ),
+          ),
+          subtitle: Text(
+            '${subVehicles.length} sub vehicle${subVehicles.length == 1 ? '' : 's'}',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: FlutterFlowTheme.of(context).secondaryText,
+            ),
+          ),
+          iconColor: DashboardTokens.primaryOrange,
+          collapsedIconColor: DashboardTokens.primaryOrange,
+          children: [
+            if (subVehicles.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  'No sub vehicles yet',
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                      ),
                 ),
               )
-            : Icon(
-                Icons.directions_car,
-                color: DashboardTokens.primaryOrange,
-                size: 40,
-              ),
-        title: Text(
-          typeName,
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700,
-            fontSize: 17,
-            color: FlutterFlowTheme.of(context).primaryText,
-          ),
-        ),
-        subtitle: Text(
-          '${subVehicles.length} sub vehicle${subVehicles.length == 1 ? '' : 's'}',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: FlutterFlowTheme.of(context).secondaryText,
-          ),
-        ),
-        children: [
-          if (subVehicles.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                'No sub vehicles yet',
-                style: FlutterFlowTheme.of(context).bodyMedium.override(
-                      color: FlutterFlowTheme.of(context).secondaryText,
+            else
+              ...subVehicles.map((v) => _buildSubVehicleTile(v)),
+            if (subVehicles.isNotEmpty) ...[
+              const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: DashboardTokens.metricOnlineAccent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-              ),
-            )
-          else
-            ...subVehicles.map((v) => _buildSubVehicleTile(v)),
-          if (subVehicles.isNotEmpty) ...[
-            const Divider(height: 24),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text(
-                'Pricing',
-                style: FlutterFlowTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Pricing',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: const Color(0xFF1A1A2E),
+                      ),
                     ),
+                  ],
+                ),
               ),
-            ),
-            ...subVehicles.map((v) => _buildPricingTile(v)),
+              ...subVehicles.map((v) => _buildPricingTile(v)),
+              const SizedBox(height: 8),
+            ],
           ],
-        ],
         ),
       ),
     );
@@ -640,7 +735,8 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
     // Prefer vehicle_image_url (full URL from API); fallback to vehicle_image
     final imgUrlRaw = getJsonField(vehicle, r'''$.vehicle_image_url''') ??
         getJsonField(vehicle, r'''$.vehicleImageUrl''');
-    final imgPath = imgUrlRaw ?? getJsonField(vehicle, r'''$.vehicle_image''') ??
+    final imgPath = imgUrlRaw ??
+        getJsonField(vehicle, r'''$.vehicle_image''') ??
         getJsonField(vehicle, r'''$.image''') ??
         getJsonField(vehicle, r'''$.vehicleImage''');
     final imgUrl = imgPath != null && imgPath.toString().isNotEmpty
@@ -649,38 +745,77 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
             : '${ApiConfig.baseUrl}/${imgPath.toString().replaceFirst(RegExp(r'^/'), '')}')
         : null;
 
-    return ListTile(
-      leading: imgUrl != null && imgUrl.isNotEmpty
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imgUrl,
-                width: 48,
-                height: 48,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.directions_car_outlined,
-                  color: FlutterFlowTheme.of(context).primary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: DashboardTokens.metricDriversBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: imgUrl != null && imgUrl.isNotEmpty
+                ? Image.network(
+                    imgUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.directions_car_outlined,
+                      color: DashboardTokens.metricDriversAccent,
+                      size: 22,
+                    ),
+                  )
+                : Icon(
+                    Icons.directions_car_outlined,
+                    color: DashboardTokens.metricDriversAccent,
+                    size: 22,
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name.toString(),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: const Color(0xFF1A1A2E),
+                  ),
                 ),
-              ),
-            )
-          : Icon(
-              Icons.directions_car_outlined,
-              color: FlutterFlowTheme.of(context).primary,
+                if (rideCategory != null ||
+                    seating != null ||
+                    luggage != null) ...[
+                  const SizedBox(height: 5),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (rideCategory != null)
+                        _buildChip(
+                          _rideCategoryDisplay(rideCategory),
+                          DashboardTokens.metricUsersAccent,
+                        ),
+                      if (seating != null)
+                        _buildChip(
+                          '$seating seats',
+                          DashboardTokens.metricDriversAccent,
+                        ),
+                      if (luggage != null)
+                        _buildChip(
+                          '$luggage luggage',
+                          DashboardTokens.metricRidesAccent,
+                        ),
+                    ],
+                  ),
+                ],
+              ],
             ),
-      title: Text(
-        name.toString(),
-        style: FlutterFlowTheme.of(context).titleMedium,
-      ),
-      subtitle: Text(
-        [
-          if (rideCategory != null) _rideCategoryDisplay(rideCategory),
-          if (seating != null) 'Seats: $seating',
-          if (luggage != null) 'Luggage: $luggage',
-        ].where((x) => x.isNotEmpty).join(' • '),
-        style: FlutterFlowTheme.of(context).bodySmall.override(
-              color: FlutterFlowTheme.of(context).secondaryText,
-            ),
+          ),
+        ],
       ),
     );
   }
@@ -690,28 +825,58 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
         getJsonField(vehicle, r'''$.name''') ??
         getJsonField(vehicle, r'''$.vehicleName''') ??
         'Vehicle';
-    return ListTile(
-      leading: Icon(
-        Icons.payments_outlined,
-        color: FlutterFlowTheme.of(context).primary,
-      ),
-      title: Text(
-        name.toString(),
-        style: FlutterFlowTheme.of(context).titleSmall,
-      ),
-      trailing: FFButtonWidget(
-        onPressed: () => _openPricingDialog(vehicle),
-        text: 'Set Pricing',
-        options: FFButtonOptions(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          color: FlutterFlowTheme.of(context).primary,
-          textStyle: FlutterFlowTheme.of(context).labelMedium.override(
-                color: Colors.white,
-                font: GoogleFonts.inter(),
-                fontWeight: FontWeight.w600,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: DashboardTokens.metricOnlineBg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border(
+            left: BorderSide(
+              color: DashboardTokens.metricOnlineAccent,
+              width: 3,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.payments_outlined,
+              color: DashboardTokens.metricOnlineAccent,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                name.toString(),
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: const Color(0xFF1A1A2E),
+                ),
               ),
-          borderRadius: BorderRadius.circular(18),
+            ),
+            GestureDetector(
+              onTap: () => _openPricingDialog(vehicle),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: DashboardTokens.primaryOrange,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Set Pricing',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -770,62 +935,82 @@ class _VehiclesListWidgetState extends State<VehiclesListWidget> {
   Widget _buildOrphanVehiclesSection() {
     final orphans = _getOrphanVehicles();
     if (orphans.isEmpty) return const SizedBox.shrink();
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ExpansionTile(
-        initiallyExpanded: true,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        leading: Icon(
-          Icons.directions_car_outlined,
-          color: FlutterFlowTheme.of(context).primary,
-          size: 40,
+      decoration: _fleetCardDecoration(
+          accentColor: DashboardTokens.metricEarningsAccent),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.white,
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          leading: Icon(
+            Icons.directions_car_outlined,
+            color: DashboardTokens.metricEarningsAccent,
+            size: 40,
+          ),
+          title: Text(
+            'Other Vehicles',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+              color: const Color(0xFF1A1A2E),
+            ),
+          ),
+          subtitle: Text(
+            '${orphans.length} vehicle${orphans.length == 1 ? '' : 's'} (type unknown)',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: FlutterFlowTheme.of(context).secondaryText,
+            ),
+          ),
+          iconColor: DashboardTokens.metricEarningsAccent,
+          collapsedIconColor: DashboardTokens.metricEarningsAccent,
+          children: orphans.map((v) => _buildSubVehicleTile(v)).toList(),
         ),
-        title: Text(
-          'Other Vehicles',
-          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-              ),
-        ),
-        subtitle: Text(
-          '${orphans.length} vehicle${orphans.length == 1 ? '' : 's'} (type unknown)',
-          style: FlutterFlowTheme.of(context).bodySmall.override(
-                color: FlutterFlowTheme.of(context).secondaryText,
-              ),
-        ),
-        children: orphans.map((v) => _buildSubVehicleTile(v)).toList(),
       ),
     );
   }
 
   Widget _buildUnassignedVehiclesSection() {
     if (_adminVehicles.isEmpty) return const SizedBox.shrink();
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ExpansionTile(
-        initiallyExpanded: true,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        leading: Icon(
-          Icons.directions_car,
-          color: FlutterFlowTheme.of(context).primary,
-          size: 40,
+      decoration:
+          _fleetCardDecoration(accentColor: DashboardTokens.metricUsersAccent),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.white,
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          leading: Icon(
+            Icons.directions_car,
+            color: DashboardTokens.metricUsersAccent,
+            size: 40,
+          ),
+          title: Text(
+            'All Vehicles',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+              color: const Color(0xFF1A1A2E),
+            ),
+          ),
+          subtitle: Text(
+            '${_adminVehicles.length} vehicle${_adminVehicles.length == 1 ? '' : 's'}',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: FlutterFlowTheme.of(context).secondaryText,
+            ),
+          ),
+          iconColor: DashboardTokens.metricUsersAccent,
+          collapsedIconColor: DashboardTokens.metricUsersAccent,
+          children: _adminVehicles.map((v) => _buildSubVehicleTile(v)).toList(),
         ),
-        title: Text(
-          'All Vehicles',
-          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                font: GoogleFonts.interTight(fontWeight: FontWeight.bold),
-              ),
-        ),
-        subtitle: Text(
-          '${_adminVehicles.length} vehicle${_adminVehicles.length == 1 ? '' : 's'}',
-          style: FlutterFlowTheme.of(context).bodySmall.override(
-                color: FlutterFlowTheme.of(context).secondaryText,
-              ),
-        ),
-        children: _adminVehicles.map((v) => _buildSubVehicleTile(v)).toList(),
       ),
     );
   }

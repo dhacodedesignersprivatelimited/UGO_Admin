@@ -5,4 +5,4 @@ export '../view_model/dashboard_cubit.dart' show DashboardCubit, DashboardState;
 
 // Legacy alias — widgets still referencing DashboardPageModel will use
 // the ChangeNotifier-based ViewModel until they are individually migrated.
-export '../view_model/dashboard_viewmodel.dart' show DashboardPageModel;
+export '../view_model/dashboard_viewmodel.dart';

@@ -34,7 +34,8 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _anim = CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic);
+    _anim =
+        CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic);
     _animController.forward();
   }
 
@@ -216,8 +217,10 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
               ),
             ),
             titlesData: FlTitlesData(
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -225,7 +228,9 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                   getTitlesWidget: (v, _) => Text(
                     v >= 100000
                         ? '₹${(v / 100000).toStringAsFixed(1)}L'
-                        : (v >= 1000 ? '₹${(v / 1000).toStringAsFixed(0)}k' : '₹${v.toInt()}'),
+                        : (v >= 1000
+                            ? '₹${(v / 1000).toStringAsFixed(0)}k'
+                            : '₹${v.toInt()}'),
                     style: GoogleFonts.inter(fontSize: 9, color: Colors.grey),
                   ),
                 ),
@@ -241,7 +246,8 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
                         lab,
-                        style: GoogleFonts.inter(fontSize: 10, color: Colors.grey),
+                        style:
+                            GoogleFonts.inter(fontSize: 10, color: Colors.grey),
                       ),
                     );
                   },
@@ -304,7 +310,9 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
   Widget _ridesBarPage(DashboardPageModel m) {
     final vals = List<double>.from(m.ridesWeekly);
     final isSeven = m.chartRideBarDays <= 7;
-    final labels = isSeven ? _dayLabels(vals.length) : List.generate(vals.length, (i) => '${i + 1}');
+    final labels = isSeven
+        ? _dayLabels(vals.length)
+        : List.generate(vals.length, (i) => '${i + 1}');
 
     if (vals.isEmpty || vals.every((e) => e == 0)) {
       return _chartShell(
@@ -340,8 +348,10 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
               ),
             ),
             titlesData: FlTitlesData(
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -362,7 +372,8 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
                         labels[i],
-                        style: GoogleFonts.inter(fontSize: 9, color: Colors.grey),
+                        style:
+                            GoogleFonts.inter(fontSize: 9, color: Colors.grey),
                       ),
                     );
                   },
@@ -378,7 +389,8 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                   if (i < 0 || i >= vals.length) return null;
                   return BarTooltipItem(
                     '${labels[i]}\n${vals[i].toStringAsFixed(0)} rides',
-                    GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+                    GoogleFonts.inter(
+                        color: Colors.white, fontWeight: FontWeight.w600),
                   );
                 },
               ),
@@ -399,7 +411,8 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                       end: Alignment.topCenter,
                     ),
                     width: isSeven ? 14 : 12,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(6)),
                   ),
                 ],
               ),
@@ -486,7 +499,8 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
                         value: segments[i].value,
                         color: segments[i].color,
                         radius: _touchedPieIndex == i ? 58 : 50,
-                        title: '${(segments[i].fraction * 100).toStringAsFixed(0)}%',
+                        title:
+                            '${(segments[i].fraction * 100).toStringAsFixed(0)}%',
                         titleStyle: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 11,
@@ -543,7 +557,8 @@ class _DashboardCarousel1State extends State<DashboardCarousel1>
           decoration: BoxDecoration(color: c, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label, style: GoogleFonts.inter(fontSize: 11, color: Colors.grey[700])),
+        Text(label,
+            style: GoogleFonts.inter(fontSize: 11, color: Colors.grey[700])),
       ],
     );
   }

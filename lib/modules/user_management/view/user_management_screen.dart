@@ -84,102 +84,98 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     return RefreshIndicator(
       color: DashboardTokens.primaryOrange,
       onRefresh: vm.load,
-      child: CustomScrollView(
+      child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            sliver: SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1180),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1180),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Updated ${dateTimeFormat("relative", DateTime.now())}',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: FlutterFlowTheme.of(context).secondaryText,
-                              ),
-                            ),
+                      Expanded(
+                        child: Text(
+                          'Updated ${dateTimeFormat("relative", DateTime.now())}',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: FlutterFlowTheme.of(context).secondaryText,
                           ),
-                          ElevatedButton.icon(
-                            onPressed: () => context.pushNamedAuth(AddUserWidget.routeName, context.mounted),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFF3C132),
-                              foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            icon: const Icon(Icons.person_add_alt_1),
-                            label: const Text('Add User'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      UserStatsCards(
-                        total: vm.totalUsers,
-                        active: vm.activeUsers,
-                        blocked: vm.blockedUsers,
-                      ),
-                      const SizedBox(height: 16),
-                      UserFilterStrip(
-                        searchController: _searchController,
-                        onFilterTap: () => vm.setSearchQuery(_searchController.text),
-                        onClearTap: () {
-                          if (_searchController.text.isEmpty) return;
-                          _searchController.clear();
-                          vm.setSearchQuery('');
-                        },
-                        hasActiveSearch: vm.searchQuery.trim().isNotEmpty,
-                        onResetAllTap: () {
-                          _searchController.clear();
-                          vm.resetAllTableState();
-                        },
-                        showResetAll: vm.hasNonDefaultTableState,
-                      ),
-                      const SizedBox(height: 16),
-                      UserTable(
-                        activeTab: vm.tab,
-                        tabCounts: {
-                          UserManagementTab.all: vm.totalUsers,
-                          UserManagementTab.active: vm.activeUsers,
-                          UserManagementTab.blocked: vm.blockedUsers,
-                        },
-                        rows: vm.pagedUsers,
-                        startDisplay: vm.startDisplay,
-                        endDisplay: vm.endDisplay,
-                        totalRows: vm.totalUsers,
-                        onViewUser: (id) => context.pushNamedAuth(
-                          UserDetailsWidget.routeName,
-                          context.mounted,
-                          queryParameters: {'userId': '$id'},
                         ),
-                        onTabChanged: (tab) {
-                          vm.setTab(tab);
-                          if (_searchController.text != vm.searchQuery) {
-                            _searchController.text = vm.searchQuery;
-                          }
-                        },
-                        onPreviousPage: vm.previousPage,
-                        onNextPage: vm.nextPage,
-                        onPageSelected: vm.setPage,
-                        canPrevious: vm.page > 1,
-                        canNext: vm.page < vm.totalPages,
-                        currentPage: vm.page,
-                        totalPages: vm.totalPages,
-                        loadingUserIds: vm.actionUserIds,
-                        onBlock: (id) => _handleBlock(vm, id),
-                        pageSize: vm.pageSize,
-                        onPageSizeChanged: vm.setPageSize,
-                        pageSizeOptions: UserManagementViewModel.pageSizeOptions,
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () => context.pushNamedAuth(AddUserWidget.routeName, context.mounted),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF3C132),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: const Icon(Icons.person_add_alt_1),
+                        label: const Text('Add User'),
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  UserStatsCards(
+                    total: vm.totalUsers,
+                    active: vm.activeUsers,
+                    blocked: vm.blockedUsers,
+                  ),
+                  const SizedBox(height: 16),
+                  UserFilterStrip(
+                    searchController: _searchController,
+                    onFilterTap: () => vm.setSearchQuery(_searchController.text),
+                    onClearTap: () {
+                      if (_searchController.text.isEmpty) return;
+                      _searchController.clear();
+                      vm.setSearchQuery('');
+                    },
+                    hasActiveSearch: vm.searchQuery.trim().isNotEmpty,
+                    onResetAllTap: () {
+                      _searchController.clear();
+                      vm.resetAllTableState();
+                    },
+                    showResetAll: vm.hasNonDefaultTableState,
+                  ),
+                  const SizedBox(height: 16),
+                  UserTable(
+                    activeTab: vm.tab,
+                    tabCounts: {
+                      UserManagementTab.all: vm.totalUsers,
+                      UserManagementTab.active: vm.activeUsers,
+                      UserManagementTab.blocked: vm.blockedUsers,
+                    },
+                    rows: vm.pagedUsers,
+                    startDisplay: vm.startDisplay,
+                    endDisplay: vm.endDisplay,
+                    totalRows: vm.totalUsers,
+                    onViewUser: (id) => context.pushNamedAuth(
+                      UserDetailsWidget.routeName,
+                      context.mounted,
+                      queryParameters: {'userId': '$id'},
+                    ),
+                    onTabChanged: (tab) {
+                      vm.setTab(tab);
+                      if (_searchController.text != vm.searchQuery) {
+                        _searchController.text = vm.searchQuery;
+                      }
+                    },
+                    onPreviousPage: vm.previousPage,
+                    onNextPage: vm.nextPage,
+                    onPageSelected: vm.setPage,
+                    canPrevious: vm.page > 1,
+                    canNext: vm.page < vm.totalPages,
+                    currentPage: vm.page,
+                    totalPages: vm.totalPages,
+                    loadingUserIds: vm.actionUserIds,
+                    onBlock: (id) => _handleBlock(vm, id),
+                    pageSize: vm.pageSize,
+                    onPageSizeChanged: vm.setPageSize,
+                    pageSizeOptions: UserManagementViewModel.pageSizeOptions,
+                  ),
+                ],
               ),
             ),
           ),

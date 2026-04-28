@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import '/config/theme/flutter_flow_util.dart';
 import 'api_config.dart';
 import 'api_manager.dart';
@@ -205,8 +204,7 @@ class GetAnalyticsCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'GetAnalytics',
-      apiUrl:
-          '${ApiConfig.apiBase}/admins/earnings-analytics?period=weekly',
+      apiUrl: '${ApiConfig.apiBase}/admins/earnings-analytics?period=weekly',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -274,12 +272,12 @@ class AllUsersCall {
     int limit = 20,
     String? status,
   }) async {
-    final params = {
+    final params = <String, dynamic>{
       'page': page,
       'limit': limit,
     };
     if (status != null && status.isNotEmpty) {
-      params['status'] = status as int;
+      params['status'] = status;
     }
     return ApiManager.instance.makeApiCall(
       callName: 'AllUsers',
@@ -441,6 +439,7 @@ class CreateDriverCall {
         params[key] = file;
       }
     }
+
     addFile('profile_image', profileImage);
     addFile('license_image', licenseImage);
     addFile('license_front_image', licenseFrontImage);
@@ -769,9 +768,6 @@ class ApiPagingParams {
   String toString() =>
       'PagingParams(nextPageNumber: $nextPageNumber, numItems: $numItems, lastResponse: $lastResponse,)';
 }
-
-
-
 
 // ============ 1. Auth (Public) ============
 class RefreshTokenCall {
@@ -1238,6 +1234,128 @@ class AddZoneCall {
       getJsonField(response, r'''$.data''') as Map<String, dynamic>?;
 }
 
+class UpdateCityCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int cityId,
+    String? name,
+    bool? isActive,
+  }) async {
+    final body = json.encode({
+      if (name != null) 'name': name,
+      if (isActive != null) 'is_active': isActive,
+    });
+    return ApiManager.instance.makeApiCall(
+      callName: 'updateCity',
+      apiUrl: '${ApiConfig.apiBase}/admins/cities/$cityId',
+      callType: ApiCallType.PUT,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class DeleteCityCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int cityId,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'deleteCity',
+      apiUrl: '${ApiConfig.apiBase}/admins/cities/$cityId',
+      callType: ApiCallType.DELETE,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class UpdateZoneCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int zoneId,
+    int? cityId,
+    String? name,
+    String? type,
+    double? centerLat,
+    double? centerLng,
+    double? radiusKm,
+    dynamic polygonJson,
+    bool? isActive,
+  }) async {
+    final body = json.encode({
+      if (cityId != null) 'city_id': cityId,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (centerLat != null) 'center_lat': centerLat,
+      if (centerLng != null) 'center_lng': centerLng,
+      if (radiusKm != null) 'radius_km': radiusKm,
+      if (polygonJson != null) 'polygon_json': polygonJson,
+      if (isActive != null) 'is_active': isActive,
+    });
+    return ApiManager.instance.makeApiCall(
+      callName: 'updateZone',
+      apiUrl: '${ApiConfig.apiBase}/admins/zones/$zoneId',
+      callType: ApiCallType.PUT,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class DeleteZoneCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    required int zoneId,
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'deleteZone',
+      apiUrl: '${ApiConfig.apiBase}/admins/zones/$zoneId',
+      callType: ApiCallType.DELETE,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
 // ============ 8. Promo Codes ============
 class GetPromoCodesCall {
   static Future<ApiCallResponse> call({String? token = ''}) async {
@@ -1566,10 +1684,12 @@ class UpdateVehicleTypeCall {
     FFUploadedFile? image,
   }) async {
     final params = <String, dynamic>{'name': name ?? ''};
-    if (image != null && (image.bytes?.isNotEmpty ?? false)) params['image'] = image;
+    if (image != null && (image.bytes?.isNotEmpty ?? false))
+      params['image'] = image;
     return ApiManager.instance.makeApiCall(
       callName: 'updateVehicleType',
-      apiUrl: '${ApiConfig.apiBase}/vehicle-types/update-vehicle-type/$vehicleTypeId',
+      apiUrl:
+          '${ApiConfig.apiBase}/vehicle-types/update-vehicle-type/$vehicleTypeId',
       callType: ApiCallType.PUT,
       headers: {'Authorization': 'Bearer $token'},
       params: params,
@@ -1952,7 +2072,8 @@ class GetRideStatusStatsCall {
     return castToType<int>(seg['count']);
   }
 
-  static double? statusPercentage(Map<String, dynamic>? rideStatus, String key) {
+  static double? statusPercentage(
+      Map<String, dynamic>? rideStatus, String key) {
     if (rideStatus == null) return null;
     final seg = rideStatus[key];
     if (seg is! Map) return null;
@@ -2157,7 +2278,8 @@ class GetPaymentsCall {
     if (direct is List && direct.isNotEmpty) {
       return List<dynamic>.from(direct);
     }
-    final nested = getJsonField(response, r'''$.data.payments''', true) as List?;
+    final nested =
+        getJsonField(response, r'''$.data.payments''', true) as List?;
     if (nested != null && nested.isNotEmpty) {
       return List<dynamic>.from(nested);
     }
@@ -2344,7 +2466,8 @@ class GetAdminWalletTransactionsCall {
   }
 
   static List<dynamic> transactionsList(dynamic response) {
-    final list = getJsonField(response, r'''$.data.transactions''', true) as List?;
+    final list =
+        getJsonField(response, r'''$.data.transactions''', true) as List?;
     if (list != null && list.isNotEmpty) {
       return List<dynamic>.from(list);
     }
@@ -2461,12 +2584,16 @@ class GetAdminLedgerCall {
     };
     if (rideId != null && rideId > 0) params['ride_id'] = rideId.toString();
     if (userId != null && userId > 0) params['user_id'] = userId.toString();
-    if (driverId != null && driverId > 0) params['driver_id'] = driverId.toString();
-    if (txnType != null && txnType.trim().isNotEmpty) params['txn_type'] = txnType.trim();
+    if (driverId != null && driverId > 0)
+      params['driver_id'] = driverId.toString();
+    if (txnType != null && txnType.trim().isNotEmpty)
+      params['txn_type'] = txnType.trim();
     if (from != null && from.trim().isNotEmpty) params['from'] = from.trim();
     if (to != null && to.trim().isNotEmpty) params['to'] = to.trim();
-    if (amountMin != null && amountMin.trim().isNotEmpty) params['amount_min'] = amountMin.trim();
-    if (amountMax != null && amountMax.trim().isNotEmpty) params['amount_max'] = amountMax.trim();
+    if (amountMin != null && amountMin.trim().isNotEmpty)
+      params['amount_min'] = amountMin.trim();
+    if (amountMax != null && amountMax.trim().isNotEmpty)
+      params['amount_max'] = amountMax.trim();
     return ApiManager.instance.makeApiCall(
       callName: 'getAdminLedger',
       apiUrl: '${ApiConfig.apiBase}/admins/ledger',
@@ -2580,6 +2707,7 @@ class GetAdminFinanceReportCall {
     required String kind,
     String? from,
     String? to,
+
     /// revenue only: `daily` | `weekly` | `monthly`
     String? group,
   }) async {
@@ -2587,7 +2715,8 @@ class GetAdminFinanceReportCall {
     final params = <String, dynamic>{};
     if (from != null && from.trim().isNotEmpty) params['from'] = from.trim();
     if (to != null && to.trim().isNotEmpty) params['to'] = to.trim();
-    if (group != null && group.trim().isNotEmpty) params['group'] = group.trim();
+    if (group != null && group.trim().isNotEmpty)
+      params['group'] = group.trim();
     return ApiManager.instance.makeApiCall(
       callName: 'getAdminFinanceReport',
       apiUrl: '${ApiConfig.apiBase}/admins/finance/reports/$k',
@@ -2886,7 +3015,8 @@ class GetAdminFinanceAuditTimelineCall {
   }) async {
     final params = <String, dynamic>{'limit': limit.toString()};
     if (userId != null && userId > 0) params['user_id'] = userId.toString();
-    if (driverId != null && driverId > 0) params['driver_id'] = driverId.toString();
+    if (driverId != null && driverId > 0)
+      params['driver_id'] = driverId.toString();
     return ApiManager.instance.makeApiCall(
       callName: 'getAdminFinanceAuditTimeline',
       apiUrl: '${ApiConfig.apiBase}/admins/finance/audit-timeline',
@@ -3073,7 +3203,8 @@ class PostAdminFinanceCaseCall {
       if (sourceAlertCode != null) 'source_alert_code': sourceAlertCode,
       if (assignedAdminId != null) 'assigned_admin_id': assignedAdminId,
       if (priority != null && priority.isNotEmpty) 'priority': priority,
-      if (riskBucket != null && riskBucket.isNotEmpty) 'risk_bucket': riskBucket,
+      if (riskBucket != null && riskBucket.isNotEmpty)
+        'risk_bucket': riskBucket,
       if (driverRiskScore != null) 'driver_risk_score': driverRiskScore,
       if (anomalyScore != null) 'anomaly_score': anomalyScore,
       if (slaDueAtIso != null) 'sla_due_at': slaDueAtIso,
@@ -3135,7 +3266,8 @@ class GetAdminFinanceCaseDetailCall {
   }
 
   static List<dynamic> pauseSegmentsList(dynamic response) {
-    final list = getJsonField(response, r'''$.data.pause_segments''', true) as List?;
+    final list =
+        getJsonField(response, r'''$.data.pause_segments''', true) as List?;
     if (list != null) return List<dynamic>.from(list);
     return const [];
   }
@@ -3187,7 +3319,8 @@ class PatchAdminFinanceCaseCall {
     if (status != null) bodyMap['status'] = status;
     if (notes != null) bodyMap['notes'] = notes;
     if (assignedAdminId != null) bodyMap['assigned_admin_id'] = assignedAdminId;
-    if (timelineNote != null && timelineNote.isNotEmpty) bodyMap['timeline_note'] = timelineNote;
+    if (timelineNote != null && timelineNote.isNotEmpty)
+      bodyMap['timeline_note'] = timelineNote;
     if (priority != null && priority.isNotEmpty) bodyMap['priority'] = priority;
     if (clearSlaDueAt == true) {
       bodyMap['sla_due_at'] = null;
@@ -3353,7 +3486,8 @@ class GetAdminFinanceDriverIntelCall {
   }) async {
     return ApiManager.instance.makeApiCall(
       callName: 'getAdminFinanceDriverIntel',
-      apiUrl: '${ApiConfig.apiBase}/admins/finance/intelligence/driver/$driverId',
+      apiUrl:
+          '${ApiConfig.apiBase}/admins/finance/intelligence/driver/$driverId',
       callType: ApiCallType.GET,
       headers: {'Authorization': 'Bearer $token'},
       params: {},
@@ -3386,7 +3520,8 @@ class GetAdminFinanceAuditViewCall {
       'page': page.toString(),
       'limit': limit.toString(),
     };
-    if (action != null && action.trim().isNotEmpty) params['action'] = action.trim();
+    if (action != null && action.trim().isNotEmpty)
+      params['action'] = action.trim();
     return ApiManager.instance.makeApiCall(
       callName: 'getAdminFinanceAuditView',
       apiUrl: '${ApiConfig.apiBase}/admins/finance/audit-view',
@@ -3481,10 +3616,6 @@ class UpdateFinanceSettingsCall {
     );
   }
 }
-
-
-
-
 
 String? escapeStringForJson(String? input) {
   if (input == null) {

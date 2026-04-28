@@ -101,14 +101,15 @@ class _LoginWidgetState extends State<LoginWidget> {
                 child: Container(
                   width: double.infinity,
                   constraints: const BoxConstraints(
-                    maxWidth: 450.0, // RESPONSIVE: Prevents stretching on web/desktop
+                    maxWidth:
+                        450.0, // RESPONSIVE: Prevents stretching on web/desktop
                   ),
                   decoration: BoxDecoration(
                     color: FlutterFlowTheme.of(context).secondaryBackground,
                     boxShadow: [
                       BoxShadow(
                         blurRadius: 12.0,
-                        color: Colors.black.withValues(alpha:0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         offset: const Offset(0, 4),
                       )
                     ],
@@ -119,7 +120,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(32.0, 40.0, 32.0, 40.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        32.0, 40.0, 32.0, 40.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -129,7 +131,9 @@ class _LoginWidgetState extends State<LoginWidget> {
                           width: 80.0,
                           height: 80.0,
                           decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).primary.withValues(alpha:0.1),
+                            color: FlutterFlowTheme.of(context)
+                                .primary
+                                .withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: ClipRRect(
@@ -144,20 +148,25 @@ class _LoginWidgetState extends State<LoginWidget> {
                         Text(
                           'UGO Admin Portal',
                           textAlign: TextAlign.center,
-                          style: FlutterFlowTheme.of(context).headlineSmall.override(
-                            font: GoogleFonts.interTight(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          style: FlutterFlowTheme.of(context)
+                              .headlineSmall
+                              .override(
+                                font: GoogleFonts.interTight(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                         ),
                         const SizedBox(height: 8.0),
                         Text(
                           'Secure access to platform management.',
                           textAlign: TextAlign.center,
-                          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.inter(),
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                          ),
+                          style: FlutterFlowTheme.of(context)
+                              .bodyMedium
+                              .override(
+                                font: GoogleFonts.inter(),
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                              ),
                         ),
                         const SizedBox(height: 32.0),
 
@@ -171,10 +180,13 @@ class _LoginWidgetState extends State<LoginWidget> {
                             labelText: 'Admin Email',
                             labelStyle: FlutterFlowTheme.of(context).bodyMedium,
                             hintText: 'Enter your email',
-                            hintStyle: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.inter(),
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                            ),
+                            hintStyle: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.inter(),
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryText,
+                                ),
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                 color: FlutterFlowTheme.of(context).alternate,
@@ -190,7 +202,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                             filled: true,
-                            fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                            fillColor:
+                                FlutterFlowTheme.of(context).primaryBackground,
                             contentPadding: const EdgeInsets.all(20.0),
                             prefixIcon: Icon(
                               Icons.email_outlined,
@@ -199,7 +212,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                           ),
                           style: FlutterFlowTheme.of(context).bodyMedium,
                           keyboardType: TextInputType.emailAddress,
-                          validator: _model.emailTextControllerValidator.asValidator(context),
+                          validator: _model.emailTextControllerValidator
+                              .asValidator(context),
                         ),
                         const SizedBox(height: 16.0),
 
@@ -213,10 +227,13 @@ class _LoginWidgetState extends State<LoginWidget> {
                             labelText: 'Password',
                             labelStyle: FlutterFlowTheme.of(context).bodyMedium,
                             hintText: 'Enter your password',
-                            hintStyle: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.inter(),
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                            ),
+                            hintStyle: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.inter(),
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryText,
+                                ),
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                 color: FlutterFlowTheme.of(context).alternate,
@@ -232,7 +249,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                             filled: true,
-                            fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                            fillColor:
+                                FlutterFlowTheme.of(context).primaryBackground,
                             contentPadding: const EdgeInsets.all(20.0),
                             prefixIcon: Icon(
                               Icons.lock_outline,
@@ -240,20 +258,23 @@ class _LoginWidgetState extends State<LoginWidget> {
                             ),
                             suffixIcon: InkWell(
                               onTap: () => setState(
-                                    () => _model.passwordVisibility = !_model.passwordVisibility,
+                                () => _model.passwordVisibility =
+                                    !_model.passwordVisibility,
                               ),
                               focusNode: FocusNode(skipTraversal: true),
                               child: Icon(
                                 _model.passwordVisibility
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: FlutterFlowTheme.of(context).secondaryText,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
                                 size: 22.0,
                               ),
                             ),
                           ),
                           style: FlutterFlowTheme.of(context).bodyMedium,
-                          validator: _model.passwordTextControllerValidator.asValidator(context),
+                          validator: _model.passwordTextControllerValidator
+                              .asValidator(context),
                         ),
                         const SizedBox(height: 16.0),
 
@@ -265,14 +286,17 @@ class _LoginWidgetState extends State<LoginWidget> {
                               children: [
                                 Theme(
                                   data: ThemeData(
-                                    unselectedWidgetColor: FlutterFlowTheme.of(context).alternate,
+                                    unselectedWidgetColor:
+                                        FlutterFlowTheme.of(context).alternate,
                                   ),
                                   child: Checkbox(
                                     value: _model.checkboxValue ??= false,
                                     onChanged: (newValue) async {
-                                      setState(() => _model.checkboxValue = newValue!);
+                                      setState(() =>
+                                          _model.checkboxValue = newValue!);
                                     },
-                                    activeColor: FlutterFlowTheme.of(context).primary,
+                                    activeColor:
+                                        FlutterFlowTheme.of(context).primary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4.0),
                                     ),
@@ -280,7 +304,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                                 ),
                                 Text(
                                   'Remember Me',
-                                  style: FlutterFlowTheme.of(context).bodyMedium,
+                                  style:
+                                      FlutterFlowTheme.of(context).bodyMedium,
                                 ),
                               ],
                             ),
@@ -288,11 +313,14 @@ class _LoginWidgetState extends State<LoginWidget> {
                               onTap: () => _showForgotPasswordDialog(),
                               child: Text(
                                 'Forgot Password?',
-                                style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                  font: GoogleFonts.inter(),
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                      font: GoogleFonts.inter(),
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
                             ),
                           ],
@@ -304,73 +332,88 @@ class _LoginWidgetState extends State<LoginWidget> {
                           onPressed: _isLoading
                               ? null
                               : () async {
-                            // Set loading state
-                            setState(() => _isLoading = true);
+                                  // Set loading state
+                                  setState(() => _isLoading = true);
 
-                            Function() _navigate = () {};
+                                  Function() _navigate = () {};
 
-                            // Call your backend API
-                            _model.apiResultpnl = await LoginCall.call(
-                              email: _model.emailTextController.text,
-                              password: _model.passwordTextController.text,
-                            );
+                                  // Call your backend API
+                                  _model.apiResultpnl = await LoginCall.call(
+                                    email: _model.emailTextController.text,
+                                    password:
+                                        _model.passwordTextController.text,
+                                  );
 
-                            if ((_model.apiResultpnl?.succeeded ?? false)) {
-                              GoRouter.of(context).prepareAuthEvent();
+                                  if ((_model.apiResultpnl?.succeeded ??
+                                      false)) {
+                                    GoRouter.of(context).prepareAuthEvent();
 
-                              await authManager.signIn(
-                                authenticationToken: LoginCall.accessToken(
-                                  (_model.apiResultpnl?.jsonBody ?? ''),
-                                ),
-                                refreshToken: LoginCall.refreshtoken(
-                                  (_model.apiResultpnl?.jsonBody ?? ''),
-                                ),
-                                userData: UserStruct(
-                                  accessToken: LoginCall.accessToken(
-                                    (_model.apiResultpnl?.jsonBody ?? ''),
-                                  ),
-                                  refreshtoken: LoginCall.refreshtoken(
-                                    (_model.apiResultpnl?.jsonBody ?? ''),
-                                  ),
-                                ),
-                              );
+                                    await authManager.signIn(
+                                      authenticationToken:
+                                          LoginCall.accessToken(
+                                        (_model.apiResultpnl?.jsonBody ?? ''),
+                                      ),
+                                      refreshToken: LoginCall.refreshtoken(
+                                        (_model.apiResultpnl?.jsonBody ?? ''),
+                                      ),
+                                      userData: UserStruct(
+                                        accessToken: LoginCall.accessToken(
+                                          (_model.apiResultpnl?.jsonBody ?? ''),
+                                        ),
+                                        refreshtoken: LoginCall.refreshtoken(
+                                          (_model.apiResultpnl?.jsonBody ?? ''),
+                                        ),
+                                      ),
+                                    );
 
-                              _navigate = () => context.goNamedAuth(
-                                  DashboardScreen.routeName, context.mounted);
-                            } else {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Login failed. Check email and password.'),
-                                    backgroundColor: FlutterFlowTheme.of(context).error,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
+                                    _navigate = () => context.goNamedAuth(
+                                        DashboardScreen.routeName,
+                                        context.mounted);
+                                  } else {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: const Text(
+                                              'Login failed. Check email and password.'),
+                                          backgroundColor:
+                                              FlutterFlowTheme.of(context)
+                                                  .error,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10.0),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
 
-                            // Turn off loading state
-                            setState(() => _isLoading = false);
-                            _navigate();
-                          },
-                          text: _isLoading ? 'Authenticating...' : 'Secure Login',
+                                  // Turn off loading state
+                                  setState(() => _isLoading = false);
+                                  _navigate();
+                                },
+                          text:
+                              _isLoading ? 'Authenticating...' : 'Secure Login',
                           options: FFButtonOptions(
                             width: double.infinity,
                             height: 55.0,
-                            color: const Color(0xFFFF6B35), // Your Vibrant Orange
-                            textStyle: FlutterFlowTheme.of(context).titleMedium.override(
-                              font: GoogleFonts.interTight(
-                                fontWeight: FontWeight.bold,
-                              ),
-                              color: Colors.white,
-                            ),
+                            color:
+                                const Color(0xFFFF6B35), // Your Vibrant Orange
+                            textStyle: FlutterFlowTheme.of(context)
+                                .titleMedium
+                                .override(
+                                  font: GoogleFonts.interTight(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  color: Colors.white,
+                                ),
                             elevation: 2.0,
                             borderRadius: BorderRadius.circular(12.0),
-                            disabledColor: FlutterFlowTheme.of(context).alternate,
-                            disabledTextColor: FlutterFlowTheme.of(context).secondaryText,
+                            disabledColor:
+                                FlutterFlowTheme.of(context).alternate,
+                            disabledTextColor:
+                                FlutterFlowTheme.of(context).secondaryText,
                           ),
                         ),
                       ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'user_management_screen.dart';
+import 'allusers/allusers_widget.dart';
 
 class UserManagementWidget extends StatefulWidget {
   const UserManagementWidget({super.key});
@@ -14,6 +14,6 @@ class UserManagementWidget extends StatefulWidget {
 class _UserManagementWidgetState extends State<UserManagementWidget> {
   @override
   Widget build(BuildContext context) {
-    return const UserManagementScreen();
+    return const AllusersWidget();
   }
 }
