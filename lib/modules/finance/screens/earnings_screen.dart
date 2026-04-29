@@ -62,16 +62,18 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
         ),
       ),
       data: (m) {
-        final pending = m['pending_payouts'];
-        final pendAmt = pending is Map ? _num(pending['amount_inr']) : 0.0;
-        final pendCnt = pending is Map ? (pending['count'] ?? 0) : 0;
-        final ledger = m['platform_ledger_breakdown'];
-        final commission =
-            ledger is Map ? _num(ledger['total_commission_ledger_inr']) : 0.0;
-
-        final ledgerBalance = _num(m['company_ledger_balance_inr']);
-        final driverLiability = _num(m['driver_wallet_liability_inr']);
-        final riderLiability = _num(m['rider_wallet_liability_inr']);
+        final totalEarnings = _num(m['total_earnings']);
+        final adminBalance = _num(m['admin_wallet_balance']);
+        final totalRides = _num(m['total_rides']);
+        final userStats = m['user_statistics'] is Map
+            ? m['user_statistics'] as Map
+            : <String, dynamic>{};
+        final driverStats = m['driver_statistics'] is Map
+            ? m['driver_statistics'] as Map
+            : <String, dynamic>{};
+        final totalUsers = _num(userStats['total']);
+        final totalDrivers = _num(driverStats['total']);
+        final activeDrivers = _num(driverStats['active']);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 18),
@@ -113,10 +115,9 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Live Finance Ledger',
+                          'Platform Earnings',
                           style: theme.titleMedium.override(
-                            font:
-                                GoogleFonts.inter(fontWeight: FontWeight.w700),
+                            font: GoogleFonts.inter(fontWeight: FontWeight.w700),
                             color: Colors.white,
                           ),
                         ),
@@ -124,17 +125,16 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      '₹${_inr.format(ledgerBalance)}',
+                      '₹${_inr.format(totalEarnings)}',
                       style: theme.displaySmall.override(
-                        font:
-                            GoogleFonts.interTight(fontWeight: FontWeight.w800),
+                        font: GoogleFonts.interTight(fontWeight: FontWeight.w800),
                         color: Colors.white,
                         fontSize: 34,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Current company ledger balance',
+                      'Total earnings across all rides',
                       style: theme.bodyMedium.override(
                         color: Colors.white.withOpacity(0.9),
                       ),
@@ -144,9 +144,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _badge('Pending: $pendCnt',
-                            Icons.hourglass_bottom_rounded),
-                        _badge('Commission tracked', Icons.assessment_rounded),
+                        _badge('${totalRides.toInt()} Rides', Icons.directions_car_rounded),
+                        _badge('${totalUsers.toInt()} Users', Icons.people_rounded),
                         _badge('Live snapshot', Icons.bolt_rounded),
                       ],
                     ),
@@ -158,18 +157,18 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                 children: [
                   Expanded(
                     child: _miniMetricCard(
-                      title: 'Driver Liability',
-                      value: '₹${_inr.format(driverLiability)}',
-                      icon: Icons.local_taxi_rounded,
+                      title: 'Admin Wallet',
+                      value: '₹${_inr.format(adminBalance)}',
+                      icon: Icons.account_balance_rounded,
                       color: const Color(0xFF0066CC),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _miniMetricCard(
-                      title: 'Rider Liability',
-                      value: '₹${_inr.format(riderLiability)}',
-                      icon: Icons.person_rounded,
+                      title: 'Total Rides',
+                      value: totalRides.toInt().toString(),
+                      icon: Icons.local_taxi_rounded,
                       color: const Color(0xFF1E8E3E),
                     ),
                   ),
@@ -180,21 +179,21 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                 children: [
                   Expanded(
                     child: _miniMetricCard(
-                      title: 'Pending Payouts',
-                      value: '₹${_inr.format(pendAmt)}',
-                      icon: Icons.payments_rounded,
+                      title: 'Active Drivers',
+                      value: activeDrivers.toInt().toString(),
+                      icon: Icons.person_rounded,
                       color: const Color(0xFFE37400),
-                      subtitle: '$pendCnt payouts queued',
+                      subtitle: '${totalDrivers.toInt()} total',
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _miniMetricCard(
-                      title: 'Platform Commission',
-                      value: '₹${_inr.format(commission)}',
-                      icon: Icons.trending_up_rounded,
+                      title: 'Total Users',
+                      value: totalUsers.toInt().toString(),
+                      icon: Icons.group_rounded,
                       color: const Color(0xFF7B1FA2),
-                      subtitle: 'Ledger window',
+                      subtitle: '${_num(userStats['active']).toInt()} active',
                     ),
                   ),
                 ],
