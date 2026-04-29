@@ -358,15 +358,24 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         ? Map<String, dynamic>.from(data)
         : Map<String, dynamic>.from(root);
 
+    final uStats = m['user_statistics'] is Map
+        ? Map<String, dynamic>.from(m['user_statistics'] as Map)
+        : const <String, dynamic>{};
+    final dStats = m['driver_statistics'] is Map
+        ? Map<String, dynamic>.from(m['driver_statistics'] as Map)
+        : const <String, dynamic>{};
+
     return s.copyWith(
       totalRides:
           _firstInt(m, const ['total_rides', 'rides_total', 'totalRides']) ??
               s.totalRides,
       totalUsers:
           _firstInt(m, const ['total_users', 'users_total', 'totalUsers']) ??
+          _firstInt(uStats, const ['total']) ??
               s.totalUsers,
       totalDrivers: _firstInt(
               m, const ['total_drivers', 'drivers_total', 'totalDrivers']) ??
+          _firstInt(dStats, const ['total']) ??
           s.totalDrivers,
       onlineDrivers: _firstInt(m,
               const ['active_drivers', 'online_drivers', 'drivers_online']) ??
@@ -382,24 +391,32 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
           s.totalEarnings,
       usersActive:
           _firstInt(m, const ['active_users', 'user_active', 'users_active']) ??
+          _firstInt(uStats, const ['active']) ??
               s.usersActive,
       usersInactive: _firstInt(
               m, const ['inactive_users', 'user_inactive', 'users_inactive']) ??
+          _firstInt(uStats, const ['inactive']) ??
           s.usersInactive,
       usersBlocked: _firstInt(
               m, const ['blocked_users', 'blockedUsers', 'users_blocked']) ??
+          _firstInt(uStats, const ['blocked']) ??
           s.usersBlocked,
       driversActiveAccounts: _firstInt(m, const [
             'active_driver_accounts',
             'drivers_active',
             'active_drivers_count'
           ]) ??
+          _firstInt(dStats, const ['active']) ??
           s.driversActiveAccounts,
+      driversInactiveAccounts: (_firstInt(m, const ['total_drivers', 'drivers_total', 'totalDrivers']) ?? _firstInt(dStats, const ['total']) ?? s.totalDrivers) - 
+          (_firstInt(m, const ['active_driver_accounts', 'drivers_active', 'active_drivers_count']) ?? _firstInt(dStats, const ['active']) ?? s.driversActiveAccounts),
       driversPendingKyc:
           _firstInt(m, const ['pending_drivers', 'drivers_pending']) ??
+          _firstInt(dStats, const ['pending']) ??
               s.driversPendingKyc,
       driversBlockedAccounts:
           _firstInt(m, const ['blocked_drivers', 'drivers_blocked']) ??
+          _firstInt(dStats, const ['blocked']) ??
               s.driversBlockedAccounts,
       adminWallet: _firstDouble(m, const [
             'admin_wallet',
@@ -539,10 +556,20 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     scored.sort((a, b) => driverScore(b).compareTo(driverScore(a)));
     final topDrivers = scored.take(8).toList();
 
+    int dActive = s.driversActiveAccounts;
+    int dPending = s.driversPendingKyc;
+    int dBlocked = s.driversBlockedAccounts;
+
+    if (dActive == 0 && dPending == 0 && dBlocked == 0) {
+      dActive = active;
+      dPending = pending;
+      dBlocked = blocked;
+    }
+
     return s.copyWith(
-      driversActiveAccounts: active,
-      driversPendingKyc: pending,
-      driversBlockedAccounts: blocked,
+      driversActiveAccounts: dActive,
+      driversPendingKyc: dPending,
+      driversBlockedAccounts: dBlocked,
       topDrivers: topDrivers,
     );
   }
@@ -570,7 +597,18 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         i++;
       }
     }
-    return s.copyWith(usersActive: a, usersInactive: i, usersBlocked: b);
+
+    int uActive = s.usersActive;
+    int uInactive = s.usersInactive;
+    int uBlocked = s.usersBlocked;
+
+    if (uActive == 0 && uInactive == 0 && uBlocked == 0) {
+      uActive = a;
+      uInactive = i;
+      uBlocked = b;
+    }
+
+    return s.copyWith(usersActive: uActive, usersInactive: uInactive, usersBlocked: uBlocked);
   }
 
   // ── Parsing helpers ───────────────────────────────────────

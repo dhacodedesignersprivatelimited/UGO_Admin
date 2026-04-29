@@ -169,6 +169,7 @@ class DashboardScreenView extends StatelessWidget {
                       DashboardMetricCard(
                         title: 'Total Rides',
                         value: _fmtInt(state.totalRides),
+                        subtitle: 'Today: ${state.ridesCompletedToday}',
                         backgroundColor: DashboardTokens.metricRidesBg,
                         accentColor: DashboardTokens.metricRidesAccent,
                         icon: Icons.directions_car_rounded,
@@ -180,6 +181,7 @@ class DashboardScreenView extends StatelessWidget {
                       DashboardMetricCard(
                         title: 'Total Users',
                         value: _fmtInt(state.totalUsers),
+                        subtitle: 'Today: ${state.newUsersToday}',
                         backgroundColor: DashboardTokens.metricUsersBg,
                         accentColor: DashboardTokens.metricUsersAccent,
                         icon: Icons.people_outline_rounded,
@@ -237,80 +239,6 @@ class DashboardScreenView extends StatelessWidget {
                       .animate()
                       .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic),
                   const SizedBox(height: 20),
-                  Text(
-                    'Operational Snapshot',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: theme.primaryText,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  DashboardMetricGrid(
-                    childAspectRatioThreeCols: 2.2,
-                    childAspectRatioTwoCols: 2.0,
-                    children: [
-                      DashboardMetricCard(
-                        title: 'Rides Today',
-                        value: _fmtInt(state.ridesCompletedToday),
-                        backgroundColor: DashboardTokens.metricRidesBg,
-                        accentColor: DashboardTokens.metricRidesAccent,
-                        icon: Icons.today_rounded,
-                      ),
-                      DashboardMetricCard(
-                        title: 'New Users Today',
-                        value: _fmtInt(state.newUsersToday),
-                        backgroundColor: DashboardTokens.metricUsersBg,
-                        accentColor: DashboardTokens.metricUsersAccent,
-                        icon: Icons.person_add_alt_1_rounded,
-                      ),
-                      DashboardMetricCard(
-                        title: 'Active Users',
-                        value: _fmtInt(state.usersActive),
-                        backgroundColor: DashboardTokens.metricUsersBg,
-                        accentColor: DashboardTokens.metricUsersAccent,
-                        icon: Icons.verified_user_outlined,
-                      ),
-                      DashboardMetricCard(
-                        title: 'Inactive Users',
-                        value: _fmtInt(state.usersInactive),
-                        backgroundColor: const Color(0xFFF2F4F7),
-                        accentColor: const Color(0xFF98A2B3),
-                        icon: Icons.person_off_outlined,
-                      ),
-                      DashboardMetricCard(
-                        title: 'Blocked Users',
-                        value: _fmtInt(state.usersBlocked),
-                        backgroundColor: DashboardTokens.metricEarningsBg,
-                        accentColor: DashboardTokens.metricEarningsAccent,
-                        icon: Icons.block_outlined,
-                      ),
-                      DashboardMetricCard(
-                        title: 'Driver Accounts Active',
-                        value: _fmtInt(state.driversActiveAccounts),
-                        backgroundColor: DashboardTokens.metricOnlineBg,
-                        accentColor: DashboardTokens.metricOnlineAccent,
-                        icon: Icons.badge_outlined,
-                      ),
-                      DashboardMetricCard(
-                        title: 'Pending Driver KYC',
-                        value: _fmtInt(state.driversPendingKyc),
-                        backgroundColor: DashboardTokens.metricDriversBg,
-                        accentColor: DashboardTokens.metricDriversAccent,
-                        icon: Icons.pending_actions_rounded,
-                      ),
-                      DashboardMetricCard(
-                        title: 'Blocked Drivers',
-                        value: _fmtInt(state.driversBlockedAccounts),
-                        backgroundColor: DashboardTokens.metricEarningsBg,
-                        accentColor: DashboardTokens.metricEarningsAccent,
-                        icon: Icons.gpp_bad_outlined,
-                      ),
-                    ],
-                  ).animate().fadeIn(
-                      delay: 60.ms,
-                      duration: 400.ms,
-                      curve: Curves.easeOutCubic),
                 ],
               ),
             ),

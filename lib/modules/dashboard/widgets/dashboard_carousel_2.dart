@@ -25,13 +25,10 @@ class _DashboardCarousel2State
   final ValueNotifier<int> _index = ValueNotifier(0);
 
   DashboardGaugeBreakdown breakdownUserStats(DashboardState m) {
-    final total =
-        (m.usersActive + m.usersInactive + m.usersBlocked) > 0
-            ? (m.usersActive + m.usersInactive + m.usersBlocked)
-            : m.totalUsers;
+    final total = m.totalUsers > 0 ? m.totalUsers : 1;
     return DashboardGaugeBreakdown(
-      displayTotal: total > 0 ? total : m.totalUsers,
-      denom: total > 0 ? total : 1,
+      displayTotal: m.totalUsers,
+      denom: total,
       segments: [
         GaugeSegment(
           label: 'Active Users',
@@ -56,24 +53,22 @@ class _DashboardCarousel2State
   }
 
   DashboardGaugeBreakdown breakdownDriverStats(DashboardState m) {
-    final total =
-        (m.driversActiveAccounts +
-                    m.driversPendingKyc +
-                    m.driversBlockedAccounts) >
-                0
-            ? (m.driversActiveAccounts +
-                m.driversPendingKyc +
-                m.driversBlockedAccounts)
-            : m.totalDrivers;
+    final total = m.totalDrivers > 0 ? m.totalDrivers : 1;
     return DashboardGaugeBreakdown(
-      displayTotal: total > 0 ? total : m.totalDrivers,
-      denom: total > 0 ? total : 1,
+      displayTotal: m.totalDrivers,
+      denom: total,
       segments: [
         GaugeSegment(
           label: 'Active Drivers',
           count: m.driversActiveAccounts,
           arcColor: const Color(0xFF16A34A),
           legendColor: const Color(0xFF16A34A),
+        ),
+        GaugeSegment(
+          label: 'Inactive Drivers',
+          count: m.driversInactiveAccounts,
+          arcColor: const Color(0xFFD1D5DB),
+          legendColor: const Color(0xFFD1D5DB),
         ),
         GaugeSegment(
           label: 'Pending',

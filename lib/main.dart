@@ -10,7 +10,6 @@ import '/core/auth/custom_auth_user_provider.dart';
 import '/core/firebase/firebase_config.dart';
 import '/config/theme/flutter_flow_theme.dart';
 import '/config/theme/flutter_flow_util.dart';
-import '/config/routes/nav.dart';
 import '/config/routes/router.dart';
 
 void main() async {
@@ -34,13 +33,15 @@ void main() async {
     ProviderScope(
       child: provider.ChangeNotifierProvider(
         create: (context) => appState,
-        child: MyApp(),
+        child: const MyApp(),
       ),
     ),
   );
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   // This widget is the root of your application.
   @override
   State<MyApp> createState() => _MyAppState();
@@ -101,7 +102,7 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: 'ugoAdmin',
-        localizationsDelegates: [
+        localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,

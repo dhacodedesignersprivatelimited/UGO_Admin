@@ -23,6 +23,7 @@ class DashboardState extends Equatable with LoadStateMixin {
     this.usersBlocked = 0,
     // ── Driver buckets ───────────────────────────────────────
     this.driversActiveAccounts = 0,
+    this.driversInactiveAccounts = 0,
     this.driversPendingKyc = 0,
     this.driversBlockedAccounts = 0,
     // ── Today stats ──────────────────────────────────────────
@@ -78,6 +79,7 @@ class DashboardState extends Equatable with LoadStateMixin {
   final int usersBlocked;
 
   final int driversActiveAccounts;
+  final int driversInactiveAccounts;
   final int driversPendingKyc;
   final int driversBlockedAccounts;
 
@@ -164,6 +166,7 @@ class DashboardState extends Equatable with LoadStateMixin {
     int? usersInactive,
     int? usersBlocked,
     int? driversActiveAccounts,
+    int? driversInactiveAccounts,
     int? driversPendingKyc,
     int? driversBlockedAccounts,
     int? ridesCompletedToday,
@@ -210,6 +213,8 @@ class DashboardState extends Equatable with LoadStateMixin {
       usersBlocked: usersBlocked ?? this.usersBlocked,
       driversActiveAccounts:
           driversActiveAccounts ?? this.driversActiveAccounts,
+      driversInactiveAccounts:
+          driversInactiveAccounts ?? this.driversInactiveAccounts,
       driversPendingKyc: driversPendingKyc ?? this.driversPendingKyc,
       driversBlockedAccounts:
           driversBlockedAccounts ?? this.driversBlockedAccounts,
@@ -258,6 +263,7 @@ class DashboardState extends Equatable with LoadStateMixin {
         usersInactive,
         usersBlocked,
         driversActiveAccounts,
+        driversInactiveAccounts,
         driversPendingKyc,
         driversBlockedAccounts,
         ridesCompletedToday,

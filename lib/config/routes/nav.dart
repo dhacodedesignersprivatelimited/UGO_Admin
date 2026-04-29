@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 import '/shared/models/structs/index.dart';
@@ -11,7 +9,6 @@ import '/core/auth/custom_auth_user_provider.dart';
 
 import '/config/theme/flutter_flow_theme.dart';
 import '/config/theme/flutter_flow_util.dart';
-import 'serialization_util.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -92,10 +89,10 @@ extension NavigationExtensions on BuildContext {
     bool ignoreRedirect = false,
   }) {
     if (!mounted || GoRouter.of(this).shouldRedirect(ignoreRedirect)) return;
-    final transition = TransitionInfo(
+    const transition = TransitionInfo(
       hasTransition: true,
       transitionType: PageTransitionType.leftToRight,
-      duration: const Duration(milliseconds: 280),
+      duration: Duration(milliseconds: 280),
     );
     final Map<String, dynamic> mergedExtra;
     if (extra is Map<String, dynamic>) {
@@ -121,10 +118,10 @@ extension NavigationExtensions on BuildContext {
     bool ignoreRedirect = false,
   }) {
     if (!mounted || GoRouter.of(this).shouldRedirect(ignoreRedirect)) return;
-    final transition = TransitionInfo(
+    const transition = TransitionInfo(
       hasTransition: true,
       transitionType: PageTransitionType.rightToLeft,
-      duration: const Duration(milliseconds: 320),
+      duration: Duration(milliseconds: 320),
     );
     final Map<String, dynamic> mergedExtra;
     if (extra is Map<String, dynamic>) {
@@ -331,7 +328,7 @@ class TransitionInfo {
   final Duration duration;
   final Alignment? alignment;
 
-  static TransitionInfo appDefault() => TransitionInfo(hasTransition: false);
+  static TransitionInfo appDefault() => const TransitionInfo(hasTransition: false);
 }
 
 class RootPageContext {
